@@ -9,7 +9,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">merchandiser</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,10 +28,12 @@
     <a class="dropdown-item" href="../articles/defect-recording-conventions.html">Recording defect</a>
     <a class="dropdown-item" href="../articles/fill-missing-heights.html">Fitting and completing heights</a>
     <a class="dropdown-item" href="../articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and scaling</a>
-    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass, carbon, and green weight</a>
-    <a class="dropdown-item" href="../articles/compiling-inventory.html">Compiling an inventory</a>
-    <a class="dropdown-item" href="../articles/bucking-prices.html">Bucking choices and prices</a>
+    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and green weight</a>
+    <a class="dropdown-item" href="../articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass and carbon</a>
+    <a class="dropdown-item" href="../articles/pacific-northwest.html">Pacific Northwest tree list</a>
+    <a class="dropdown-item" href="../articles/southern.html">Southern stands</a>
+    <a class="dropdown-item" href="../articles/optimal-bucking.html">Optimal bucking</a>
     <a class="dropdown-item" href="../articles/assumptions-status.html">Assumptions and status</a>
     <a class="dropdown-item" href="../articles/methods-taper-equations.html">Taper equation methods</a>
     <a class="dropdown-item" href="../articles/methods-fitting-taper.html">Fitting taper equations</a>
@@ -64,6 +66,32 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.0" id="merchandiser-050">merchandiser 0.5.0<a class="anchor" aria-label="anchor" href="#merchandiser-050"></a></h2>
+<ul><li><p>The product and model species scopes are <code>spcd</code>.</p></li>
+<li><p>Value optimization now assigns any eligible product at each cut, independently of product order. Ties prefer fewer logs, then longer logs lower on the stem. Product log limits restart at cull and restriction boundaries. Trees run through the shared parallel bucking engine.</p></li>
+<li><p>The optimal bucking guide compares strategies, mapped defects, prices, and measured computation costs.</p></li>
+<li><p>Tree inputs now use inches and feet. Public calculation functions accept numeric Forest Inventory and Analysis species codes through <code>spcd</code>. Species names and symbols are no longer resolved in arguments. The species reference table remains available for joins.</p></li>
+<li><p><code><a href="../reference/merchandise.html">merchandise()</a></code> requires <code>tree_id</code> first. <code>pruned_ht</code> replaces <code>pruned</code> and records clear wood from the ground to the pruning height. <code>strategy</code> selects the priority cascade or value optimization. Optimization requires a price for every product.</p></li>
+<li><p><code><a href="../reference/merchandise.html">merchandise()</a></code> removes <code>id</code>, <code>species</code>, <code>pruned</code>, <code>utilization_top</code>, <code>utilization_top_basis</code>, <code>utilization_height</code>, <code>curvature_scale</code>, <code>report_also</code>, <code>scaling</code>, <code>currency</code>, <code>units</code>, <code>status</code>, <code>preset</code>, <code>region</code>, <code>forest</code>, and <code>district</code>. Product specifications define the usable top.</p></li>
+<li><p>Cascade cuts products in their supplied order. <code>priority</code> is removed. Continuous candidate lengths use an internal half foot grid. <code>length_round</code> rounds the nominal length down to the mill’s scaling increment. <code>max_logs</code> replaces <code>max_logs_per_segment</code>. <code>requires_pruned</code> replaces the product field <code>pruned</code>.</p></li>
+<li><p>Product fields <code>lengths</code>, <code>length_step</code>, <code>min_boundary_length</code>, <code>allow_after_higher_product</code>, <code>allow_lower_products</code>, <code>accepts_pulp_restriction</code>, <code>max_crook</code>, <code>max_rot_pct</code>, <code>grade</code>, <code>diameter_basis</code>, <code>sold_by</code>, <code>specification_source</code>, all <code>meta_</code> columns, and legacy field aliases are removed. <code>max_sweep</code> is a numeric percentage.</p></li>
+<li><p>Defects contain only <code>tree_id</code>, <code>from</code>, <code>to</code>, <code>effect</code>, <code>product</code>, and <code>percent</code>. Effects are <code>cull</code>, <code>restrict</code>, <code>end</code>, and <code>sweep</code>. Cull and restriction boundaries split the stem and restart product priority and log counts. Missing <code>to</code> means the tree top. The former <code>pulp</code>, <code>exclude</code>, <code>rot</code>, <code>crook</code>, <code>fork</code>, and <code><a href="https://rdrr.io/r/base/Control.html" class="external-link">break</a></code> effects are removed. <code>defect_id</code>, <code>category</code>, <code>pathology</code>, and <code>source_record_id</code> are removed. No defect percentage is applied inside merchandising.</p></li>
+<li><p><code><a href="../reference/defect.html">defect()</a></code>, <code><a href="../reference/defects_from_stoppers.html">defects_from_stoppers()</a></code>, <code><a href="../reference/validate_defects.html">validate_defects()</a></code>, and <code><a href="../reference/stem_profile.html">stem_profile()</a></code> rename <code>id</code> to <code>tree_id</code>. Stopping heights now produce the four supported effects. The standalone thirds utility uses species defaults and leaves application of its percentage to the user’s script.</p></li>
+<li><p>A log occupies nominal length plus trim. Every scaled quantity and cubic volume covers only the nominal body. Physical log ends determine diameter limits. Trim is a separate residual row and contributes no volume. Separate trim and physical cubic columns and paired gross and net scale columns are removed.</p></li>
+<li><p>Results contain <code>logs</code>, <code>residuals</code>, <code>status</code>, <code>assumptions</code>, and replay inputs in <code>call</code>. Each table begins with <code>tree_id</code>. Status contains nonzero tree results only. Value appears on logs when any product is priced. The former <code>trees</code>, <code>scales</code>, <code>values</code>, <code>defect_accounting</code>, <code>run_metadata</code>, and <code>diagnostics</code> tables are removed.</p></li>
+<li><p>Stem measurement functions accept <code>spcd</code> and choose a taper model by species unless <code>model</code> is supplied. <code><a href="../reference/stem_volume.html">stem_volume()</a></code> renames <code>bark</code> to logical <code>inside_bark</code>. <code><a href="../reference/tree_cubic_volume.html">tree_cubic_volume()</a></code> renames <code>basis</code> to <code>inside_bark</code>. One-row-per-input functions have no identifier argument.</p></li>
+<li><p>Public vector-to-table switches named <code>status</code> are removed. Those functions always return data frames with a status column. Public <code>units</code> arguments are removed from stem, height, taper fitting, model construction, biomass, and green weight functions.</p></li>
+<li><p><code><a href="../reference/new_taper_model.html">new_taper_model()</a></code> and <code><a href="../reference/taper_model_from_coefficients.html">taper_model_from_coefficients()</a></code> remove <code>units</code> and <code>notes</code> and retain <code>bark_ratio</code> and <code>source</code>. Model identifiers keep the argument name <code>id</code>. Model species scopes keep <code>spcd</code>.</p></li>
+<li><p><code><a href="../reference/biomass.html">biomass()</a></code> returns dry mass and carbon in metric tonnes, with carbon dioxide equivalent in <code>tco2e</code>. National coefficients are selected by <code>division = 0</code>. Invalid input rows remain aligned. Green biomass columns and the <code>system</code>, <code>id</code>, <code>units</code>, and <code>status</code> arguments are removed from the public biomass interface. <code><a href="../reference/green_weight.html">green_weight()</a></code> returns merchandising weight in short tons and is not a carbon calculation. <code>biomass_component()</code> is removed.</p></li>
+<li><p><code><a href="../reference/as_taper_model.html">as_taper_model()</a></code> retains the fitted species scope and removes its <code>species</code> override. <code><a href="../reference/fit_taper.html">fit_taper()</a></code> no longer treats a species argument as a column name.</p></li>
+<li><p>Example trees retain numeric species codes. Pacific Northwest heights are complete and carry measured or predicted origin. The southern example contains four plantation stands with distinct stand ages. New mapped Pacific Northwest defect records illustrate culls, restricted forks, broken tops, and sweep. Product examples are unexported source scripts, not shipped specifications.</p></li>
+<li><p>Removed functions: <code>apply_defect_pct()</code>, <code>check_model_ids()</code>, <code>check_registry_manifest()</code>, <code>co2e()</code>, <code>example_product_names()</code>, <code>example_products()</code>, <code>has_model()</code>, <code>list_presets()</code>, <code>mc_status_codes()</code>, <code>merch_defect()</code>, <code>merch_piece_count()</code>, <code>merch_product()</code>, <code>merch_products()</code>, <code>merch_summary()</code>, <code>merch_summary_by_product()</code>, <code>merch_volume()</code>, <code>optimize_bucking()</code>, <code>preset()</code>, <code>product_preset()</code>, <code>product_presets()</code>, <code>product_summary()</code>, <code>product_summary_by_tree()</code>, <code>register_model()</code>, <code>registry_manifest()</code>, <code>species_lookup()</code>, <code>stand_table()</code>, <code>stock_table()</code>, <code>taper_model()</code>, <code>taper_model_spec()</code>, <code>tv_models()</code>, <code>tv_species</code>, <code>tv_status_codes()</code>, <code>tv_threads()</code>, <code>unregister_model()</code>.</p></li>
+<li><p>Source board foot rules scale the rounded length in whole or even feet according to <code>length_round</code>.</p></li>
+<li><p><code>sed</code> and <code>led</code> measure the physical ends on the product’s bark basis, which <code>inside_bark</code> records and product diameter limits use. <code>scaling_diameter</code> is the inside bark diameter used and rounded by the source board foot rule, and is <code>NA</code> for cubic, green weight, and cord products.</p></li>
+<li><p>Cubic, green weight, and cord products scale the nominal body and report <code>scaling_length</code> for the mill’s records only.</p></li>
+<li><p><code>tree_log_count()</code> is removed. Count logs from the logs table of <code><a href="../reference/merchandise.html">merchandise()</a></code>. <code><a href="../reference/tree_cubic_volume.html">tree_cubic_volume()</a></code> needs no products and measures from <code>stump_ht</code> to the tip or the inside bark diameter supplied in <code>top_dib</code>.</p></li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="merchandiser-040">merchandiser 0.4.0<a class="anchor" aria-label="anchor" href="#merchandiser-040"></a></h2>
 <ul><li>Products now use <code>volume_unit</code>, <code>inside_bark</code>, <code>split_scale</code>, and <code>round</code>.</li>
 <li>Scaling diameter preprocessing supports downward and nearest-inch rounding.</li>
@@ -75,9 +103,10 @@
 <li>The home and getting-started examples include Scribner sawlogs and green-ton pulp.</li>
 <li>Legacy measurements migrate with a deprecation message only when the product fields can express them. Other settings stop and identify <code>report_also</code> as the advanced reporting argument for measurement forms still available there.</li>
 <li>The Flewelling Black Hills <code>SF_CORR</code> routine now applies its correlation cap only when the higher height exceeds breast height. Fixture comparisons did not cover this branch. A standalone header comparison checks agreement with compiled Fortran. A regression test pins the corrected below-breast-height value.</li>
-<li>Caller-supplied missing quantities propagate through <code><a href="../reference/apply_defect_pct.html">apply_defect_pct()</a></code> without a warning or status.</li>
+<li>Caller-supplied missing quantities propagate through <code>apply_defect_pct()</code> without a warning or status.</li>
 </ul></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

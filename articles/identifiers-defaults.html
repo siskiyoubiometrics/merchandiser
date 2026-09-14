@@ -32,7 +32,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">merchandiser</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,10 +52,12 @@
     <a class="dropdown-item" href="../articles/defect-recording-conventions.html">Recording defect</a>
     <a class="dropdown-item" href="../articles/fill-missing-heights.html">Fitting and completing heights</a>
     <a class="dropdown-item" href="../articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and scaling</a>
-    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass, carbon, and green weight</a>
-    <a class="dropdown-item" href="../articles/compiling-inventory.html">Compiling an inventory</a>
-    <a class="dropdown-item" href="../articles/bucking-prices.html">Bucking choices and prices</a>
+    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and green weight</a>
+    <a class="dropdown-item" href="../articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass and carbon</a>
+    <a class="dropdown-item" href="../articles/pacific-northwest.html">Pacific Northwest tree list</a>
+    <a class="dropdown-item" href="../articles/southern.html">Southern stands</a>
+    <a class="dropdown-item" href="../articles/optimal-bucking.html">Optimal bucking</a>
     <a class="dropdown-item" href="../articles/assumptions-status.html">Assumptions and status</a>
     <a class="dropdown-item" href="../articles/methods-taper-equations.html">Taper equation methods</a>
     <a class="dropdown-item" href="../articles/methods-fitting-taper.html">Fitting taper equations</a>
@@ -100,165 +102,143 @@
 
     
     
-<p>Equation identifiers select a taper implementation. Species
-identifiers select species scope and property records. Forest Service
-region, forest, and district fields are agency codes used by the source
-default lookup.</p>
+<p>Equation identifiers select taper implementations, and species codes
+select equation scope and properties. Stored assignments and registry
+records support repeating a calculation.</p>
 <div class="section level2">
 <h2 id="stored-equations">Stored equations<a class="anchor" aria-label="anchor" href="#stored-equations"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Inspect equations stored with the shipped tree list</span></span>
+<code class="sourceCode R"><span><span class="co">## Inspect stored species and model assignments</span></span>
 <span><span class="va">assignments</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="va">spcd</span>, <span class="va">species</span>, <span class="va">model</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="va">spcd</span>, <span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <thead><tr class="header">
 <th align="right">spcd</th>
-<th align="left">species</th>
 <th align="left">model</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">202</td>
-<td align="left">Douglas-fir</td>
 <td align="left">F00FW2W202</td>
 </tr>
 <tr class="even">
 <td align="right">263</td>
-<td align="left">western hemlock</td>
 <td align="left">F03FW2W263</td>
 </tr>
 </tbody>
 </table>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Check the stored species and equation assignments</span></span>
+<code class="sourceCode R"><span><span class="co">## Check the stored assignments</span></span>
 <span><span class="fu"><a href="../reference/check_taper_models.html">check_taper_models</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">assignments</span><span class="op">$</span><span class="va">model</span>, spcd <span class="op">=</span> <span class="va">assignments</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] row     id      code    problem input  </span></span>
 <span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre></div>
-<p>An empty diagnosis table means the assignment checks passed. An
-explicit <code>model</code> takes precedence over <code>taper_map</code>
-and automatic defaults.</p>
+<p>An empty diagnosis table means the assignments passed. Explicit
+<code>model</code> takes precedence over <code>taper_map</code> and
+species defaults.</p>
 </div>
 <div class="section level2">
-<h2 id="source-defaults">Source defaults<a class="anchor" aria-label="anchor" href="#source-defaults"></a>
+<h2 id="species-defaults">Species defaults<a class="anchor" aria-label="anchor" href="#species-defaults"></a>
 </h2>
-<p><code><a href="../reference/nvel_default_equation.html">nvel_default_equation()</a></code> applies the pinned lookup to
-agency codes already present in the example inventory.</p>
+<p>Automatic selections are recorded by <code><a href="../reference/merchandise.html">merchandise()</a></code>. The
+result retains the selected equation for every tree.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Resolve equations for the shipped agency-code combinations</span></span>
-<span><span class="va">defaults</span> <span class="op">&lt;-</span> <span class="va">example_trees_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="va">region</span>, <span class="va">forest</span>, <span class="va">district</span>, <span class="va">spcd</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>model <span class="op">=</span> <span class="fu"><a href="../reference/nvel_default_equation.html">nvel_default_equation</a></span><span class="op">(</span>region <span class="op">=</span> <span class="va">region</span>,</span>
-<span>                                       forest <span class="op">=</span> <span class="va">forest</span>,</span>
-<span>                                       district <span class="op">=</span> <span class="va">district</span>,</span>
-<span>                                       spcd <span class="op">=</span> <span class="va">spcd</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Define saw specifications</span></span>
+<span><span class="va">saw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'domestic_saw'</span>,  <span class="co">## product name, unitless</span></span>
+<span>               min_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
+<span>               max_length <span class="op">=</span> <span class="fl">40</span>,  <span class="co">## feet</span></span>
+<span>               trim <span class="op">=</span> <span class="fl">1</span>,  <span class="co">## feet</span></span>
+<span>               min_sed <span class="op">=</span> <span class="fl">6</span>,  <span class="co">## inches</span></span>
+<span>               volume_unit <span class="op">=</span> <span class="st">'scribner'</span><span class="op">)</span>  <span class="co">## Scribner board feet</span></span>
+<span></span>
+<span><span class="co">## Cut and scale the trees</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                      dbh <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                      ht <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                      spcd <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                      products <span class="op">=</span> <span class="va">saw</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <thead><tr class="header">
-<th align="right">region</th>
-<th align="right">forest</th>
-<th align="right">district</th>
+<th align="right">tree_id</th>
 <th align="right">spcd</th>
-<th align="left">model</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="right">6</td>
-<td align="right">12</td>
-<td align="right">0</td>
-<td align="right">202</td>
-<td align="left">F00FW2W202</td>
-</tr>
-<tr class="even">
-<td align="right">6</td>
-<td align="right">12</td>
-<td align="right">0</td>
-<td align="right">263</td>
-<td align="left">F03FW2W263</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Attach the resolved equations to inventory rows</span></span>
-<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">example_trees_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">defaults</span>, by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'region'</span>, <span class="st">'forest'</span>, <span class="st">'district'</span>, <span class="st">'spcd'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">tree</th>
-<th align="left">species</th>
 <th align="left">model</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">1</td>
-<td align="left">Douglas-fir</td>
+<td align="right">202</td>
 <td align="left">F00FW2W202</td>
 </tr>
 <tr class="even">
 <td align="right">2</td>
-<td align="left">Douglas-fir</td>
-<td align="left">F00FW2W202</td>
+<td align="right">263</td>
+<td align="left">F03FW2W263</td>
 </tr>
 <tr class="odd">
 <td align="right">3</td>
-<td align="left">Douglas-fir</td>
+<td align="right">202</td>
 <td align="left">F00FW2W202</td>
 </tr>
 <tr class="even">
 <td align="right">4</td>
-<td align="left">Douglas-fir</td>
-<td align="left">F00FW2W202</td>
+<td align="right">263</td>
+<td align="left">F03FW2W263</td>
 </tr>
 <tr class="odd">
 <td align="right">5</td>
-<td align="left">western hemlock</td>
+<td align="right">202</td>
+<td align="left">F00FW2W202</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="right">263</td>
 <td align="left">F03FW2W263</td>
 </tr>
 </tbody>
 </table>
-<p><code><a href="../reference/nvel_from_fia_code.html">nvel_from_fia_code()</a></code> translates Forest Inventory and
-Analysis inventory equation codes into source identifiers. Its
-<code>geosub</code> and <code>primary_top</code> arguments participate
-in source substitutions.</p>
 </div>
 <div class="section level2">
-<h2 id="species-and-ecological-codes">Species and ecological codes<a class="anchor" aria-label="anchor" href="#species-and-ecological-codes"></a>
+<h2 id="species-properties">Species properties<a class="anchor" aria-label="anchor" href="#species-properties"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Resolve species records for the example tree list</span></span>
-<span><span class="va">species</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/species_lookup.html">species_lookup</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">assignments</span><span class="op">$</span><span class="va">spcd</span>, from <span class="op">=</span> <span class="st">'spcd'</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Select the example species records</span></span>
+<span><span class="va">species</span> <span class="op">&lt;-</span> <span class="va">species_reference</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">spcd</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">assignments</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <thead><tr class="header">
 <th align="right">spcd</th>
 <th align="left">common</th>
 <th align="left">scientific</th>
+<th align="right">bark ratio (unitless)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">202</td>
 <td align="left">Douglas-fir</td>
 <td align="left">Pseudotsuga menziesii</td>
+<td align="right">0.923</td>
 </tr>
 <tr class="even">
 <td align="right">263</td>
 <td align="left">western hemlock</td>
 <td align="left">Tsuga heterophylla</td>
+<td align="right">0.929</td>
 </tr>
 </tbody>
 </table>
 <p><code>species_reference</code> stores names, wood density, and bark
-ratios. <code><a href="../reference/nsvb_division.html">nsvb_division()</a></code> returns county-predominant
-ecological codes from state and county codes.
-<code><a href="../reference/nsvb_division_xy.html">nsvb_division_xy()</a></code> uses coordinates and packaged ecological
-boundaries for location-based assignment.</p>
+ratios. Calculation calls accept numeric species codes. County and
+coordinate lookups select optional <a href="biomass-carbon.html">biomass
+coefficients</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="registry-record">Registry record<a class="anchor" aria-label="anchor" href="#registry-record"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Save the current equation registrations</span></span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Record the current registry</span></span>
 <span><span class="va">manifest</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/taper_manifest.html">taper_manifest</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Compare the saved record with the current registry</span></span>
+<span><span class="co">## Check the saved registry record</span></span>
 <span><span class="fu"><a href="../reference/check_taper_manifest.html">check_taper_manifest</a></span><span class="op">(</span>manifest <span class="op">=</span> <span class="va">manifest</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] id      problem</span></span>
 <span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre></div>
@@ -273,39 +253,39 @@ boundaries for location-based assignment.</p>
 <tr class="odd">
 <td align="left">100FW2W202</td>
 <td align="left">merchandiser</td>
-<td align="left">0.4.0</td>
+<td align="left">0.5.0</td>
 <td align="right">3</td>
 </tr>
 <tr class="even">
 <td align="left">100JB2W017</td>
 <td align="left">merchandiser</td>
-<td align="left">0.4.0</td>
+<td align="left">0.5.0</td>
 <td align="right">3115</td>
 </tr>
 <tr class="odd">
 <td align="left">100JB2W019</td>
 <td align="left">merchandiser</td>
-<td align="left">0.4.0</td>
+<td align="left">0.5.0</td>
 <td align="right">3116</td>
 </tr>
 <tr class="even">
 <td align="left">100JB2W073</td>
 <td align="left">merchandiser</td>
-<td align="left">0.4.0</td>
+<td align="left">0.5.0</td>
 <td align="right">3117</td>
 </tr>
 <tr class="odd">
 <td align="left">100JB2W108</td>
 <td align="left">merchandiser</td>
-<td align="left">0.4.0</td>
+<td align="left">0.5.0</td>
 <td align="right">3118</td>
 </tr>
 </tbody>
 </table>
 <p>The manifest records registered identifiers, owning packages,
-versions, and registration order. It excludes local coefficients and
-source identifiers resolved without explicit registration. Save fitted
-objects or coefficient vectors separately.</p>
+versions, and registration order. It excludes coefficients and source
+identifiers resolved without explicit registration. Save fitted objects
+or coefficient vectors separately.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

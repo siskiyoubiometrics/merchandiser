@@ -32,7 +32,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">merchandiser</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,10 +52,12 @@
     <a class="dropdown-item" href="../articles/defect-recording-conventions.html">Recording defect</a>
     <a class="dropdown-item" href="../articles/fill-missing-heights.html">Fitting and completing heights</a>
     <a class="dropdown-item" href="../articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and scaling</a>
-    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass, carbon, and green weight</a>
-    <a class="dropdown-item" href="../articles/compiling-inventory.html">Compiling an inventory</a>
-    <a class="dropdown-item" href="../articles/bucking-prices.html">Bucking choices and prices</a>
+    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and green weight</a>
+    <a class="dropdown-item" href="../articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass and carbon</a>
+    <a class="dropdown-item" href="../articles/pacific-northwest.html">Pacific Northwest tree list</a>
+    <a class="dropdown-item" href="../articles/southern.html">Southern stands</a>
+    <a class="dropdown-item" href="../articles/optimal-bucking.html">Optimal bucking</a>
     <a class="dropdown-item" href="../articles/assumptions-status.html">Assumptions and status</a>
     <a class="dropdown-item" href="../articles/methods-taper-equations.html">Taper equation methods</a>
     <a class="dropdown-item" href="../articles/methods-fitting-taper.html">Fitting taper equations</a>
@@ -100,131 +102,1732 @@
 
     
     
-<p><code><a href="../reference/fit_height.html">fit_height()</a></code> fits height from diameter by species. A
-<code>group</code> vector adds supported group effects.
-<code><a href="../reference/complete_heights.html">complete_heights()</a></code> retains finite heights and fills missing
-or nonfinite values.</p>
-<div class="section level2">
-<h2 id="fit-measured-heights">Fit measured heights<a class="anchor" aria-label="anchor" href="#fit-measured-heights"></a>
-</h2>
+<p><code><a href="../reference/fit_height.html">fit_height()</a></code> fits height by species, with optional plot
+adjustments. <code><a href="../reference/complete_heights.html">complete_heights()</a></code> fills missing heights for
+subsequent stem calculations.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select retained height measurements</span></span>
-<span><span class="va">measured</span> <span class="op">&lt;-</span> <span class="va">example_trees_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">ht_observed</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Fit height by species with plot effects</span></span>
+<code class="sourceCode R"><span><span class="co">## Blank heights whose shipped origin is predicted</span></span>
+<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">example_trees_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ht <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span>condition <span class="op">=</span> <span class="va">ht_status</span> <span class="op">==</span> <span class="st">'predicted'</span>,</span>
+<span>                      true <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>                      false <span class="op">=</span> <span class="va">ht</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Retain measured heights for fitting</span></span>
+<span><span class="va">measured</span> <span class="op">&lt;-</span> <span class="va">trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">ht_status</span> <span class="op">==</span> <span class="st">'measured'</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Fit height with plot adjustments</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_height.html">fit_height</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">measured</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                  ht <span class="op">=</span> <span class="va">measured</span><span class="op">$</span><span class="va">ht_observed</span>,</span>
+<span>                  ht <span class="op">=</span> <span class="va">measured</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                  spcd <span class="op">=</span> <span class="va">measured</span><span class="op">$</span><span class="va">spcd</span>,</span>
 <span>                  group <span class="op">=</span> <span class="va">measured</span><span class="op">$</span><span class="va">plot</span><span class="op">)</span></span></code></pre></div>
+<details><summary>
+Measured heights and fitted curves
+</summary><table class="table">
+<thead><tr class="header">
+<th align="right">diameter (inches)</th>
+<th align="right">measured height (feet)</th>
+<th align="right">spcd</th>
+<th align="left">group</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">25.01</td>
+<td align="right">141.8</td>
+<td align="right">202</td>
+<td align="left">PNW-01</td>
+</tr>
+<tr class="even">
+<td align="right">6.71</td>
+<td align="right">47.3</td>
+<td align="right">202</td>
+<td align="left">PNW-04</td>
+</tr>
+<tr class="odd">
+<td align="right">14.82</td>
+<td align="right">98.0</td>
+<td align="right">202</td>
+<td align="left">PNW-07</td>
+</tr>
+<tr class="even">
+<td align="right">6.04</td>
+<td align="right">37.9</td>
+<td align="right">202</td>
+<td align="left">PNW-10</td>
+</tr>
+<tr class="odd">
+<td align="right">7.80</td>
+<td align="right">59.2</td>
+<td align="right">202</td>
+<td align="left">PNW-03</td>
+</tr>
+<tr class="even">
+<td align="right">24.21</td>
+<td align="right">141.8</td>
+<td align="right">202</td>
+<td align="left">PNW-06</td>
+</tr>
+<tr class="odd">
+<td align="right">15.57</td>
+<td align="right">108.9</td>
+<td align="right">202</td>
+<td align="left">PNW-09</td>
+</tr>
+<tr class="even">
+<td align="right">18.94</td>
+<td align="right">114.9</td>
+<td align="right">202</td>
+<td align="left">PNW-02</td>
+</tr>
+<tr class="odd">
+<td align="right">22.75</td>
+<td align="right">133.9</td>
+<td align="right">263</td>
+<td align="left">PNW-05</td>
+</tr>
+<tr class="even">
+<td align="right">15.00</td>
+<td align="right">86.5</td>
+<td align="right">263</td>
+<td align="left">PNW-08</td>
+</tr>
+<tr class="odd">
+<td align="right">33.22</td>
+<td align="right">164.7</td>
+<td align="right">202</td>
+<td align="left">PNW-01</td>
+</tr>
+<tr class="even">
+<td align="right">17.95</td>
+<td align="right">111.2</td>
+<td align="right">202</td>
+<td align="left">PNW-04</td>
+</tr>
+<tr class="odd">
+<td align="right">18.27</td>
+<td align="right">116.2</td>
+<td align="right">202</td>
+<td align="left">PNW-07</td>
+</tr>
+<tr class="even">
+<td align="right">14.68</td>
+<td align="right">89.4</td>
+<td align="right">202</td>
+<td align="left">PNW-10</td>
+</tr>
+<tr class="odd">
+<td align="right">13.32</td>
+<td align="right">81.8</td>
+<td align="right">263</td>
+<td align="left">PNW-03</td>
+</tr>
+<tr class="even">
+<td align="right">12.87</td>
+<td align="right">82.2</td>
+<td align="right">202</td>
+<td align="left">PNW-06</td>
+</tr>
+<tr class="odd">
+<td align="right">9.96</td>
+<td align="right">73.0</td>
+<td align="right">202</td>
+<td align="left">PNW-09</td>
+</tr>
+<tr class="even">
+<td align="right">18.47</td>
+<td align="right">120.4</td>
+<td align="right">202</td>
+<td align="left">PNW-02</td>
+</tr>
+<tr class="odd">
+<td align="right">22.69</td>
+<td align="right">137.5</td>
+<td align="right">202</td>
+<td align="left">PNW-05</td>
+</tr>
+<tr class="even">
+<td align="right">17.07</td>
+<td align="right">104.7</td>
+<td align="right">202</td>
+<td align="left">PNW-08</td>
+</tr>
+<tr class="odd">
+<td align="right">6.95</td>
+<td align="right">47.8</td>
+<td align="right">202</td>
+<td align="left">PNW-01</td>
+</tr>
+<tr class="even">
+<td align="right">17.28</td>
+<td align="right">107.1</td>
+<td align="right">202</td>
+<td align="left">PNW-04</td>
+</tr>
+<tr class="odd">
+<td align="right">33.63</td>
+<td align="right">169.4</td>
+<td align="right">202</td>
+<td align="left">PNW-07</td>
+</tr>
+<tr class="even">
+<td align="right">26.83</td>
+<td align="right">156.8</td>
+<td align="right">202</td>
+<td align="left">PNW-10</td>
+</tr>
+<tr class="odd">
+<td align="right">19.82</td>
+<td align="right">119.2</td>
+<td align="right">202</td>
+<td align="left">PNW-03</td>
+</tr>
+<tr class="even">
+<td align="right">17.51</td>
+<td align="right">119.6</td>
+<td align="right">202</td>
+<td align="left">PNW-06</td>
+</tr>
+<tr class="odd">
+<td align="right">7.91</td>
+<td align="right">44.0</td>
+<td align="right">202</td>
+<td align="left">PNW-09</td>
+</tr>
+<tr class="even">
+<td align="right">7.57</td>
+<td align="right">49.6</td>
+<td align="right">202</td>
+<td align="left">PNW-02</td>
+</tr>
+<tr class="odd">
+<td align="right">18.98</td>
+<td align="right">112.0</td>
+<td align="right">263</td>
+<td align="left">PNW-05</td>
+</tr>
+<tr class="even">
+<td align="right">24.36</td>
+<td align="right">129.3</td>
+<td align="right">263</td>
+<td align="left">PNW-08</td>
+</tr>
+<tr class="odd">
+<td align="right">9.63</td>
+<td align="right">59.5</td>
+<td align="right">202</td>
+<td align="left">PNW-01</td>
+</tr>
+<tr class="even">
+<td align="right">11.13</td>
+<td align="right">73.6</td>
+<td align="right">263</td>
+<td align="left">PNW-04</td>
+</tr>
+<tr class="odd">
+<td align="right">6.59</td>
+<td align="right">47.6</td>
+<td align="right">202</td>
+<td align="left">PNW-07</td>
+</tr>
+<tr class="even">
+<td align="right">9.00</td>
+<td align="right">60.8</td>
+<td align="right">202</td>
+<td align="left">PNW-10</td>
+</tr>
+<tr class="odd">
+<td align="right">8.49</td>
+<td align="right">53.8</td>
+<td align="right">202</td>
+<td align="left">PNW-03</td>
+</tr>
+<tr class="even">
+<td align="right">14.26</td>
+<td align="right">93.8</td>
+<td align="right">202</td>
+<td align="left">PNW-06</td>
+</tr>
+<tr class="odd">
+<td align="right">11.68</td>
+<td align="right">67.4</td>
+<td align="right">263</td>
+<td align="left">PNW-09</td>
+</tr>
+<tr class="even">
+<td align="right">13.40</td>
+<td align="right">91.8</td>
+<td align="right">202</td>
+<td align="left">PNW-02</td>
+</tr>
+<tr class="odd">
+<td align="right">8.95</td>
+<td align="right">60.6</td>
+<td align="right">202</td>
+<td align="left">PNW-05</td>
+</tr>
+<tr class="even">
+<td align="right">9.53</td>
+<td align="right">60.7</td>
+<td align="right">202</td>
+<td align="left">PNW-08</td>
+</tr>
+<tr class="odd">
+<td align="right">14.25</td>
+<td align="right">85.0</td>
+<td align="right">263</td>
+<td align="left">PNW-01</td>
+</tr>
+<tr class="even">
+<td align="right">11.76</td>
+<td align="right">68.8</td>
+<td align="right">202</td>
+<td align="left">PNW-04</td>
+</tr>
+<tr class="odd">
+<td align="right">6.25</td>
+<td align="right">36.7</td>
+<td align="right">202</td>
+<td align="left">PNW-07</td>
+</tr>
+<tr class="even">
+<td align="right">17.72</td>
+<td align="right">104.6</td>
+<td align="right">202</td>
+<td align="left">PNW-10</td>
+</tr>
+<tr class="odd">
+<td align="right">24.92</td>
+<td align="right">118.6</td>
+<td align="right">263</td>
+<td align="left">PNW-03</td>
+</tr>
+<tr class="even">
+<td align="right">21.69</td>
+<td align="right">134.4</td>
+<td align="right">202</td>
+<td align="left">PNW-06</td>
+</tr>
+<tr class="odd">
+<td align="right">9.62</td>
+<td align="right">69.7</td>
+<td align="right">202</td>
+<td align="left">PNW-09</td>
+</tr>
+<tr class="even">
+<td align="right">13.20</td>
+<td align="right">86.7</td>
+<td align="right">202</td>
+<td align="left">PNW-02</td>
+</tr>
+<tr class="odd">
+<td align="right">5.42</td>
+<td align="right">33.4</td>
+<td align="right">202</td>
+<td align="left">PNW-05</td>
+</tr>
+<tr class="even">
+<td align="right">26.39</td>
+<td align="right">148.5</td>
+<td align="right">202</td>
+<td align="left">PNW-08</td>
+</tr>
+<tr class="odd">
+<td align="right">15.88</td>
+<td align="right">97.6</td>
+<td align="right">202</td>
+<td align="left">PNW-01</td>
+</tr>
+<tr class="even">
+<td align="right">16.13</td>
+<td align="right">106.9</td>
+<td align="right">202</td>
+<td align="left">PNW-04</td>
+</tr>
+<tr class="odd">
+<td align="right">16.59</td>
+<td align="right">116.8</td>
+<td align="right">202</td>
+<td align="left">PNW-07</td>
+</tr>
+<tr class="even">
+<td align="right">11.60</td>
+<td align="right">77.6</td>
+<td align="right">263</td>
+<td align="left">PNW-10</td>
+</tr>
+<tr class="odd">
+<td align="right">15.91</td>
+<td align="right">101.5</td>
+<td align="right">202</td>
+<td align="left">PNW-03</td>
+</tr>
+<tr class="even">
+<td align="right">11.18</td>
+<td align="right">86.4</td>
+<td align="right">202</td>
+<td align="left">PNW-06</td>
+</tr>
+<tr class="odd">
+<td align="right">13.14</td>
+<td align="right">82.0</td>
+<td align="right">202</td>
+<td align="left">PNW-09</td>
+</tr>
+<tr class="even">
+<td align="right">8.70</td>
+<td align="right">65.9</td>
+<td align="right">263</td>
+<td align="left">PNW-02</td>
+</tr>
+<tr class="odd">
+<td align="right">24.97</td>
+<td align="right">140.4</td>
+<td align="right">202</td>
+<td align="left">PNW-05</td>
+</tr>
+<tr class="even">
+<td align="right">9.24</td>
+<td align="right">66.5</td>
+<td align="right">263</td>
+<td align="left">PNW-08</td>
+</tr>
+<tr class="odd">
+<td align="right">9.75</td>
+<td align="right">67.2</td>
+<td align="right">202</td>
+<td align="left">PNW-01</td>
+</tr>
+<tr class="even">
+<td align="right">12.56</td>
+<td align="right">81.1</td>
+<td align="right">202</td>
+<td align="left">PNW-04</td>
+</tr>
+<tr class="odd">
+<td align="right">18.22</td>
+<td align="right">113.7</td>
+<td align="right">202</td>
+<td align="left">PNW-07</td>
+</tr>
+<tr class="even">
+<td align="right">14.10</td>
+<td align="right">89.9</td>
+<td align="right">202</td>
+<td align="left">PNW-10</td>
+</tr>
+<tr class="odd">
+<td align="right">11.85</td>
+<td align="right">79.8</td>
+<td align="right">202</td>
+<td align="left">PNW-03</td>
+</tr>
+<tr class="even">
+<td align="right">21.48</td>
+<td align="right">123.5</td>
+<td align="right">202</td>
+<td align="left">PNW-06</td>
+</tr>
+<tr class="odd">
+<td align="right">21.72</td>
+<td align="right">129.1</td>
+<td align="right">202</td>
+<td align="left">PNW-09</td>
+</tr>
+<tr class="even">
+<td align="right">19.34</td>
+<td align="right">120.6</td>
+<td align="right">202</td>
+<td align="left">PNW-02</td>
+</tr>
+<tr class="odd">
+<td align="right">26.12</td>
+<td align="right">140.6</td>
+<td align="right">202</td>
+<td align="left">PNW-05</td>
+</tr>
+<tr class="even">
+<td align="right">22.10</td>
+<td align="right">127.6</td>
+<td align="right">202</td>
+<td align="left">PNW-08</td>
+</tr>
+<tr class="odd">
+<td align="right">23.13</td>
+<td align="right">134.5</td>
+<td align="right">202</td>
+<td align="left">PNW-01</td>
+</tr>
+<tr class="even">
+<td align="right">15.43</td>
+<td align="right">92.6</td>
+<td align="right">263</td>
+<td align="left">PNW-04</td>
+</tr>
+<tr class="odd">
+<td align="right">8.40</td>
+<td align="right">68.5</td>
+<td align="right">202</td>
+<td align="left">PNW-07</td>
+</tr>
+<tr class="even">
+<td align="right">34.27</td>
+<td align="right">153.0</td>
+<td align="right">263</td>
+<td align="left">PNW-10</td>
+</tr>
+<tr class="odd">
+<td align="right">14.88</td>
+<td align="right">86.7</td>
+<td align="right">263</td>
+<td align="left">PNW-03</td>
+</tr>
+<tr class="even">
+<td align="right">5.93</td>
+<td align="right">42.7</td>
+<td align="right">202</td>
+<td align="left">PNW-06</td>
+</tr>
+<tr class="odd">
+<td align="right">24.58</td>
+<td align="right">146.8</td>
+<td align="right">202</td>
+<td align="left">PNW-09</td>
+</tr>
+<tr class="even">
+<td align="right">20.11</td>
+<td align="right">128.7</td>
+<td align="right">202</td>
+<td align="left">PNW-02</td>
+</tr>
+<tr class="odd">
+<td align="right">22.87</td>
+<td align="right">132.9</td>
+<td align="right">202</td>
+<td align="left">PNW-05</td>
+</tr>
+<tr class="even">
+<td align="right">26.64</td>
+<td align="right">148.9</td>
+<td align="right">202</td>
+<td align="left">PNW-08</td>
+</tr>
+<tr class="odd">
+<td align="right">23.38</td>
+<td align="right">116.4</td>
+<td align="right">263</td>
+<td align="left">PNW-01</td>
+</tr>
+<tr class="even">
+<td align="right">24.23</td>
+<td align="right">147.2</td>
+<td align="right">202</td>
+<td align="left">PNW-04</td>
+</tr>
+<tr class="odd">
+<td align="right">10.66</td>
+<td align="right">75.6</td>
+<td align="right">202</td>
+<td align="left">PNW-07</td>
+</tr>
+<tr class="even">
+<td align="right">20.17</td>
+<td align="right">113.3</td>
+<td align="right">202</td>
+<td align="left">PNW-10</td>
+</tr>
+<tr class="odd">
+<td align="right">10.77</td>
+<td align="right">68.1</td>
+<td align="right">202</td>
+<td align="left">PNW-03</td>
+</tr>
+<tr class="even">
+<td align="right">9.32</td>
+<td align="right">65.8</td>
+<td align="right">202</td>
+<td align="left">PNW-06</td>
+</tr>
+<tr class="odd">
+<td align="right">12.22</td>
+<td align="right">83.8</td>
+<td align="right">202</td>
+<td align="left">PNW-09</td>
+</tr>
+<tr class="even">
+<td align="right">14.78</td>
+<td align="right">90.8</td>
+<td align="right">202</td>
+<td align="left">PNW-02</td>
+</tr>
+<tr class="odd">
+<td align="right">18.04</td>
+<td align="right">110.1</td>
+<td align="right">202</td>
+<td align="left">PNW-05</td>
+</tr>
+<tr class="even">
+<td align="right">22.55</td>
+<td align="right">131.1</td>
+<td align="right">202</td>
+<td align="left">PNW-08</td>
+</tr>
+<tr class="odd">
+<td align="right">18.34</td>
+<td align="right">118.1</td>
+<td align="right">202</td>
+<td align="left">PNW-01</td>
+</tr>
+<tr class="even">
+<td align="right">21.93</td>
+<td align="right">129.0</td>
+<td align="right">202</td>
+<td align="left">PNW-04</td>
+</tr>
+<tr class="odd">
+<td align="right">14.60</td>
+<td align="right">98.0</td>
+<td align="right">202</td>
+<td align="left">PNW-07</td>
+</tr>
+<tr class="even">
+<td align="right">27.80</td>
+<td align="right">145.8</td>
+<td align="right">202</td>
+<td align="left">PNW-10</td>
+</tr>
+<tr class="odd">
+<td align="right">15.33</td>
+<td align="right">105.6</td>
+<td align="right">202</td>
+<td align="left">PNW-03</td>
+</tr>
+<tr class="even">
+<td align="right">13.53</td>
+<td align="right">83.7</td>
+<td align="right">202</td>
+<td align="left">PNW-06</td>
+</tr>
+<tr class="odd">
+<td align="right">13.55</td>
+<td align="right">89.1</td>
+<td align="right">202</td>
+<td align="left">PNW-09</td>
+</tr>
+<tr class="even">
+<td align="right">33.21</td>
+<td align="right">157.1</td>
+<td align="right">263</td>
+<td align="left">PNW-02</td>
+</tr>
+<tr class="odd">
+<td align="right">19.06</td>
+<td align="right">116.7</td>
+<td align="right">202</td>
+<td align="left">PNW-05</td>
+</tr>
+<tr class="even">
+<td align="right">16.57</td>
+<td align="right">101.3</td>
+<td align="right">202</td>
+<td align="left">PNW-08</td>
+</tr>
+</tbody>
+</table>
 <table class="table">
 <thead><tr class="header">
 <th align="right">spcd</th>
-<th align="left">model_key</th>
-<th align="left">pooled</th>
-<th align="right">a</th>
-<th align="right">b</th>
-<th align="right">c</th>
+<th align="right">diameter (inches)</th>
+<th align="right">predicted height (feet)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">202</td>
-<td align="left">spcd_202</td>
-<td align="left">FALSE</td>
-<td align="right">211.055</td>
-<td align="right">0.053</td>
-<td align="right">1.355</td>
+<td align="right">5.420</td>
+<td align="right">36.430</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">5.705</td>
+<td align="right">38.395</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">5.990</td>
+<td align="right">40.362</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">6.275</td>
+<td align="right">42.327</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">6.560</td>
+<td align="right">44.289</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">6.845</td>
+<td align="right">46.247</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">7.130</td>
+<td align="right">48.200</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">7.415</td>
+<td align="right">50.147</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">7.700</td>
+<td align="right">52.086</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">7.985</td>
+<td align="right">54.017</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">8.269</td>
+<td align="right">55.938</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">8.554</td>
+<td align="right">57.849</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">8.839</td>
+<td align="right">59.750</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">9.124</td>
+<td align="right">61.639</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">9.409</td>
+<td align="right">63.517</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">9.694</td>
+<td align="right">65.381</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">9.979</td>
+<td align="right">67.233</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">10.264</td>
+<td align="right">69.071</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">10.549</td>
+<td align="right">70.896</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">10.834</td>
+<td align="right">72.706</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">11.119</td>
+<td align="right">74.502</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">11.404</td>
+<td align="right">76.283</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">11.689</td>
+<td align="right">78.049</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">11.974</td>
+<td align="right">79.799</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">12.259</td>
+<td align="right">81.534</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">12.544</td>
+<td align="right">83.253</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">12.829</td>
+<td align="right">84.956</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">13.114</td>
+<td align="right">86.644</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">13.399</td>
+<td align="right">88.315</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">13.684</td>
+<td align="right">89.969</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">13.968</td>
+<td align="right">91.608</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">14.253</td>
+<td align="right">93.230</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">14.538</td>
+<td align="right">94.835</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">14.823</td>
+<td align="right">96.424</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">15.108</td>
+<td align="right">97.996</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">15.393</td>
+<td align="right">99.552</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">15.678</td>
+<td align="right">101.091</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">15.963</td>
+<td align="right">102.614</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">16.248</td>
+<td align="right">104.120</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">16.533</td>
+<td align="right">105.609</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">16.818</td>
+<td align="right">107.082</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">17.103</td>
+<td align="right">108.538</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">17.388</td>
+<td align="right">109.978</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">17.673</td>
+<td align="right">111.402</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">17.958</td>
+<td align="right">112.809</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">18.243</td>
+<td align="right">114.200</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">18.528</td>
+<td align="right">115.575</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">18.813</td>
+<td align="right">116.934</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">19.098</td>
+<td align="right">118.277</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">19.383</td>
+<td align="right">119.604</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">19.667</td>
+<td align="right">120.915</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">19.952</td>
+<td align="right">122.210</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">20.237</td>
+<td align="right">123.490</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">20.522</td>
+<td align="right">124.755</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">20.807</td>
+<td align="right">126.003</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">21.092</td>
+<td align="right">127.237</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">21.377</td>
+<td align="right">128.456</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">21.662</td>
+<td align="right">129.659</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">21.947</td>
+<td align="right">130.847</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">22.232</td>
+<td align="right">132.021</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">22.517</td>
+<td align="right">133.180</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">22.802</td>
+<td align="right">134.325</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">23.087</td>
+<td align="right">135.455</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">23.372</td>
+<td align="right">136.570</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">23.657</td>
+<td align="right">137.672</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">23.942</td>
+<td align="right">138.759</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">24.227</td>
+<td align="right">139.833</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">24.512</td>
+<td align="right">140.893</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">24.797</td>
+<td align="right">141.939</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">25.082</td>
+<td align="right">142.971</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">25.366</td>
+<td align="right">143.990</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">25.651</td>
+<td align="right">144.996</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">25.936</td>
+<td align="right">145.989</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">26.221</td>
+<td align="right">146.969</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">26.506</td>
+<td align="right">147.936</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">26.791</td>
+<td align="right">148.891</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">27.076</td>
+<td align="right">149.832</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">27.361</td>
+<td align="right">150.762</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">27.646</td>
+<td align="right">151.679</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">27.931</td>
+<td align="right">152.583</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">28.216</td>
+<td align="right">153.476</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">28.501</td>
+<td align="right">154.357</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">28.786</td>
+<td align="right">155.226</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">29.071</td>
+<td align="right">156.084</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">29.356</td>
+<td align="right">156.929</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">29.641</td>
+<td align="right">157.764</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">29.926</td>
+<td align="right">158.587</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">30.211</td>
+<td align="right">159.399</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">30.496</td>
+<td align="right">160.201</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">30.781</td>
+<td align="right">160.991</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">31.065</td>
+<td align="right">161.771</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">31.350</td>
+<td align="right">162.540</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">31.635</td>
+<td align="right">163.298</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">31.920</td>
+<td align="right">164.046</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">32.205</td>
+<td align="right">164.784</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">32.490</td>
+<td align="right">165.512</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">32.775</td>
+<td align="right">166.230</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">33.060</td>
+<td align="right">166.938</td>
+</tr>
+<tr class="odd">
+<td align="right">202</td>
+<td align="right">33.345</td>
+<td align="right">167.636</td>
+</tr>
+<tr class="even">
+<td align="right">202</td>
+<td align="right">33.630</td>
+<td align="right">168.325</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">8.700</td>
+<td align="right">62.297</td>
 </tr>
 <tr class="even">
 <td align="right">263</td>
-<td align="left">spcd_263</td>
-<td align="left">FALSE</td>
-<td align="right">412.085</td>
-<td align="right">0.009</td>
-<td align="right">0.758</td>
+<td align="right">8.958</td>
+<td align="right">63.541</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">9.217</td>
+<td align="right">64.775</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">9.475</td>
+<td align="right">65.997</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">9.733</td>
+<td align="right">67.209</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">9.991</td>
+<td align="right">68.410</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">10.250</td>
+<td align="right">69.602</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">10.508</td>
+<td align="right">70.784</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">10.766</td>
+<td align="right">71.957</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">11.025</td>
+<td align="right">73.120</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">11.283</td>
+<td align="right">74.275</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">11.541</td>
+<td align="right">75.421</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">11.799</td>
+<td align="right">76.558</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">12.058</td>
+<td align="right">77.687</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">12.316</td>
+<td align="right">78.808</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">12.574</td>
+<td align="right">79.921</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">12.833</td>
+<td align="right">81.026</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">13.091</td>
+<td align="right">82.123</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">13.349</td>
+<td align="right">83.213</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">13.607</td>
+<td align="right">84.296</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">13.866</td>
+<td align="right">85.372</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">14.124</td>
+<td align="right">86.440</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">14.382</td>
+<td align="right">87.502</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">14.641</td>
+<td align="right">88.557</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">14.899</td>
+<td align="right">89.605</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">15.157</td>
+<td align="right">90.647</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">15.415</td>
+<td align="right">91.682</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">15.674</td>
+<td align="right">92.711</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">15.932</td>
+<td align="right">93.734</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">16.190</td>
+<td align="right">94.751</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">16.448</td>
+<td align="right">95.761</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">16.707</td>
+<td align="right">96.766</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">16.965</td>
+<td align="right">97.765</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">17.223</td>
+<td align="right">98.759</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">17.482</td>
+<td align="right">99.747</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">17.740</td>
+<td align="right">100.729</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">17.998</td>
+<td align="right">101.706</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">18.256</td>
+<td align="right">102.677</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">18.515</td>
+<td align="right">103.643</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">18.773</td>
+<td align="right">104.604</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">19.031</td>
+<td align="right">105.560</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">19.290</td>
+<td align="right">106.511</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">19.548</td>
+<td align="right">107.456</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">19.806</td>
+<td align="right">108.397</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">20.064</td>
+<td align="right">109.333</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">20.323</td>
+<td align="right">110.264</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">20.581</td>
+<td align="right">111.190</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">20.839</td>
+<td align="right">112.112</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">21.098</td>
+<td align="right">113.029</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">21.356</td>
+<td align="right">113.941</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">21.614</td>
+<td align="right">114.849</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">21.872</td>
+<td align="right">115.753</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">22.131</td>
+<td align="right">116.652</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">22.389</td>
+<td align="right">117.546</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">22.647</td>
+<td align="right">118.437</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">22.906</td>
+<td align="right">119.323</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">23.164</td>
+<td align="right">120.204</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">23.422</td>
+<td align="right">121.082</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">23.680</td>
+<td align="right">121.956</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">23.939</td>
+<td align="right">122.825</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">24.197</td>
+<td align="right">123.690</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">24.455</td>
+<td align="right">124.552</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">24.714</td>
+<td align="right">125.409</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">24.972</td>
+<td align="right">126.263</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">25.230</td>
+<td align="right">127.113</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">25.488</td>
+<td align="right">127.958</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">25.747</td>
+<td align="right">128.800</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">26.005</td>
+<td align="right">129.639</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">26.263</td>
+<td align="right">130.473</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">26.522</td>
+<td align="right">131.304</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">26.780</td>
+<td align="right">132.131</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">27.038</td>
+<td align="right">132.955</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">27.296</td>
+<td align="right">133.775</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">27.555</td>
+<td align="right">134.592</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">27.813</td>
+<td align="right">135.405</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">28.071</td>
+<td align="right">136.214</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">28.329</td>
+<td align="right">137.020</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">28.588</td>
+<td align="right">137.823</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">28.846</td>
+<td align="right">138.622</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">29.104</td>
+<td align="right">139.418</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">29.363</td>
+<td align="right">140.211</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">29.621</td>
+<td align="right">141.000</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">29.879</td>
+<td align="right">141.786</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">30.137</td>
+<td align="right">142.569</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">30.396</td>
+<td align="right">143.348</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">30.654</td>
+<td align="right">144.124</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">30.912</td>
+<td align="right">144.898</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">31.171</td>
+<td align="right">145.668</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">31.429</td>
+<td align="right">146.435</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">31.687</td>
+<td align="right">147.198</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">31.945</td>
+<td align="right">147.959</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">32.204</td>
+<td align="right">148.717</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">32.462</td>
+<td align="right">149.472</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">32.720</td>
+<td align="right">150.223</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">32.979</td>
+<td align="right">150.972</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">33.237</td>
+<td align="right">151.718</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">33.495</td>
+<td align="right">152.461</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">33.753</td>
+<td align="right">153.201</td>
+</tr>
+<tr class="odd">
+<td align="right">263</td>
+<td align="right">34.012</td>
+<td align="right">153.938</td>
+</tr>
+<tr class="even">
+<td align="right">263</td>
+<td align="right">34.270</td>
+<td align="right">154.672</td>
 </tr>
 </tbody>
-</table>
-<p><code>pooled</code> identifies species using the pooled relationship.
-Species with too few measurements or unsuccessful separate fits use that
-relationship. Available forms are <code>chapman_richards</code>,
+</table></details><p>The curves show population predictions against measured heights,
+separately by species.</p>
+<p><img src="fill-missing-heights_files/figure-html/unnamed-chunk-3-1.png" alt="" width="1080"></p>
+<p>Available forms are <code>chapman_richards</code>,
 <code>curtis</code>, <code>wykoff</code>, <code>naslund</code>, and
-<code>schumacher</code>.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Draw measured heights and fitted curves</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="fill-missing-heights_files/figure-html/unnamed-chunk-4-1.png" alt="" width="672"></p>
-</div>
-<div class="section level2">
-<h2 id="complete-inventory-heights">Complete inventory heights<a class="anchor" aria-label="anchor" href="#complete-inventory-heights"></a>
-</h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Retain observed heights and fill the missing values</span></span>
-<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">example_trees_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<code>schumacher</code>. Species below <code>min_n</code>, or with
+unsuccessful separate fits, use the pooled relationship.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Refill the blanked heights</span></span>
+<span><span class="va">completed</span> <span class="op">&lt;-</span> <span class="va">trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ht <span class="op">=</span> <span class="fu"><a href="../reference/complete_heights.html">complete_heights</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">dbh</span>,</span>
-<span>                               ht <span class="op">=</span> <span class="va">ht_observed</span>,</span>
+<span>                               ht <span class="op">=</span> <span class="va">ht</span>,</span>
 <span>                               spcd <span class="op">=</span> <span class="va">spcd</span>,</span>
 <span>                               group <span class="op">=</span> <span class="va">plot</span>,</span>
-<span>                               fit <span class="op">=</span> <span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>                               fit <span class="op">=</span> <span class="va">fit</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Compare refilled heights with the shipped values</span></span>
+<span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="va">completed</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>shipped_ht <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>         difference <span class="op">=</span> <span class="va">ht</span> <span class="op">-</span> <span class="va">shipped_ht</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">ht_status</span> <span class="op">==</span> <span class="st">'predicted'</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
+<colgroup>
+<col width="11%">
+<col width="32%">
+<col width="30%">
+<col width="25%">
+</colgroup>
 <thead><tr class="header">
-<th align="right">tree</th>
-<th align="left">species</th>
-<th align="right">dbh</th>
-<th align="right">ht_observed</th>
-<th align="right">ht</th>
+<th align="right">tree_id</th>
+<th align="right">refilled height (feet)</th>
+<th align="right">shipped height (feet)</th>
+<th align="right">difference (feet)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">2</td>
-<td align="left">Douglas-fir</td>
-<td align="right">10.42</td>
-<td align="right">NA</td>
 <td align="right">70.229</td>
+<td align="right">70.229</td>
+<td align="right">0</td>
 </tr>
 <tr class="even">
 <td align="right">3</td>
-<td align="left">Douglas-fir</td>
-<td align="right">12.21</td>
-<td align="right">NA</td>
 <td align="right">81.273</td>
+<td align="right">81.273</td>
+<td align="right">0</td>
 </tr>
 <tr class="odd">
 <td align="right">5</td>
-<td align="left">western hemlock</td>
-<td align="right">36.09</td>
-<td align="right">NA</td>
 <td align="right">173.681</td>
+<td align="right">173.681</td>
+<td align="right">0</td>
 </tr>
 <tr class="even">
 <td align="right">6</td>
-<td align="left">western hemlock</td>
-<td align="right">9.82</td>
-<td align="right">NA</td>
 <td align="right">67.614</td>
+<td align="right">67.614</td>
+<td align="right">0</td>
 </tr>
 <tr class="odd">
 <td align="right">8</td>
-<td align="left">Douglas-fir</td>
-<td align="right">14.31</td>
-<td align="right">NA</td>
 <td align="right">93.132</td>
+<td align="right">93.132</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+<td align="right">82.747</td>
+<td align="right">82.747</td>
+<td align="right">0</td>
 </tr>
 </tbody>
 </table>
-<p>Pass a fitted object to reuse the same model across data groups. With
-<code>fit = NULL</code>, completion fits from the supplied
-observations.</p>
-</div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Check agreement across every refilled height</span></span>
+<span><span class="va">comparison</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span>maximum_difference_feet <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">difference</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   maximum_difference_feet</span></span>
+<span><span class="co">#&gt; 1                       0</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="predict-heights">Predict heights<a class="anchor" aria-label="anchor" href="#predict-heights"></a>
 </h2>
-<p><code><a href="../reference/predict_height.html">predict_height()</a></code> predicts every supplied tree.
-<code>re_form = 'population'</code> omits fitted group effects. Groups
-absent from the fit use its population relationship. Species absent from
-the fit receive missing predictions.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Predict heights for the complete shipped tree list</span></span>
+<p><code><a href="../reference/predict_height.html">predict_height()</a></code> predicts all supplied rows. Population
+predictions omit plot adjustments. Unseen groups use population
+predictions. Unseen species return missing heights.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Predict heights and intervals for the small tree list</span></span>
 <span><span class="va">predictions</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/predict_height.html">predict_height</a></span><span class="op">(</span>fit <span class="op">=</span> <span class="va">fit</span>,</span>
 <span>                              dbh <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                              spcd <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
@@ -233,9 +1836,9 @@ the fit receive missing predictions.</p>
 <span>                              seed <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <thead><tr class="header">
-<th align="right">fit</th>
-<th align="right">lower</th>
-<th align="right">upper</th>
+<th align="right">height (feet)</th>
+<th align="right">lower (feet)</th>
+<th align="right">upper (feet)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -270,14 +1873,11 @@ the fit receive missing predictions.</p>
 </tr>
 </tbody>
 </table>
-<p>With <code>interval = TRUE</code>, the result contains
-<code>fit</code>, <code>lower</code>, and <code>upper</code>. Simulated
-limits include group variation and residual error with coefficients held
-fixed. They exclude coefficient uncertainty and inventory sampling
+<p>Intervals include group variation and residual error with fixed
+coefficients. They exclude coefficient and inventory sampling
 uncertainty.</p>
 </div>
-  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
-    </nav></aside>
+  </main>
 </div>
 
 

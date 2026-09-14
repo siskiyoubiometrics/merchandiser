@@ -32,7 +32,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">merchandiser</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,10 +52,12 @@
     <a class="dropdown-item" href="../articles/defect-recording-conventions.html">Recording defect</a>
     <a class="dropdown-item" href="../articles/fill-missing-heights.html">Fitting and completing heights</a>
     <a class="dropdown-item" href="../articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and scaling</a>
-    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass, carbon, and green weight</a>
-    <a class="dropdown-item" href="../articles/compiling-inventory.html">Compiling an inventory</a>
-    <a class="dropdown-item" href="../articles/bucking-prices.html">Bucking choices and prices</a>
+    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and green weight</a>
+    <a class="dropdown-item" href="../articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass and carbon</a>
+    <a class="dropdown-item" href="../articles/pacific-northwest.html">Pacific Northwest tree list</a>
+    <a class="dropdown-item" href="../articles/southern.html">Southern stands</a>
+    <a class="dropdown-item" href="../articles/optimal-bucking.html">Optimal bucking</a>
     <a class="dropdown-item" href="../articles/assumptions-status.html">Assumptions and status</a>
     <a class="dropdown-item" href="../articles/methods-taper-equations.html">Taper equation methods</a>
     <a class="dropdown-item" href="../articles/methods-fitting-taper.html">Fitting taper equations</a>
@@ -100,56 +102,73 @@
 
     
     
-<p>Scalar height, diameter, volume, and biomass helpers return results
-aligned with their input vectors. <code><a href="../reference/stem_profile.html">stem_profile()</a></code> expands
-trees into rows sorted by identifier and height. Only length-one inputs
-recycle. Other nonempty lengths must match.</p>
+<p>Stem measurement results align with input rows and can be joined to
+tree lists. <code><a href="../reference/stem_profile.html">stem_profile()</a></code> expands each tree into ordered
+height measurements.</p>
+<div class="section level2">
+<h2 id="input-lengths">Input lengths<a class="anchor" aria-label="anchor" href="#input-lengths"></a>
+</h2>
+<p>Only scalar inputs recycle. Other nonempty input lengths must
+match.</p>
+</div>
 <div class="section level2">
 <h2 id="heights">Heights<a class="anchor" aria-label="anchor" href="#heights"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Fit the retained inventory heights</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_height.html">fit_height</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                  ht <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">ht_observed</span>,</span>
-<span>                  spcd <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Complete missing heights with the fitted model</span></span>
-<span><span class="va">completed</span> <span class="op">&lt;-</span> <span class="va">example_trees_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<code class="sourceCode R"><span><span class="co">## Select measured rows</span></span>
+<span><span class="va">measured</span> <span class="op">&lt;-</span> <span class="va">example_trees_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">ht_status</span> <span class="op">==</span> <span class="st">'measured'</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Fit measured heights</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_height.html">fit_height</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">measured</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                  ht <span class="op">=</span> <span class="va">measured</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                  spcd <span class="op">=</span> <span class="va">measured</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                  group <span class="op">=</span> <span class="va">measured</span><span class="op">$</span><span class="va">plot</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Blank predicted rows before completion</span></span>
+<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">example_trees_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ht <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span>condition <span class="op">=</span> <span class="va">ht_status</span> <span class="op">==</span> <span class="st">'predicted'</span>,</span>
+<span>                      true <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>                      false <span class="op">=</span> <span class="va">ht</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Complete the missing heights</span></span>
+<span><span class="va">completed</span> <span class="op">&lt;-</span> <span class="va">trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>ht <span class="op">=</span> <span class="fu"><a href="../reference/complete_heights.html">complete_heights</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">dbh</span>,</span>
-<span>                               ht <span class="op">=</span> <span class="va">ht_observed</span>,</span>
+<span>                               ht <span class="op">=</span> <span class="va">ht</span>,</span>
 <span>                               spcd <span class="op">=</span> <span class="va">spcd</span>,</span>
+<span>                               group <span class="op">=</span> <span class="va">plot</span>,</span>
 <span>                               fit <span class="op">=</span> <span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <thead><tr class="header">
-<th align="right">tree</th>
-<th align="right">ht_observed</th>
-<th align="right">ht</th>
+<th align="right">tree_id</th>
+<th align="left">ht_status</th>
+<th align="right">height (feet)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">1</td>
-<td align="right">141.8</td>
+<td align="left">measured</td>
 <td align="right">141.800</td>
 </tr>
 <tr class="even">
 <td align="right">2</td>
-<td align="right">NA</td>
-<td align="right">70.175</td>
+<td align="left">predicted</td>
+<td align="right">70.229</td>
 </tr>
 <tr class="odd">
 <td align="right">3</td>
-<td align="right">NA</td>
-<td align="right">81.327</td>
+<td align="left">predicted</td>
+<td align="right">81.273</td>
 </tr>
 <tr class="even">
 <td align="right">4</td>
-<td align="right">47.3</td>
+<td align="left">measured</td>
 <td align="right">47.300</td>
 </tr>
 <tr class="odd">
 <td align="right">5</td>
-<td align="right">NA</td>
-<td align="right">161.605</td>
+<td align="left">predicted</td>
+<td align="right">173.681</td>
 </tr>
 </tbody>
 </table>
@@ -157,23 +176,41 @@ recycle. Other nonempty lengths must match.</p>
 <div class="section level2">
 <h2 id="stem-quantities">Stem quantities<a class="anchor" aria-label="anchor" href="#stem-quantities"></a>
 </h2>
-<p><code><a href="../reference/dib.html">dib()</a></code> calculates inside-bark diameter.
-<code><a href="../reference/height_at_dib.html">height_at_dib()</a></code> returns the highest matching height.
-<code><a href="../reference/stem_volume.html">stem_volume()</a></code> evaluates a bounded interval using the
-model’s volume capability.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Add diameter, height, and volume calculations</span></span>
-<span><span class="va">dimensions</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/transmute.html" class="external-link">transmute</a></span><span class="op">(</span><span class="va">tree</span>,</span>
-<span>            diameter <span class="op">=</span> <span class="fu"><a href="../reference/dib.html">dib</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">dbh</span>, ht <span class="op">=</span> <span class="va">ht</span>, h <span class="op">=</span> <span class="fl">20</span>, model <span class="op">=</span> <span class="va">model</span><span class="op">)</span>,</span>
-<span>            height <span class="op">=</span> <span class="fu"><a href="../reference/height_at_dib.html">height_at_dib</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">dbh</span>, ht <span class="op">=</span> <span class="va">ht</span>, dib <span class="op">=</span> <span class="fl">6</span>, model <span class="op">=</span> <span class="va">model</span><span class="op">)</span>,</span>
-<span>            cubic <span class="op">=</span> <span class="fu"><a href="../reference/stem_volume.html">stem_volume</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">dbh</span>, ht <span class="op">=</span> <span class="va">ht</span>, model <span class="op">=</span> <span class="va">model</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Each measurement function returns <code>value</code> and
+<code>status</code>. Outside bark calculations need a model capability
+or a bark ratio.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Calculate dib</span></span>
+<span><span class="va">dib_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dib.html">dib</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                  ht <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                  spcd <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                  model <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">model</span>,</span>
+<span>                  h <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Calculate height at dib</span></span>
+<span><span class="va">height_at_dib_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/height_at_dib.html">height_at_dib</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                                      ht <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                                      spcd <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                                      model <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">model</span>,</span>
+<span>                                      dib <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Calculate stem volume</span></span>
+<span><span class="va">stem_volume_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stem_volume.html">stem_volume</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                                  ht <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                                  spcd <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                                  model <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
+<colgroup>
+<col width="8%">
+<col width="32%">
+<col width="36%">
+<col width="21%">
+</colgroup>
 <thead><tr class="header">
-<th align="right">tree</th>
-<th align="right">diameter</th>
-<th align="right">height</th>
-<th align="right">cubic</th>
+<th align="right">tree_id</th>
+<th align="right">diameter inside bark (inches)</th>
+<th align="right">height at target diameter (feet)</th>
+<th align="right">volume (cubic feet)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -214,58 +251,54 @@ model’s volume capability.</p>
 </tr>
 </tbody>
 </table>
-<p>Imperial diameters, heights, and volumes use inches, feet, and cubic
-feet. Metric calls require centimeters and meters and return cubic
-meters. Outside-bark calculations require a model capability or an
-explicit constant bark ratio.</p>
+<p>Diameters use inches, heights use feet, and volumes use cubic feet.
+Inverse functions retain the highest matching height.</p>
 </div>
 <div class="section level2">
 <h2 id="weight">Weight<a class="anchor" aria-label="anchor" href="#weight"></a>
 </h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Convert the modeled volumes to green wood and bark weight</span></span>
-<span><span class="va">weight</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/green_weight.html">green_weight</a></span><span class="op">(</span>volume <span class="op">=</span> <span class="va">dimensions</span><span class="op">$</span><span class="va">cubic</span>,</span>
-<span>                       spcd <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
-<span>                       status <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Convert modeled stem volume to weight</span></span>
+<span><span class="va">weight</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/green_weight.html">green_weight</a></span><span class="op">(</span>volume <span class="op">=</span> <span class="va">stem_volume_result</span><span class="op">$</span><span class="va">value</span>,</span>
+<span>                       spcd <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <thead><tr class="header">
-<th align="right">value</th>
+<th align="right">green weight (short tons)</th>
 <th align="right">status</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">788.882</td>
+<td align="right">0.394</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">1434.825</td>
+<td align="right">0.717</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="right">1842.669</td>
+<td align="right">0.921</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">3031.964</td>
+<td align="right">1.516</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="right">3569.866</td>
+<td align="right">1.785</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">6970.729</td>
+<td align="right">3.485</td>
 <td align="right">0</td>
 </tr>
 </tbody>
 </table>
-<p>Green weight uses species properties and supplied cubic volume. The
-national biomass equations use tree dimensions and ecological divisions
-to calculate fitted component masses. <a href="biomass-carbon.html">biomass()</a> returns dry mass, green mass,
-and carbon by component.</p>
-<p><code>status = TRUE</code> pairs quantities with diagnoses.
-Unsupported quantities remain missing. Model checks verify available
-operations and species scope, not predictive accuracy.</p>
+<p><a href="volumes-scaling.html">Green weight</a> uses supplied cubic
+volume and species properties. <a href="biomass-carbon.html">Biomass</a>
+estimates dry mass and carbon from tree dimensions.</p>
+<p>Unsupported quantities remain missing with status codes. Model checks
+establish available operations and species scope, not predictive
+accuracy.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

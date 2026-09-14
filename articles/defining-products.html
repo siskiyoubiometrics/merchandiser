@@ -32,7 +32,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">merchandiser</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,10 +52,12 @@
     <a class="dropdown-item" href="../articles/defect-recording-conventions.html">Recording defect</a>
     <a class="dropdown-item" href="../articles/fill-missing-heights.html">Fitting and completing heights</a>
     <a class="dropdown-item" href="../articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and scaling</a>
-    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass, carbon, and green weight</a>
-    <a class="dropdown-item" href="../articles/compiling-inventory.html">Compiling an inventory</a>
-    <a class="dropdown-item" href="../articles/bucking-prices.html">Bucking choices and prices</a>
+    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and green weight</a>
+    <a class="dropdown-item" href="../articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass and carbon</a>
+    <a class="dropdown-item" href="../articles/pacific-northwest.html">Pacific Northwest tree list</a>
+    <a class="dropdown-item" href="../articles/southern.html">Southern stands</a>
+    <a class="dropdown-item" href="../articles/optimal-bucking.html">Optimal bucking</a>
     <a class="dropdown-item" href="../articles/assumptions-status.html">Assumptions and status</a>
     <a class="dropdown-item" href="../articles/methods-taper-equations.html">Taper equation methods</a>
     <a class="dropdown-item" href="../articles/methods-fitting-taper.html">Fitting taper equations</a>
@@ -100,332 +102,414 @@
 
     
     
-<p><code><a href="../reference/product.html">product()</a></code> creates a specification row.
-<code><a href="../reference/products.html">products()</a></code> combines rows and validates the resulting table.
-Lower <code>priority</code> values are considered first.</p>
-<div class="section level2">
-<h2 id="product-fields">Product fields<a class="anchor" aria-label="anchor" href="#product-fields"></a>
-</h2>
+<p>Product order in <code><a href="../reference/products.html">products()</a></code> sets cutting priority.
+Product fields set the trees and log sections eligible for each
+output.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Define a sawlog specification</span></span>
-<span><span class="va">saw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'saw'</span>,</span>
-<span>               priority <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>               lengths <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">16</span>, <span class="fl">32</span><span class="op">)</span>,</span>
-<span>               trim <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>               min_sed <span class="op">=</span> <span class="fl">6</span>,</span>
-<span>               volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,</span>
-<span>               inside_bark <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="left">product</th>
-<th align="right">priority</th>
-<th align="left">lengths</th>
-<th align="right">trim</th>
-<th align="right">min_sed</th>
-<th align="left">volume_unit</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="left">saw</td>
-<td align="right">1</td>
-<td align="left">16, 32</td>
-<td align="right">0.5</td>
-<td align="right">6</td>
-<td align="left">scribner</td>
-</tr></tbody>
-</table>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Define a pulp specification</span></span>
-<span><span class="va">pulp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'pulp'</span>,</span>
-<span>                priority <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>                min_length <span class="op">=</span> <span class="fl">8</span>,</span>
-<span>                max_length <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>                length_step <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>                trim <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>                min_sed <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>                volume_unit <span class="op">=</span> <span class="st">'green_ton'</span>,</span>
-<span>                accepts_pulp_restriction <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Combine and check the specifications</span></span>
-<span><span class="va">specifications</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/products.html">products</a></span><span class="op">(</span><span class="va">saw</span>, <span class="va">pulp</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/validate_products.html">validate_products</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="left">product</th>
-<th align="right">priority</th>
-<th align="right">min_sed</th>
-<th align="left">volume_unit</th>
-<th align="left">accepts_pulp_restriction</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="left">saw</td>
-<td align="right">1</td>
-<td align="right">6</td>
-<td align="left">scribner</td>
-<td align="left">FALSE</td>
-</tr>
-<tr class="even">
-<td align="left">pulp</td>
-<td align="right">2</td>
-<td align="right">3</td>
-<td align="left">green_ton</td>
-<td align="left">TRUE</td>
-</tr>
-</tbody>
-</table>
-<p>Use <code>lengths</code> for discrete lengths or
-<code>min_length</code>, <code>max_length</code>, and
-<code>length_step</code> for a range. <code>min_sed</code> tests the
-physical small end, including trim. <code>inside_bark</code> chooses the
-diameter basis for acceptance.</p>
-<p>Tree entry checks species, diameter, age, and pruning restrictions.
-<code>allow_after_higher_product</code> controls later use after an
-earlier product. <code>allow_lower_products</code> controls progression
-to subsequent products. <a href="../reference/product_schema.html">Product fields</a> control tree
-entry, log acceptance, and measurement.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select a shipped tree</span></span>
-<span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">tree</th>
-<th align="right">spcd</th>
-<th align="left">species</th>
-<th align="right">dbh</th>
-<th align="right">ht</th>
-<th align="left">model</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="right">5</td>
-<td align="right">202</td>
-<td align="left">Douglas-fir</td>
-<td align="right">20</td>
-<td align="right">100</td>
-<td align="left">F00FW2W202</td>
-</tr></tbody>
-</table>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Apply the specifications to the example tree</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                      ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                      model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span>,</span>
-<span>                      species <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">species</span>,</span>
+<code class="sourceCode R"><span><span class="co">## Select example trees</span></span>
+<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_head</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Define export specifications</span></span>
+<span><span class="va">export</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'export'</span>,  <span class="co">## product name, unitless</span></span>
+<span>                  spcd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">202</span>, <span class="fl">263</span><span class="op">)</span>,  <span class="co">## species codes, unitless</span></span>
+<span>                  min_dbh <span class="op">=</span> <span class="fl">12</span>,  <span class="co">## inches</span></span>
+<span>                  min_length <span class="op">=</span> <span class="fl">32</span>,  <span class="co">## feet</span></span>
+<span>                  max_length <span class="op">=</span> <span class="fl">40</span>,  <span class="co">## feet</span></span>
+<span>                  trim <span class="op">=</span> <span class="fl">1</span>,  <span class="co">## feet</span></span>
+<span>                  min_sed <span class="op">=</span> <span class="fl">12</span>,  <span class="co">## inches</span></span>
+<span>                  inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## logical, unitless</span></span>
+<span>                  volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## board feet</span></span>
+<span>                  split_scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>  <span class="co">## logical, unitless</span></span>
+<span></span>
+<span><span class="co">## Define domestic saw specifications</span></span>
+<span><span class="va">domestic_saw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'domestic_saw'</span>,  <span class="co">## product name, unitless</span></span>
+<span>                        spcd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">202</span>, <span class="fl">263</span><span class="op">)</span>,  <span class="co">## species codes, unitless</span></span>
+<span>                        min_dbh <span class="op">=</span> <span class="fl">10</span>,  <span class="co">## inches</span></span>
+<span>                        min_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
+<span>                        max_length <span class="op">=</span> <span class="fl">40</span>,  <span class="co">## feet</span></span>
+<span>                        trim <span class="op">=</span> <span class="fl">1</span>,  <span class="co">## feet</span></span>
+<span>                        min_sed <span class="op">=</span> <span class="fl">6</span>,  <span class="co">## inches</span></span>
+<span>                        inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## logical, unitless</span></span>
+<span>                        volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## board feet</span></span>
+<span>                        split_scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>  <span class="co">## logical, unitless</span></span>
+<span></span>
+<span><span class="co">## Define pulp specifications</span></span>
+<span><span class="va">pulp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'pulp'</span>,  <span class="co">## product name, unitless</span></span>
+<span>                spcd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">202</span>, <span class="fl">263</span><span class="op">)</span>,  <span class="co">## species codes, unitless</span></span>
+<span>                min_dbh <span class="op">=</span> <span class="fl">5</span>,  <span class="co">## inches</span></span>
+<span>                min_length <span class="op">=</span> <span class="fl">8</span>,  <span class="co">## feet</span></span>
+<span>                max_length <span class="op">=</span> <span class="fl">40</span>,  <span class="co">## feet</span></span>
+<span>                trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet</span></span>
+<span>                min_sed <span class="op">=</span> <span class="fl">3</span>,  <span class="co">## inches</span></span>
+<span>                inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## logical, unitless</span></span>
+<span>                volume_unit <span class="op">=</span> <span class="st">'green_ton'</span><span class="op">)</span>  <span class="co">## green short tons</span></span>
+<span></span>
+<span><span class="co">## Combine products in cutting priority order</span></span>
+<span><span class="va">specifications</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/products.html">products</a></span><span class="op">(</span>export <span class="op">=</span> <span class="va">export</span>,</span>
+<span>                           domestic_saw <span class="op">=</span> <span class="va">domestic_saw</span>,</span>
+<span>                           pulp <span class="op">=</span> <span class="va">pulp</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Cut and scale the trees</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                      dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                      ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                      spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
 <span>                      products <span class="op">=</span> <span class="va">specifications</span>,</span>
-<span>                      status <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span>                      model <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
+<colgroup>
+<col width="10%">
+<col width="5%">
+<col width="16%">
+<col width="17%">
+<col width="16%">
+<col width="35%">
+</colgroup>
 <thead><tr class="header">
+<th align="right">tree_id</th>
 <th align="right">log</th>
 <th align="left">product</th>
-<th align="right">nominal_length</th>
-<th align="right">sed_ib</th>
-<th align="right">net_scale</th>
-<th align="left">scale_unit</th>
+<th align="right">length (feet)</th>
+<th align="right">sed (inches)</th>
+<th align="right">scale (Scribner board feet)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">1</td>
-<td align="left">saw</td>
+<td align="right">1</td>
+<td align="left">domestic_saw</td>
 <td align="right">32</td>
-<td align="right">14.017</td>
-<td align="right">230.000</td>
-<td align="left">board_foot</td>
+<td align="right">6.024</td>
+<td align="right">50</td>
 </tr>
 <tr class="even">
 <td align="right">2</td>
-<td align="left">saw</td>
-<td align="right">32</td>
-<td align="right">8.524</td>
-<td align="right">90.000</td>
-<td align="left">board_foot</td>
+<td align="right">1</td>
+<td align="left">domestic_saw</td>
+<td align="right">40</td>
+<td align="right">6.541</td>
+<td align="right">70</td>
 </tr>
 <tr class="odd">
 <td align="right">3</td>
-<td align="left">pulp</td>
-<td align="right">20</td>
-<td align="right">3.474</td>
-<td align="right">0.102</td>
-<td align="left">green_short_ton</td>
+<td align="right">1</td>
+<td align="left">domestic_saw</td>
+<td align="right">40</td>
+<td align="right">8.830</td>
+<td align="right">120</td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section level2">
-<h2 id="shipped-specifications">Shipped specifications<a class="anchor" aria-label="anchor" href="#shipped-specifications"></a>
-</h2>
-<p><code><a href="../reference/example_product_names.html">example_product_names()</a></code> lists the available tables.
-<code><a href="../reference/example_products.html">example_products()</a></code> loads one.
-<code><a href="../reference/product_preset.html">product_presets()</a></code> and <code><a href="../reference/product_preset.html">product_preset()</a></code> are
-compatibility names for the same operations.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## List the example tables</span></span>
-<span><span class="va">available</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/example_product_names.html">example_product_names</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="left">name</th>
-<th align="left">status</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="left">pnw</td>
-<td align="left">illustrative</td>
-</tr>
-<tr class="even">
-<td align="left">us_south</td>
-<td align="left">illustrative</td>
-</tr>
-<tr class="odd">
-<td align="left">douglas_fir</td>
-<td align="left">illustrative</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Load the example specifications</span></span>
-<span><span class="va">specifications</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/example_products.html">example_products</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">'pnw'</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
-<col width="16%">
-<col width="24%">
-<col width="13%">
-<col width="13%">
-<col width="10%">
-<col width="6%">
-<col width="15%">
+<col width="11%">
+<col width="5%">
+<col width="11%">
+<col width="19%">
+<col width="18%">
+<col width="34%">
 </colgroup>
 <thead><tr class="header">
+<th align="right">tree_id</th>
+<th align="right">log</th>
 <th align="left">product</th>
-<th align="left">lengths</th>
-<th align="right">min_length</th>
-<th align="right">max_length</th>
-<th align="right">min_sed</th>
-<th align="right">trim</th>
-<th align="left">volume_unit</th>
+<th align="right">length (feet)</th>
+<th align="right">sed (inches)</th>
+<th align="right">scale (green short tons)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="left">export</td>
-<td align="left">32, 40</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">12</td>
-<td align="right">1.0</td>
-<td align="left">scribner</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="left">pulp</td>
+<td align="right">13.0</td>
+<td align="right">3.011</td>
+<td align="right">0.037</td>
 </tr>
 <tr class="even">
-<td align="left">domestic_saw</td>
-<td align="left">16, 20, 24, 32, 40</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">6</td>
-<td align="right">1.0</td>
-<td align="left">scribner</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="left">pulp</td>
+<td align="right">12.5</td>
+<td align="right">3.124</td>
+<td align="right">0.044</td>
 </tr>
 <tr class="odd">
-<td align="left">pulp</td>
-<td align="left"></td>
-<td align="right">8</td>
-<td align="right">40</td>
 <td align="right">3</td>
-<td align="right">0.5</td>
-<td align="left">green_ton</td>
+<td align="right">2</td>
+<td align="left">pulp</td>
+<td align="right">25.0</td>
+<td align="right">3.118</td>
+<td align="right">0.131</td>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Load the same specifications through the compatibility names</span></span>
-<span><span class="va">preset_names</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product_preset.html">product_presets</a></span><span class="op">(</span><span class="op">)</span></span>
+<div class="section level2">
+<h2 id="tree-and-log-limits">Tree and log limits<a class="anchor" aria-label="anchor" href="#tree-and-log-limits"></a>
+</h2>
+<p><code>min_dbh</code> and <code>max_dbh</code> apply to tree diameter.
+<code>min_age</code> and <code>max_age</code> apply to supplied tree
+age. Lower limits are inclusive. Upper tree diameter and age limits are
+exclusive.</p>
+<p>Missing age prevents eligibility for products with age limits.</p>
+<p><code>min_length</code> and <code>max_length</code> bound candidate
+nominal lengths. Candidates use the internal half foot grid.
+<code>min_sed</code>, <code>max_sed</code>, <code>min_led</code>, and
+<code>max_led</code> constrain physical end diameters.
+<code>max_logs</code> limits product counts within each segment.</p>
+<p><code>requires_pruned</code> requires the entire cut below
+<code>pruned_ht</code>. <code>max_sweep</code> rejects overlaps above
+its percentage limit.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Define clear specifications</span></span>
+<span><span class="va">clear</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'clear'</span>,  <span class="co">## product name, unitless</span></span>
+<span>                 min_age <span class="op">=</span> <span class="fl">35</span>,  <span class="co">## years</span></span>
+<span>                 max_age <span class="op">=</span> <span class="fl">70</span>,  <span class="co">## years</span></span>
+<span>                 requires_pruned <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## logical, unitless</span></span>
+<span>                 min_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
+<span>                 max_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
+<span>                 min_sed <span class="op">=</span> <span class="fl">6</span>,  <span class="co">## inches</span></span>
+<span>                 max_sweep <span class="op">=</span> <span class="fl">10</span>,  <span class="co">## percent</span></span>
+<span>                 volume_unit <span class="op">=</span> <span class="st">'cubic'</span><span class="op">)</span>  <span class="co">## cubic feet</span></span>
 <span></span>
-<span><span class="co">## Load a preset table</span></span>
-<span><span class="va">preset_products</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product_preset.html">product_preset</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">'pnw'</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">## Cut and scale the trees</span></span>
+<span><span class="va">clear_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                            dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                            ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                            spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                            products <span class="op">=</span> <span class="va">clear</span>,</span>
+<span>                            model <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">model</span>,</span>
+<span>                            age <span class="op">=</span> <span class="fl">45</span>,</span>
+<span>                            pruned_ht <span class="op">=</span> <span class="fl">34</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
+<colgroup>
+<col width="12%">
+<col width="6%">
+<col width="12%">
+<col width="21%">
+<col width="19%">
+<col width="28%">
+</colgroup>
 <thead><tr class="header">
+<th align="right">tree_id</th>
+<th align="right">log</th>
 <th align="left">product</th>
-<th align="right">priority</th>
-<th align="left">volume_unit</th>
+<th align="right">length (feet)</th>
+<th align="right">sed (inches)</th>
+<th align="right">scale (cubic feet)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="left">export</td>
 <td align="right">1</td>
-<td align="left">scribner</td>
+<td align="right">1</td>
+<td align="left">clear</td>
+<td align="right">16</td>
+<td align="right">9.023</td>
+<td align="right">9.551</td>
 </tr>
 <tr class="even">
-<td align="left">domestic_saw</td>
+<td align="right">1</td>
 <td align="right">2</td>
-<td align="left">scribner</td>
+<td align="left">clear</td>
+<td align="right">16</td>
+<td align="right">6.227</td>
+<td align="right">5.224</td>
 </tr>
 <tr class="odd">
-<td align="left">pulp</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="left">clear</td>
+<td align="right">16</td>
+<td align="right">11.446</td>
+<td align="right">14.262</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="left">clear</td>
+<td align="right">16</td>
+<td align="right">8.650</td>
+<td align="right">9.034</td>
+</tr>
+<tr class="odd">
 <td align="right">3</td>
-<td align="left">green_ton</td>
+<td align="right">1</td>
+<td align="left">clear</td>
+<td align="right">16</td>
+<td align="right">12.581</td>
+<td align="right">17.215</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">2</td>
+<td align="left">clear</td>
+<td align="right">16</td>
+<td align="right">10.373</td>
+<td align="right">11.610</td>
+</tr>
+</tbody>
+</table>
+<p><code>age</code> and <code>pruned_ht</code> supply scenario
+measurements. <a href="southern.html">Southern stands</a> compares
+explicit age limits across the shipped stand ages.</p>
+</div>
+<div class="section level2">
+<h2 id="cords">Cords<a class="anchor" aria-label="anchor" href="#cords"></a>
+</h2>
+<p><code>cord_solid_fraction</code> supplies the solid wood proportion
+for the stacked cord conversion.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Define cordwood specifications</span></span>
+<span><span class="va">cordwood</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'cordwood'</span>,  <span class="co">## product name, unitless</span></span>
+<span>                    min_length <span class="op">=</span> <span class="fl">8</span>,  <span class="co">## feet</span></span>
+<span>                    max_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
+<span>                    min_sed <span class="op">=</span> <span class="fl">3</span>,  <span class="co">## inches</span></span>
+<span>                    inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## logical, unitless</span></span>
+<span>                    volume_unit <span class="op">=</span> <span class="st">'cord'</span>,  <span class="co">## cords</span></span>
+<span>                    cord_solid_fraction <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span>  <span class="co">## solid wood proportion, unitless</span></span>
+<span></span>
+<span><span class="co">## Cut and scale the trees</span></span>
+<span><span class="va">cord_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                           dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                           ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                           spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                           products <span class="op">=</span> <span class="va">cordwood</span>,</span>
+<span>                           model <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="right">tree_id</th>
+<th align="right">log</th>
+<th align="left">product</th>
+<th align="right">length (feet)</th>
+<th align="right">sed (inches)</th>
+<th align="right">scale (cords)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="left">cordwood</td>
+<td align="right">16.0</td>
+<td align="right">9.023</td>
+<td align="right">0.107</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="left">cordwood</td>
+<td align="right">16.0</td>
+<td align="right">6.227</td>
+<td align="right">0.058</td>
+</tr>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">3</td>
+<td align="left">cordwood</td>
+<td align="right">14.5</td>
+<td align="right">3.011</td>
+<td align="right">0.020</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="left">cordwood</td>
+<td align="right">16.0</td>
+<td align="right">11.446</td>
+<td align="right">0.159</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="left">cordwood</td>
+<td align="right">16.0</td>
+<td align="right">8.650</td>
+<td align="right">0.101</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">3</td>
+<td align="left">cordwood</td>
+<td align="right">16.0</td>
+<td align="right">4.716</td>
+<td align="right">0.046</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">1</td>
+<td align="left">cordwood</td>
+<td align="right">16.0</td>
+<td align="right">12.581</td>
+<td align="right">0.192</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">2</td>
+<td align="left">cordwood</td>
+<td align="right">16.0</td>
+<td align="right">10.373</td>
+<td align="right">0.130</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">3</td>
+<td align="left">cordwood</td>
+<td align="right">16.0</td>
+<td align="right">7.445</td>
+<td align="right">0.079</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">4</td>
+<td align="left">cordwood</td>
+<td align="right">16.0</td>
+<td align="right">3.747</td>
+<td align="right">0.032</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section level2">
-<h2 id="source-rule-records">Source rule records<a class="anchor" aria-label="anchor" href="#source-rule-records"></a>
+<h2 id="prices-and-validation">Prices and validation<a class="anchor" aria-label="anchor" href="#prices-and-validation"></a>
 </h2>
-<p><code><a href="../reference/nvel_rules.html">nvel_rules()</a></code> records National Volume Estimator Library
-settings. <code><a href="../reference/products_from_nvel_rules.html">products_from_nvel_rules()</a></code> translates a complete
-record into products and accompanying stem limits.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Record the source segmentation and measurement settings</span></span>
-<span><span class="va">rules</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nvel_rules.html">nvel_rules</a></span><span class="op">(</span>even_or_odd <span class="op">=</span> <span class="fl">2</span>,</span>
+<p><code>price</code> is the amount per <code>price_per</code> volume
+units. Omitting <code>price</code> leaves the product unpriced and omits
+log values. <a href="optimal-bucking.html">Prices and bucking</a> shows
+priced specifications.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Check the product table</span></span>
+<span><span class="va">checked</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/validate_products.html">validate_products</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">specifications</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Count validated products</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">checked</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 3</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="source-rule-conversion">Source rule conversion<a class="anchor" aria-label="anchor" href="#source-rule-conversion"></a>
+</h2>
+<p><code><a href="../reference/products_from_nvel_rules.html">products_from_nvel_rules()</a></code> translates explicit source
+rule limits into products, a stump height, and model auxiliaries.
+Continuous length bounds replace source top segment policies. Factor
+scaling cannot be translated.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Specify the source rule fields to translate</span></span>
+<span><span class="va">rules</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/nvel_rules.html">nvel_rules</a></span><span class="op">(</span>even_or_odd <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                    option <span class="op">=</span> <span class="fl">14</span>,</span>
-<span>                    maximum_length <span class="op">=</span> <span class="fl">40</span>,</span>
-<span>                    minimum_length <span class="op">=</span> <span class="fl">8</span>,</span>
-<span>                    minimum_top_length <span class="op">=</span> <span class="fl">8</span>,</span>
-<span>                    merchantable_length <span class="op">=</span> <span class="fl">80</span>,</span>
+<span>                    maximum_length <span class="op">=</span> <span class="fl">32</span>,</span>
+<span>                    minimum_length <span class="op">=</span> <span class="fl">16</span>,</span>
 <span>                    primary_top <span class="op">=</span> <span class="fl">6</span>,</span>
-<span>                    secondary_top <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>                    secondary_top <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>                    stump <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                    trim <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>                    bark_ratio <span class="op">=</span> <span class="fl">0.9</span>,</span>
-<span>                    minimum_board_foot_dbh <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>                    scribner <span class="op">=</span> <span class="st">'table'</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Translate the complete rule record</span></span>
-<span><span class="va">translated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/products_from_nvel_rules.html">products_from_nvel_rules</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">rules</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<colgroup>
-<col width="20%">
-<col width="10%">
-<col width="15%">
-<col width="15%">
-<col width="38%">
-</colgroup>
-<thead><tr class="header">
-<th align="left">product</th>
-<th align="right">min_sed</th>
-<th align="right">min_length</th>
-<th align="right">max_length</th>
-<th align="left">scale_rule</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="left">nvel_primary</td>
-<td align="right">6</td>
-<td align="right">8</td>
-<td align="right">40</td>
-<td align="left">scribner_decimal_c_whole_40</td>
-</tr>
-<tr class="even">
-<td align="left">nvel_secondary</td>
-<td align="right">4</td>
-<td align="right">8</td>
-<td align="right">40</td>
-<td align="left">scribner_decimal_c_whole_40</td>
-</tr>
-</tbody>
-</table>
-<p>Translated products retain expanded source measurement fields. The
-returned list also contains <code>stump_ht</code>,
-<code>utilization_height</code>, and <code>model_aux</code>. The
-translated height cap adds <code>stump</code> to
-<code>merchantable_length</code>. Both translated products retain
-board-foot measurement, including the product accepting pulp
-restrictions.</p>
+<span>                    minimum_board_foot_dbh <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>                    scribner <span class="op">=</span> <span class="st">'table'</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Translate the rule record</span></span>
+<span><span class="va">translated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/products_from_nvel_rules.html">products_from_nvel_rules</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">rules</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Inspect the translated result structure</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">translated</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "products"  "stump_ht"  "model_aux"</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

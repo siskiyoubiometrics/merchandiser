@@ -9,7 +9,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">merchandiser</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,10 +28,12 @@
     <a class="dropdown-item" href="../articles/defect-recording-conventions.html">Recording defect</a>
     <a class="dropdown-item" href="../articles/fill-missing-heights.html">Fitting and completing heights</a>
     <a class="dropdown-item" href="../articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and scaling</a>
-    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass, carbon, and green weight</a>
-    <a class="dropdown-item" href="../articles/compiling-inventory.html">Compiling an inventory</a>
-    <a class="dropdown-item" href="../articles/bucking-prices.html">Bucking choices and prices</a>
+    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and green weight</a>
+    <a class="dropdown-item" href="../articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass and carbon</a>
+    <a class="dropdown-item" href="../articles/pacific-northwest.html">Pacific Northwest tree list</a>
+    <a class="dropdown-item" href="../articles/southern.html">Southern stands</a>
+    <a class="dropdown-item" href="../articles/optimal-bucking.html">Optimal bucking</a>
     <a class="dropdown-item" href="../articles/assumptions-status.html">Assumptions and status</a>
     <a class="dropdown-item" href="../articles/methods-taper-equations.html">Taper equation methods</a>
     <a class="dropdown-item" href="../articles/methods-fitting-taper.html">Fitting taper equations</a>
@@ -63,7 +65,7 @@
     </div>
 
     <div class="section level2">
-      <h2 id="select-logs">Select logs<a class="anchor" aria-label="anchor" href="#select-logs"></a></h2>
+      <h2 id="logs-and-products">Logs and products<a class="anchor" aria-label="anchor" href="#logs-and-products"></a></h2>
       
       
 
@@ -77,85 +79,29 @@
           
           <code><a href="merchandise.html">merchandise()</a></code> 
         </dt>
-        <dd>Select logs from trees using a product table</dd>
+        <dd>Cut and scale logs from trees</dd>
       </dl><dl><dt>
-          
-          <code><a href="optimize_bucking.html">optimize_bucking()</a></code> 
-        </dt>
-        <dd>Select log cuts for the greatest value or volume</dd>
-      </dl><dl><dt>
-          
-          <code><a href="merch_tree_helpers.html">tree_cubic_volume()</a></code> <code><a href="merch_tree_helpers.html">tree_log_count()</a></code> 
-        </dt>
-        <dd>Calculate log volume or log count for each tree</dd>
-      </dl><dl><dt>
-          
-          <code><a href="compare_bucking_prices.html">compare_bucking_prices()</a></code> 
-        </dt>
-        <dd>Compare log values as cut and with trees bucked again</dd>
-      </dl><dl><dt>
-          
-          <code><a href="result_tables.html">result_tables</a></code> 
-        </dt>
-        <dd>Result tables</dd>
-      </dl><dl><dt>
-          
-          <code><a href="plot.merch_result.html">plot(<i>&lt;merch_result&gt;</i>)</a></code> 
-        </dt>
-        <dd>Draw a felled stem and its selected logs</dd>
-      </dl></div><div class="section level2">
-      <h2 id="define-products">Define products<a class="anchor" aria-label="anchor" href="#define-products"></a></h2>
-      
-      
-
-      
-    </div><div id="" class="section level2">
-      
-      
-      
-
-      <dl><dt>
           
           <code><a href="product.html">product()</a></code> 
         </dt>
-        <dd>Define a product and its log specifications</dd>
+        <dd>Define one product</dd>
       </dl><dl><dt>
           
           <code><a href="products.html">products()</a></code> 
         </dt>
-        <dd>Combine log specifications into a product table</dd>
+        <dd>Combine products in cutting priority order</dd>
       </dl><dl><dt>
           
           <code><a href="validate_products.html">validate_products()</a></code> 
         </dt>
-        <dd>Check a product table before selecting logs</dd>
-      </dl><dl><dt>
-          
-          <code><a href="example_products.html">example_products()</a></code> 
-        </dt>
-        <dd>Start a product table from shipped example specifications</dd>
-      </dl><dl><dt>
-          
-          <code><a href="example_product_names.html">example_product_names()</a></code> 
-        </dt>
-        <dd>List the shipped example product tables</dd>
-      </dl><dl><dt>
-          
-          <code><a href="product_schema.html">product_schema</a></code> 
-        </dt>
-        <dd>Product specification schema</dd>
+        <dd>Check a product table</dd>
       </dl><dl><dt>
           
           <code><a href="products_from_nvel_rules.html">products_from_nvel_rules()</a></code> 
         </dt>
-        <dd>Turn a source rule record into product specifications</dd>
-      </dl><dl><dt>
-          
-          <code><a href="nvel_rules.html">nvel_rules()</a></code> 
-        </dt>
-        <dd>Record source-library log-length and measurement rules</dd>
+        <dd>Translate a source rule record to product specifications</dd>
       </dl></div><div class="section level2">
-      <h2 id="record-defect">Record defect<a class="anchor" aria-label="anchor" href="#record-defect"></a></h2>
+      <h2 id="recording-defect">Recording defect<a class="anchor" aria-label="anchor" href="#recording-defect"></a></h2>
       
       
 
@@ -169,29 +115,24 @@
           
           <code><a href="defect.html">defect()</a></code> 
         </dt>
-        <dd>Record a stem condition at a height or along a section</dd>
-      </dl><dl><dt>
-          
-          <code><a href="defects_from_stoppers.html">defects_from_stoppers()</a></code> 
-        </dt>
-        <dd>Convert product stopping heights to located defect records</dd>
-      </dl><dl><dt>
-          
-          <code><a href="defect_pct_from_thirds.html">defect_pct_from_thirds()</a></code> 
-        </dt>
-        <dd>Convert stem-third defect percentages to one whole-tree percentage</dd>
-      </dl><dl><dt>
-          
-          <code><a href="apply_defect_pct.html">apply_defect_pct()</a></code> 
-        </dt>
-        <dd>Deduct a percentage from current net volume</dd>
+        <dd>Record a section that changes log selection</dd>
       </dl><dl><dt>
           
           <code><a href="validate_defects.html">validate_defects()</a></code> 
         </dt>
-        <dd>Check defect records against tree heights</dd>
+        <dd>Check defects against tree heights and products</dd>
+      </dl><dl><dt>
+          
+          <code><a href="defects_from_stoppers.html">defects_from_stoppers()</a></code> 
+        </dt>
+        <dd>Convert southern stopping heights to defect records</dd>
+      </dl><dl><dt>
+          
+          <code><a href="defect_pct_from_thirds.html">defect_pct_from_thirds()</a></code> 
+        </dt>
+        <dd>Weight stem-third defect percentages by volume</dd>
       </dl></div><div class="section level2">
-      <h2 id="fit-and-complete-heights">Fit and complete heights<a class="anchor" aria-label="anchor" href="#fit-and-complete-heights"></a></h2>
+      <h2 id="height-models">Height models<a class="anchor" aria-label="anchor" href="#height-models"></a></h2>
       
       
 
@@ -216,13 +157,8 @@
           <code><a href="predict_height.html">predict_height()</a></code> 
         </dt>
         <dd>Predict tree height</dd>
-      </dl><dl><dt>
-          
-          <code><a href="plot.height_fit.html">plot(<i>&lt;height_fit&gt;</i>)</a></code> 
-        </dt>
-        <dd>Inspect measured heights and fitted height curves</dd>
       </dl></div><div class="section level2">
-      <h2 id="calculate-stem-dimensions-and-volume">Calculate stem dimensions and volume<a class="anchor" aria-label="anchor" href="#calculate-stem-dimensions-and-volume"></a></h2>
+      <h2 id="stem-measurements">Stem measurements<a class="anchor" aria-label="anchor" href="#stem-measurements"></a></h2>
       
       
 
@@ -234,46 +170,57 @@
 
       <dl><dt>
           
+          <code><a href="stem_profile.html">stem_profile()</a></code> 
+        </dt>
+        <dd>Diameters along a tree stem</dd>
+      </dl><dl><dt>
+          
           <code><a href="dib.html">dib()</a></code> 
         </dt>
-        <dd>Calculate stem diameter inside bark at a height</dd>
+        <dd>Diameter inside bark at a height</dd>
       </dl><dl><dt>
           
           <code><a href="dob.html">dob()</a></code> 
         </dt>
-        <dd>Calculate stem diameter outside bark at a height</dd>
+        <dd>Diameter outside bark at a height</dd>
       </dl><dl><dt>
           
           <code><a href="height_at_dib.html">height_at_dib()</a></code> 
         </dt>
-        <dd>Find the highest height at a diameter inside bark</dd>
+        <dd>Height to a diameter inside bark</dd>
       </dl><dl><dt>
           
           <code><a href="height_at_dob.html">height_at_dob()</a></code> 
         </dt>
-        <dd>Find the highest height at a diameter outside bark</dd>
-      </dl><dl><dt>
-          
-          <code><a href="stem_profile.html">stem_profile()</a></code> 
-        </dt>
-        <dd>Calculate stem diameters and volume at a series of heights</dd>
-      </dl><dl><dt>
+        <dd>Height to a diameter outside bark</dd>
+      </dl></div><div class="section level2">
+      <h2 id="volumes-and-weight">Volumes and weight<a class="anchor" aria-label="anchor" href="#volumes-and-weight"></a></h2>
+      
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
           
           <code><a href="stem_volume.html">stem_volume()</a></code> 
         </dt>
-        <dd>Calculate stem volume between heights or diameter limits</dd>
+        <dd>Cubic volume of a stem section</dd>
       </dl><dl><dt>
           
-          <code><a href="plot.stem_profile.html">plot(<i>&lt;stem_profile&gt;</i>)</a></code> 
+          <code><a href="tree_cubic_volume.html">tree_cubic_volume()</a></code> 
         </dt>
-        <dd>Draw a stem profile</dd>
+        <dd>Cubic volume of each tree above the stump</dd>
       </dl><dl><dt>
           
-          <code><a href="scaling_rules.html">scaling_rules</a></code> 
+          <code><a href="green_weight.html">green_weight()</a></code> 
         </dt>
-        <dd>Scaling rules</dd>
+        <dd>Convert cubic volume to merchandising weight</dd>
       </dl></div><div class="section level2">
-      <h2 id="estimate-biomass-and-carbon">Estimate biomass and carbon<a class="anchor" aria-label="anchor" href="#estimate-biomass-and-carbon"></a></h2>
+      <h2 id="biomass-and-carbon">Biomass and carbon<a class="anchor" aria-label="anchor" href="#biomass-and-carbon"></a></h2>
       
       
 
@@ -287,27 +234,12 @@
           
           <code><a href="biomass.html">biomass()</a></code> 
         </dt>
-        <dd>Estimate tree biomass and carbon by component</dd>
-      </dl><dl><dt>
-          
-          <code><a href="biomass_component.html">biomass_component()</a></code> 
-        </dt>
-        <dd>Calculate one tree biomass component</dd>
+        <dd>Dry biomass in metric tonnes from tree measurements in inches and feet</dd>
       </dl><dl><dt>
           
           <code><a href="carbon_fraction.html">carbon_fraction()</a></code> 
         </dt>
         <dd>Look up the carbon fraction of dry tree biomass</dd>
-      </dl><dl><dt>
-          
-          <code><a href="co2e.html">co2e()</a></code> 
-        </dt>
-        <dd>Express tree carbon as metric tons of carbon dioxide</dd>
-      </dl><dl><dt>
-          
-          <code><a href="green_weight.html">green_weight()</a></code> 
-        </dt>
-        <dd>Convert stem volume to wood and bark weight</dd>
       </dl><dl><dt>
           
           <code><a href="nsvb_division.html">nsvb_division()</a></code> 
@@ -319,38 +251,7 @@
         </dt>
         <dd>Look up an ecological division by coordinates</dd>
       </dl></div><div class="section level2">
-      <h2 id="compile-an-inventory">Compile an inventory<a class="anchor" aria-label="anchor" href="#compile-an-inventory"></a></h2>
-      
-      
-
-      
-    </div><div id="" class="section level2">
-      
-      
-      
-
-      <dl><dt>
-          
-          <code><a href="stand_table.html">stand_table()</a></code> 
-        </dt>
-        <dd>Expand an inventory into a stand table</dd>
-      </dl><dl><dt>
-          
-          <code><a href="stock_table.html">stock_table()</a></code> 
-        </dt>
-        <dd>Report product stock by diameter class</dd>
-      </dl><dl><dt>
-          
-          <code><a href="product_summary.html">product_summary()</a></code> 
-        </dt>
-        <dd>Sum volume by product or tree group</dd>
-      </dl><dl><dt>
-          
-          <code><a href="product_summary_by_tree.html">product_summary_by_tree()</a></code> 
-        </dt>
-        <dd>Select logs and summarize volume by product</dd>
-      </dl></div><div class="section level2">
-      <h2 id="fit-and-register-taper-models">Fit and register taper models<a class="anchor" aria-label="anchor" href="#fit-and-register-taper-models"></a></h2>
+      <h2 id="taper-fitting-and-models">Taper fitting and models<a class="anchor" aria-label="anchor" href="#taper-fitting-and-models"></a></h2>
       
       
 
@@ -367,11 +268,6 @@
         <dd>Fit a taper model to stem-analysis data</dd>
       </dl><dl><dt>
           
-          <code><a href="taper_fit_methods.html">predict(<i>&lt;taper_fit&gt;</i>)</a></code> <code><a href="taper_fit_methods.html">plot(<i>&lt;taper_fit&gt;</i>)</a></code> 
-        </dt>
-        <dd>Inspect fitted diameters and taper residuals</dd>
-      </dl><dl><dt>
-          
           <code><a href="as_taper_model.html">as_taper_model()</a></code> 
         </dt>
         <dd>Use a fitted taper relationship in stem calculations</dd>
@@ -380,31 +276,6 @@
           <code><a href="taper_model_from_coefficients.html">taper_model_from_coefficients()</a></code> 
         </dt>
         <dd>Create a taper model from a coefficient set</dd>
-      </dl><dl><dt>
-          
-          <code><a href="taper_models.html">taper_models()</a></code> 
-        </dt>
-        <dd>Find available taper equations by family or species</dd>
-      </dl><dl><dt>
-          
-          <code><a href="get_taper_model.html">get_taper_model()</a></code> 
-        </dt>
-        <dd>Inspect a taper equation and its required inputs</dd>
-      </dl><dl><dt>
-          
-          <code><a href="has_taper_model.html">has_taper_model()</a></code> 
-        </dt>
-        <dd>Check whether taper equations are available</dd>
-      </dl><dl><dt>
-          
-          <code><a href="model_capabilities.html">model_capabilities()</a></code> 
-        </dt>
-        <dd>Check which diameter and volume calculations an equation supplies</dd>
-      </dl><dl><dt>
-          
-          <code><a href="check_taper_models.html">check_taper_models()</a></code> 
-        </dt>
-        <dd>Check equation assignments and required tree measurements</dd>
       </dl><dl><dt>
           
           <code><a href="new_taper_model.html">new_taper_model()</a></code> 
@@ -427,6 +298,31 @@
         <dd>Remove a local equation from the current analysis</dd>
       </dl><dl><dt>
           
+          <code><a href="get_taper_model.html">get_taper_model()</a></code> 
+        </dt>
+        <dd>Inspect a taper equation and its required inputs</dd>
+      </dl><dl><dt>
+          
+          <code><a href="taper_models.html">taper_models()</a></code> 
+        </dt>
+        <dd>Find available taper equations by family or species</dd>
+      </dl><dl><dt>
+          
+          <code><a href="has_taper_model.html">has_taper_model()</a></code> 
+        </dt>
+        <dd>Check whether taper equations are available</dd>
+      </dl><dl><dt>
+          
+          <code><a href="model_capabilities.html">model_capabilities()</a></code> 
+        </dt>
+        <dd>Check which diameter and volume calculations an equation supplies</dd>
+      </dl><dl><dt>
+          
+          <code><a href="check_taper_models.html">check_taper_models()</a></code> 
+        </dt>
+        <dd>Check equation assignments and required tree measurements</dd>
+      </dl><dl><dt>
+          
           <code><a href="taper_manifest.html">taper_manifest()</a></code> 
         </dt>
         <dd>Record the equations registered for this analysis</dd>
@@ -436,68 +332,7 @@
         </dt>
         <dd>Check whether the registered equations match a saved record</dd>
       </dl></div><div class="section level2">
-      <h2 id="resolve-identifiers-and-source-methods">Resolve identifiers and source methods<a class="anchor" aria-label="anchor" href="#resolve-identifiers-and-source-methods"></a></h2>
-      
-      
-
-      
-    </div><div id="" class="section level2">
-      
-      
-      
-
-      <dl><dt>
-          
-          <code><a href="species_lookup.html">species_lookup()</a></code> 
-        </dt>
-        <dd>Match tree species codes, symbols, or names</dd>
-      </dl><dl><dt>
-          
-          <code><a href="species_reference.html">species_reference</a></code> 
-        </dt>
-        <dd>Inspect species names and physical properties</dd>
-      </dl><dl><dt>
-          
-          <code><a href="nvel_default_equation.html">nvel_default_equation()</a></code> 
-        </dt>
-        <dd>Look up a source equation from species and geographic codes</dd>
-      </dl><dl><dt>
-          
-          <code><a href="nvel_from_fia_code.html">nvel_from_fia_code()</a></code> 
-        </dt>
-        <dd>Translate inventory equation codes to source equation names</dd>
-      </dl><dl><dt>
-          
-          <code><a href="nvel_source_revision.html">nvel_source_revision()</a></code> 
-        </dt>
-        <dd>Record the source version used for the shipped equations</dd>
-      </dl><dl><dt>
-          
-          <code><a href="flewelling_profiles.html">flewelling_profiles</a></code> 
-        </dt>
-        <dd>Choose measurements for Flewelling stem equations</dd>
-      </dl><dl><dt>
-          
-          <code><a href="clark_profiles.html">clark_profiles</a></code> 
-        </dt>
-        <dd>Choose inputs for Clark stem equations</dd>
-      </dl><dl><dt>
-          
-          <code><a href="regional_profiles.html">regional_profiles</a></code> 
-        </dt>
-        <dd>Check bark inputs for Alaska and Mathis equations</dd>
-      </dl><dl><dt>
-          
-          <code><a href="regional_small_tapers.html">regional_small_tapers</a></code> 
-        </dt>
-        <dd>Inspect regional taper and volume conventions</dd>
-      </dl><dl><dt>
-          
-          <code><a href="nsvb_profiles.html">nsvb_profiles</a></code> 
-        </dt>
-        <dd>Interpret diameter and volume from the national biomass equations</dd>
-      </dl></div><div class="section level2">
-      <h2 id="inspect-assumptions-and-status">Inspect assumptions and status<a class="anchor" aria-label="anchor" href="#inspect-assumptions-and-status"></a></h2>
+      <h2 id="assumptions-and-computation">Assumptions and computation<a class="anchor" aria-label="anchor" href="#assumptions-and-computation"></a></h2>
       
       
 
@@ -528,7 +363,38 @@
         </dt>
         <dd>Evaluate code with a temporary merchandiser thread count</dd>
       </dl></div><div class="section level2">
-      <h2 id="example-data">Example data<a class="anchor" aria-label="anchor" href="#example-data"></a></h2>
+      <h2 id="source-library">Source library<a class="anchor" aria-label="anchor" href="#source-library"></a></h2>
+      
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="nvel_default_equation.html">nvel_default_equation()</a></code> 
+        </dt>
+        <dd>Look up a source equation from species and geographic codes</dd>
+      </dl><dl><dt>
+          
+          <code><a href="nvel_from_fia_code.html">nvel_from_fia_code()</a></code> 
+        </dt>
+        <dd>Translate inventory equation codes to source equation names</dd>
+      </dl><dl><dt>
+          
+          <code><a href="nvel_rules.html">nvel_rules()</a></code> 
+        </dt>
+        <dd>Record source-library log-length and measurement rules</dd>
+      </dl><dl><dt>
+          
+          <code><a href="nvel_source_revision.html">nvel_source_revision()</a></code> 
+        </dt>
+        <dd>Record the source version used for the shipped equations</dd>
+      </dl></div><div class="section level2">
+      <h2 id="example-data-and-species-properties">Example data and species properties<a class="anchor" aria-label="anchor" href="#example-data-and-species-properties"></a></h2>
       
       
 
@@ -542,48 +408,37 @@
           
           <code><a href="example_trees.html">example_trees</a></code> 
         </dt>
-        <dd>Synthetic example trees</dd>
+        <dd>Example trees for stem calculations</dd>
       </dl><dl><dt>
           
           <code><a href="example_trees_pnw.html">example_trees_pnw</a></code> 
         </dt>
-        <dd>Example trees from the Pacific Northwest</dd>
+        <dd>Example Pacific Northwest trees</dd>
       </dl><dl><dt>
           
           <code><a href="example_trees_south.html">example_trees_south</a></code> 
         </dt>
-        <dd>Example trees from the South</dd>
+        <dd>Example southern plantation trees</dd>
+      </dl><dl><dt>
+          
+          <code><a href="example_defects_pnw.html">example_defects_pnw</a></code> 
+        </dt>
+        <dd>Example Pacific Northwest defect records</dd>
       </dl><dl><dt>
           
           <code><a href="example_stem_measurements.html">example_stem_measurements</a></code> 
         </dt>
-        <dd>Modeled upper-stem measurements for taper fitting</dd>
+        <dd>Example stem measurements</dd>
       </dl><dl><dt>
           
-          <code><a href="merchandiser-package.html">merchandiser</a></code> <code><a href="merchandiser-package.html">merchandiser-package</a></code> 
+          <code><a href="species_reference.html">species_reference</a></code> 
         </dt>
-        <dd>Estimate log and product volumes from forest inventory</dd>
-      </dl></div><div class="section level2">
-      <h2 id="compatibility-names">Compatibility names<a class="anchor" aria-label="anchor" href="#compatibility-names"></a></h2>
-      
-      
-
-      
-    </div><div id="" class="section level2">
-      
-      
-      
-
-      <dl><dt>
-          
-          <code><a href="deprecated-names.html">merch_product()</a></code> <code><a href="deprecated-names.html">merch_summary()</a></code> <code><a href="deprecated-names.html">taper_model()</a></code> <code><a href="deprecated-names.html">tv_species</a></code> 
-        </dt>
-        <dd>Deprecated names and measurement migration</dd>
+        <dd>Species reference for joining tree lists</dd>
       </dl><dl><dt>
           
-          <code><a href="product_preset.html">product_preset()</a></code> <code><a href="product_preset.html">product_presets()</a></code> 
+          <code><a href="nsvb_division_polygons.html">nsvb_division_polygons</a></code> 
         </dt>
-        <dd>Use the current example product names</dd>
+        <dd>Ecological division boundaries</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>

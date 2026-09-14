@@ -19,12 +19,6 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/articles/biomass-carbon.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/articles/bucking-prices.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/articles/compiling-inventory.html</loc>
-  </url>
-  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/articles/defect-recording-conventions.html</loc>
   </url>
   <url>
@@ -49,7 +43,19 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/articles/methods-taper-equations.html</loc>
   </url>
   <url>
+    <loc>https://siskiyoubiometrics.github.io/merchandiser/articles/optimal-bucking.html</loc>
+  </url>
+  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/articles/oracle-agreement.html</loc>
+  </url>
+  <url>
+    <loc>https://siskiyoubiometrics.github.io/merchandiser/articles/pacific-northwest.html</loc>
+  </url>
+  <url>
+    <loc>https://siskiyoubiometrics.github.io/merchandiser/articles/scaling-rules.html</loc>
+  </url>
+  <url>
+    <loc>https://siskiyoubiometrics.github.io/merchandiser/articles/southern.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/articles/stem-model-overview.html</loc>
@@ -70,9 +76,6 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/news/index.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/apply_defect_pct.html</loc>
-  </url>
-  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/as_taper_model.html</loc>
   </url>
   <url>
@@ -82,9 +85,6 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/biomass.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/biomass_component.html</loc>
-  </url>
-  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/carbon_fraction.html</loc>
   </url>
   <url>
@@ -92,15 +92,6 @@
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/check_taper_models.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/clark_profiles.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/co2e.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/compare_bucking_prices.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/complete_heights.html</loc>
@@ -115,19 +106,13 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/defects_from_stoppers.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/deprecated-names.html</loc>
-  </url>
-  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/dib.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/dob.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/example_product_names.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/example_products.html</loc>
+    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/example_defects_pnw.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/example_stem_measurements.html</loc>
@@ -148,9 +133,6 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/fit_taper.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/flewelling_profiles.html</loc>
-  </url>
-  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/get_taper_model.html</loc>
   </url>
   <url>
@@ -167,12 +149,6 @@
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/mc_version.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/merch_tree_helpers.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/merchandise.html</loc>
@@ -196,9 +172,6 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/nsvb_division_xy.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/nsvb_profiles.html</loc>
-  </url>
-  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/nvel_default_equation.html</loc>
   </url>
   <url>
@@ -211,37 +184,10 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/nvel_source_revision.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/nvel_volume.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/optimize_bucking.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/plot.height_fit.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/plot.merch_result.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/plot.stem_profile.html</loc>
-  </url>
-  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/predict_height.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/product.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/product_preset.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/product_schema.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/product_summary.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/product_summary_by_tree.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/products.html</loc>
@@ -250,31 +196,10 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/products_from_nvel_rules.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/provider_api.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/regional_profiles.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/regional_small_tapers.html</loc>
-  </url>
-  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/register_taper_model.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/result_tables.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/scaling_rules.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/species_lookup.html</loc>
-  </url>
-  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/species_reference.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/stand_table.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/status_codes.html</loc>
@@ -284,12 +209,6 @@
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/stem_volume.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/stock_table.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/taper_fit_methods.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/taper_manifest.html</loc>
@@ -304,7 +223,7 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/threads.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/tv_version.html</loc>
+    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/tree_cubic_volume.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/unregister_taper_model.html</loc>

@@ -32,7 +32,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">merchandiser</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,10 +52,12 @@
     <a class="dropdown-item" href="../articles/defect-recording-conventions.html">Recording defect</a>
     <a class="dropdown-item" href="../articles/fill-missing-heights.html">Fitting and completing heights</a>
     <a class="dropdown-item" href="../articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and scaling</a>
-    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass, carbon, and green weight</a>
-    <a class="dropdown-item" href="../articles/compiling-inventory.html">Compiling an inventory</a>
-    <a class="dropdown-item" href="../articles/bucking-prices.html">Bucking choices and prices</a>
+    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and green weight</a>
+    <a class="dropdown-item" href="../articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass and carbon</a>
+    <a class="dropdown-item" href="../articles/pacific-northwest.html">Pacific Northwest tree list</a>
+    <a class="dropdown-item" href="../articles/southern.html">Southern stands</a>
+    <a class="dropdown-item" href="../articles/optimal-bucking.html">Optimal bucking</a>
     <a class="dropdown-item" href="../articles/assumptions-status.html">Assumptions and status</a>
     <a class="dropdown-item" href="../articles/methods-taper-equations.html">Taper equation methods</a>
     <a class="dropdown-item" href="../articles/methods-fitting-taper.html">Fitting taper equations</a>
@@ -100,14 +102,11 @@
 
     
     
-<p>The shipped equations follow a pinned National Volume Estimator
-Library source revision. <code><a href="../reference/nvel_source_revision.html">nvel_source_revision()</a></code> returns
-that revision and attributes identifying the repository and fixture
-release.</p>
-<p><code>DIB</code> denotes diameter inside bark, and <code>DOB</code>
-denotes diameter outside bark.</p>
+<p>Shipped taper equations follow the pinned National Volume Estimator
+Library source revision. Source and agreement tables identify
+implementations available for stem calculations.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Report the equation source revision</span></span>
+<code class="sourceCode R"><span><span class="co">## Inspect the pinned source revision</span></span>
 <span><span class="fu"><a href="../reference/nvel_source_revision.html">nvel_source_revision</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "38548071d5aa652bb90c7f111f86b427f798a1c9"</span></span>
 <span><span class="co">#&gt; attr(,"upstream_url")</span></span>
@@ -117,8 +116,8 @@ denotes diameter outside bark.</p>
 <div class="section level2">
 <h2 id="source-routines">Source routines<a class="anchor" aria-label="anchor" href="#source-routines"></a>
 </h2>
-<p>Coefficient inventories retain source files, line locations, and
-revision identifiers.</p>
+<p>Coefficient inventories retain source filenames, line locations, and
+revisions.</p>
 <table class="table">
 <colgroup>
 <col width="13%">
@@ -136,7 +135,7 @@ sf_2pth.f, sf_3pt.f, sf_3z.f, sf_corr.f, sf_dfz.f, sf_ds.f, sf_hs.f,
 sf_shp.f, sf_taper.f, sf_yhat.f, sf_yhat3.f, sf_zero.f</td>
 </tr>
 <tr class="even">
-<td align="left">Clark regional profiles</td>
+<td align="left">Clark source profiles</td>
 <td align="left">r8clkdib.f, r8dib.f, r8dib.inc, r8clkcoef.inc,
 r8cfo.inc, r8clist.inc, r8vlist.f, r8vlist.inc, r8init.f, r8prep.f,
 r8vol.f, r8vol1.f, r8vol2.f, r9clarkdib.f, r9clark.f, r9coeff.inc,
@@ -144,12 +143,12 @@ r9init.f, r9vol.f, r9logs.f, clkcoef_mod.f, calcdia.f, ht2topd.f,
 profile.f, volinit.f, voleqdef.f</td>
 </tr>
 <tr class="odd">
-<td align="left">Alaska and Mathis regional profiles</td>
+<td align="left">Alaska and Mathis source profiles</td>
 <td align="left">r10tap.f, r10tapo.f, r10d2h.f, r10vol.f, r10vol1.f,
 r10volo.f, r4d2h.f, r4vol.f, profile.f, calcdia.f, ht2topd.f</td>
 </tr>
 <tr class="even">
-<td align="left">Smaller regional profile families</td>
+<td align="left">Smaller source profile families</td>
 <td align="left">r1tap.f, r2tap.f, r5tap.f, r12tap.f, stump.f, blmtap.f,
 blmvol.f, formclas.f, r6vol3.f</td>
 </tr>
@@ -164,16 +163,14 @@ dist_ecoprov.inc, regndftdata.inc, scrib.f</td>
 </tr>
 </tbody>
 </table>
-<p>National biomass diameter and cumulative-volume calculations use
+<p>National biomass diameter and cumulative volume calculations use
 distinct fitted relationships. <a href="stem-model-overview.html">Stem
-functions</a> accept equation identifiers and measurement vectors. <a href="methods-fitting-taper.html">fit_taper()</a> estimates local
-coefficients.</p>
+calculations</a> use the capabilities of the selected equation.</p>
 </div>
 <div class="section level2">
 <h2 id="identifier-fields">Identifier fields<a class="anchor" aria-label="anchor" href="#identifier-fields"></a>
 </h2>
-<p>The source identifiers use fixed character positions. Field meanings
-depend on the family.</p>
+<p>Field positions depend on the equation family.</p>
 <table class="table">
 <thead><tr class="header">
 <th align="left">layout</th>
@@ -183,25 +180,25 @@ depend on the family.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="left">regional profile</td>
+<td align="left">source profile</td>
 <td align="left">geographic equation selection</td>
 <td align="left">1:3</td>
-<td align="left">I00</td>
+<td align="left">F00</td>
 </tr>
 <tr class="even">
-<td align="left">regional profile</td>
+<td align="left">source profile</td>
 <td align="left">equation mnemonic</td>
 <td align="left">4:6</td>
 <td align="left">FW2</td>
 </tr>
 <tr class="odd">
-<td align="left">regional profile</td>
+<td align="left">source profile</td>
 <td align="left">family-specific variant</td>
 <td align="left">7</td>
 <td align="left">W</td>
 </tr>
 <tr class="even">
-<td align="left">regional profile</td>
+<td align="left">source profile</td>
 <td align="left">species suffix</td>
 <td align="left">8:10</td>
 <td align="left">202</td>
@@ -232,21 +229,24 @@ depend on the family.</p>
 </tr>
 </tbody>
 </table>
-<p><code><a href="../reference/check_taper_models.html">check_taper_models()</a></code> checks resolved identifiers and
-species scope. <a href="identifiers-defaults.html">nvel_default_equation()</a> resolves
-identifiers from agency and species codes.</p>
+<p><code><a href="../reference/check_taper_models.html">check_taper_models()</a></code> checks equation availability and
+species scope. <a href="identifiers-defaults.html">Identifiers and
+defaults</a> shows stored assignments.</p>
 </div>
 <div class="section level2">
 <h2 id="compatibility-behavior">Compatibility behavior<a class="anchor" aria-label="anchor" href="#compatibility-behavior"></a>
 </h2>
-<p><code>options(merchandiser.compat = 'port')</code> is the default.
-<code>options(merchandiser.compat = 'nvel')</code> selects
-source-compatible calculations. Restore the previous process option
-after a source comparison.</p>
+<p>The default compatibility option is <code>port</code>. The
+<code>nvel</code> option reproduces source behavior for the listed
+differences.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Inspect the compatibility option</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">'merchandiser.compat'</span>, default <span class="op">=</span> <span class="st">'port'</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "port"</span></span></code></pre></div>
 <table class="table">
 <colgroup>
-<col width="27%">
-<col width="35%">
+<col width="25%">
+<col width="36%">
 <col width="37%">
 </colgroup>
 <thead><tr class="header">
@@ -274,13 +274,13 @@ selection</td>
 <td align="left">reproduces the source two-root addition</td>
 </tr>
 <tr class="even">
-<td align="left">Regional Clark R9LOGS error 12</td>
+<td align="left">Clark R9LOGS error 12</td>
 <td align="left">retains a computable total in the internal volume
 record</td>
 <td align="left">reproduces the source error and cleared record</td>
 </tr>
 <tr class="odd">
-<td align="left">Regional R10 height selection and cedar equality</td>
+<td align="left">R10 height selection and cedar equality</td>
 <td align="left">inverts the registered profile consistently</td>
 <td align="left">retains source height results and the cedar equality
 rule</td>
@@ -291,7 +291,7 @@ rule</td>
 <td align="left">reproduces the source rounded search</td>
 </tr>
 <tr class="odd">
-<td align="left">Regional R12 height selection</td>
+<td align="left">R12 height selection</td>
 <td align="left">inverts the public profile</td>
 <td align="left">retains the source result for an unselected
 calculation</td>
@@ -314,9 +314,9 @@ calculation</td>
 <div class="section level2">
 <h2 id="fixture-agreement">Fixture agreement<a class="anchor" aria-label="anchor" href="#fixture-agreement"></a>
 </h2>
-<p>Differential tests compare package results with double- and
-single-precision source builds. They enforce tolerances and named
-exclusions for each family and operation.</p>
+<p>The saved table compares double and single precision source builds
+with package calculations. Tests enforce tolerances and named
+exclusions.</p>
 <table class="table">
 <thead><tr class="header">
 <th align="left">precision</th>
@@ -341,33 +341,33 @@ exclusions for each family and operation.</p>
 </tr>
 </tbody>
 </table>
-<table class="table">
+<table style="width:100%;" class="table">
 <colgroup>
-<col width="6%">
-<col width="12%">
 <col width="4%">
+<col width="15%">
+<col width="3%">
 <col width="2%">
-<col width="5%">
-<col width="8%">
+<col width="7%">
 <col width="9%">
-<col width="4%">
-<col width="46%">
+<col width="12%">
+<col width="6%">
+<col width="37%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">family</th>
 <th align="left">output</th>
 <th align="left">precision</th>
 <th align="left">compat</th>
-<th align="right">rows_compared</th>
-<th align="right">rows_within_tolerance</th>
-<th align="left">max_relative_difference</th>
-<th align="left">tolerance</th>
-<th align="left">exclusions</th>
+<th align="right">rows compared (count)</th>
+<th align="right">rows within tolerance (count)</th>
+<th align="left">maximum relative difference (unitless)</th>
+<th align="left">tolerance (unitless)</th>
+<th align="left">exclusions (names and counts)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="left">behre_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">1780</td>
@@ -378,7 +378,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="even">
 <td align="left">behre_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">1780</td>
@@ -389,7 +389,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="odd">
 <td align="left">behre_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">1323</td>
@@ -400,7 +400,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="even">
 <td align="left">behre_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">1323</td>
@@ -477,7 +477,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="odd">
 <td align="left">blm_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">30106</td>
@@ -488,7 +488,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="even">
 <td align="left">blm_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">30106</td>
@@ -499,7 +499,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="odd">
 <td align="left">blm_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">22683</td>
@@ -510,7 +510,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="even">
 <td align="left">blm_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">22683</td>
@@ -587,7 +587,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="odd">
 <td align="left">clark_r8</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">1478303</td>
@@ -598,7 +598,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="even">
 <td align="left">clark_r8</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">1478303</td>
@@ -609,7 +609,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="odd">
 <td align="left">clark_r8</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">4</td>
@@ -620,7 +620,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="even">
 <td align="left">clark_r8</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">4</td>
@@ -631,7 +631,7 @@ exclusions for each family and operation.</p>
 </tr>
 <tr class="odd">
 <td align="left">clark_r8</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">1163439</td>
@@ -643,7 +643,7 @@ below_contract_stump 86892, overlapping_roots 4</td>
 </tr>
 <tr class="even">
 <td align="left">clark_r8</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">1163439</td>
@@ -727,7 +727,7 @@ segmentation_not_available 652388</td>
 </tr>
 <tr class="odd">
 <td align="left">clark_r9</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">621260</td>
@@ -738,7 +738,7 @@ segmentation_not_available 652388</td>
 </tr>
 <tr class="even">
 <td align="left">clark_r9</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">621249</td>
@@ -749,7 +749,7 @@ segmentation_not_available 652388</td>
 </tr>
 <tr class="odd">
 <td align="left">clark_r9</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">539010</td>
@@ -760,7 +760,7 @@ segmentation_not_available 652388</td>
 </tr>
 <tr class="even">
 <td align="left">clark_r9</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">539010</td>
@@ -874,7 +874,7 @@ single_rounding_boundary 23</td>
 </tr>
 <tr class="even">
 <td align="left">flewelling_2pt</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">128415</td>
@@ -885,7 +885,7 @@ single_rounding_boundary 23</td>
 </tr>
 <tr class="odd">
 <td align="left">flewelling_2pt</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">128415</td>
@@ -896,7 +896,7 @@ single_rounding_boundary 23</td>
 </tr>
 <tr class="even">
 <td align="left">flewelling_2pt</td>
-<td align="left">DOB</td>
+<td align="left">diameter outside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">128415</td>
@@ -907,7 +907,7 @@ single_rounding_boundary 23</td>
 </tr>
 <tr class="odd">
 <td align="left">flewelling_2pt</td>
-<td align="left">DOB</td>
+<td align="left">diameter outside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">128415</td>
@@ -918,7 +918,7 @@ single_rounding_boundary 23</td>
 </tr>
 <tr class="even">
 <td align="left">flewelling_2pt</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">11525</td>
@@ -929,7 +929,7 @@ single_rounding_boundary 23</td>
 </tr>
 <tr class="odd">
 <td align="left">flewelling_2pt</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">11520</td>
@@ -941,7 +941,7 @@ single_precision_boundary 5</td>
 </tr>
 <tr class="even">
 <td align="left">flewelling_2pt</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">99822</td>
@@ -953,7 +953,7 @@ at_or_below_contract_stump 39</td>
 </tr>
 <tr class="odd">
 <td align="left">flewelling_2pt</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">99822</td>
@@ -1037,7 +1037,7 @@ fwsmall_uninitialized_state 173</td>
 </tr>
 <tr class="even">
 <td align="left">flewelling_3pt</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">37616</td>
@@ -1048,7 +1048,7 @@ fwsmall_uninitialized_state 173</td>
 </tr>
 <tr class="odd">
 <td align="left">flewelling_3pt</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">37616</td>
@@ -1059,7 +1059,7 @@ fwsmall_uninitialized_state 173</td>
 </tr>
 <tr class="even">
 <td align="left">flewelling_3pt</td>
-<td align="left">DOB</td>
+<td align="left">diameter outside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">37616</td>
@@ -1070,7 +1070,7 @@ fwsmall_uninitialized_state 173</td>
 </tr>
 <tr class="odd">
 <td align="left">flewelling_3pt</td>
-<td align="left">DOB</td>
+<td align="left">diameter outside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">37616</td>
@@ -1081,7 +1081,7 @@ fwsmall_uninitialized_state 173</td>
 </tr>
 <tr class="even">
 <td align="left">flewelling_3pt</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">23082</td>
@@ -1092,7 +1092,7 @@ fwsmall_uninitialized_state 173</td>
 </tr>
 <tr class="odd">
 <td align="left">flewelling_3pt</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">23074</td>
@@ -1104,7 +1104,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="even">
 <td align="left">flewelling_3pt</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">6930</td>
@@ -1116,7 +1116,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="odd">
 <td align="left">flewelling_3pt</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">6930</td>
@@ -1227,7 +1227,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="odd">
 <td align="left">nsvb</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">26755</td>
@@ -1238,7 +1238,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="even">
 <td align="left">nsvb</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">26755</td>
@@ -1249,7 +1249,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="odd">
 <td align="left">nsvb</td>
-<td align="left">DOB</td>
+<td align="left">diameter outside bark</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">26755</td>
@@ -1260,7 +1260,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="even">
 <td align="left">nsvb</td>
-<td align="left">DOB</td>
+<td align="left">diameter outside bark</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">26755</td>
@@ -1271,7 +1271,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="odd">
 <td align="left">nsvb</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">26476</td>
@@ -1282,7 +1282,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="even">
 <td align="left">nsvb</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">26476</td>
@@ -1359,7 +1359,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="odd">
 <td align="left">r1_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">5119</td>
@@ -1370,7 +1370,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="even">
 <td align="left">r1_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">5119</td>
@@ -1381,7 +1381,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="odd">
 <td align="left">r1_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">2625</td>
@@ -1393,7 +1393,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="even">
 <td align="left">r1_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">2625</td>
@@ -1471,7 +1471,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="odd">
 <td align="left">r10_taper</td>
-<td align="left">cedar equality height at DIB</td>
+<td align="left">cedar equality height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">2</td>
@@ -1482,7 +1482,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="even">
 <td align="left">r10_taper</td>
-<td align="left">cedar equality height at DIB</td>
+<td align="left">cedar equality height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">2</td>
@@ -1493,7 +1493,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="odd">
 <td align="left">r10_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">19499</td>
@@ -1504,7 +1504,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="even">
 <td align="left">r10_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">19499</td>
@@ -1515,7 +1515,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="odd">
 <td align="left">r10_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">3833</td>
@@ -1526,7 +1526,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="even">
 <td align="left">r10_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">3833</td>
@@ -1537,7 +1537,7 @@ single_precision_boundary 8</td>
 </tr>
 <tr class="odd">
 <td align="left">r10_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">13068</td>
@@ -1549,7 +1549,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="even">
 <td align="left">r10_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">13068</td>
@@ -1627,7 +1627,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="odd">
 <td align="left">r12_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">3547</td>
@@ -1638,7 +1638,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="even">
 <td align="left">r12_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">3547</td>
@@ -1649,7 +1649,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="odd">
 <td align="left">r12_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">3074</td>
@@ -1660,7 +1660,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="even">
 <td align="left">r12_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">3074</td>
@@ -1737,7 +1737,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="odd">
 <td align="left">r2_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">7075</td>
@@ -1748,7 +1748,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="even">
 <td align="left">r2_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">7075</td>
@@ -1759,7 +1759,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="odd">
 <td align="left">r2_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">6150</td>
@@ -1770,7 +1770,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="even">
 <td align="left">r2_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">6150</td>
@@ -1849,7 +1849,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="odd">
 <td align="left">r4_driver</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">17678</td>
@@ -1860,7 +1860,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="even">
 <td align="left">r4_driver</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">17678</td>
@@ -1871,7 +1871,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="odd">
 <td align="left">r4_driver</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">15211</td>
@@ -1882,7 +1882,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="even">
 <td align="left">r4_driver</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">15209</td>
@@ -1959,7 +1959,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="odd">
 <td align="left">r5_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">double</td>
 <td align="left">port</td>
 <td align="right">15950</td>
@@ -1970,7 +1970,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="even">
 <td align="left">r5_taper</td>
-<td align="left">DIB</td>
+<td align="left">diameter inside bark</td>
 <td align="left">single</td>
 <td align="left">port</td>
 <td align="right">15950</td>
@@ -1981,7 +1981,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="odd">
 <td align="left">r5_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">double</td>
 <td align="left">nvel</td>
 <td align="right">13856</td>
@@ -1992,7 +1992,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 <tr class="even">
 <td align="left">r5_taper</td>
-<td align="left">height at DIB</td>
+<td align="left">height at inside bark diameter</td>
 <td align="left">single</td>
 <td align="left">nvel</td>
 <td align="right">13856</td>
@@ -2069,8 +2069,7 @@ unsupported_dispatch_species 3833</td>
 </tr>
 </tbody>
 </table>
-<p>The saved table ships with the package. Full source fixtures are
-supplied separately to the test suite.</p>
+<p>Full source fixtures are supplied separately to the test suite.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

@@ -5,8 +5,8 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="description" content="Calculate log volumes, biomass, carbon, and expanded inventory summaries from tree measurements.">
-<title>Log volumes, biomass, and inventory summaries • merchandiser</title>
+<meta name="description" content="Turn tree measurements and product specifications into logs and scale.">
+<title>Logs, scale, biomass, and carbon • merchandiser</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
@@ -17,8 +17,8 @@
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Log volumes, biomass, and inventory summaries">
-<meta property="og:description" content="Calculate log volumes, biomass, carbon, and expanded inventory summaries from tree measurements.">
+<!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Logs, scale, biomass, and carbon">
+<meta property="og:description" content="Turn tree measurements and product specifications into logs and scale.">
 <meta property="og:image" content="https://siskiyoubiometrics.github.io/merchandiser/logo.svg">
 <!-- mathjax --><script src="file:///usr/share/javascript/mathjax/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -32,7 +32,7 @@
     
     <a class="navbar-brand me-2" href="index.html">merchandiser</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,10 +52,12 @@
     <a class="dropdown-item" href="articles/defect-recording-conventions.html">Recording defect</a>
     <a class="dropdown-item" href="articles/fill-missing-heights.html">Fitting and completing heights</a>
     <a class="dropdown-item" href="articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="articles/volumes-scaling.html">Volumes and scaling</a>
-    <a class="dropdown-item" href="articles/biomass-carbon.html">Biomass, carbon, and green weight</a>
-    <a class="dropdown-item" href="articles/compiling-inventory.html">Compiling an inventory</a>
-    <a class="dropdown-item" href="articles/bucking-prices.html">Bucking choices and prices</a>
+    <a class="dropdown-item" href="articles/volumes-scaling.html">Volumes and green weight</a>
+    <a class="dropdown-item" href="articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="articles/biomass-carbon.html">Biomass and carbon</a>
+    <a class="dropdown-item" href="articles/pacific-northwest.html">Pacific Northwest tree list</a>
+    <a class="dropdown-item" href="articles/southern.html">Southern stands</a>
+    <a class="dropdown-item" href="articles/optimal-bucking.html">Optimal bucking</a>
     <a class="dropdown-item" href="articles/assumptions-status.html">Assumptions and status</a>
     <a class="dropdown-item" href="articles/methods-taper-equations.html">Taper equation methods</a>
     <a class="dropdown-item" href="articles/methods-fitting-taper.html">Fitting taper equations</a>
@@ -91,22 +93,21 @@
 <img src="logo.svg" class="logo" alt=""><h1 id="merchandiser-">merchandiser <a class="anchor" aria-label="anchor" href="#merchandiser-"></a>
 </h1>
 </div>
-<p>merchandiser calculates log dimensions, product volumes, and values from tree measurements, taper equations, product tables, and recorded defects. It also fits heights and taper, estimates biomass and carbon, converts volume to green weight, and compiles expanded inventory summaries. Results retain calculation statuses and assumptions.</p>
+<p>merchandiser turns tree measurements, product specifications, and located defects into logs, scale, and residual stem sections. It also fits heights and taper equations, measures stems, and estimates dry biomass and carbon.</p>
 <div class="section level2">
 <h2 id="install">Install<a class="anchor" aria-label="anchor" href="#install"></a>
 </h2>
-<p>Install from the package repository with <code>remotes</code>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Load the installer</span></span>
+<code class="sourceCode R"><span><span class="co">## Install from the package repository</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://remotes.r-lib.org" class="external-link">remotes</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Install merchandiser from its source repository</span></span>
+<span><span class="co">## Install the package</span></span>
 <span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span>repo <span class="op">=</span> <span class="st">'siskiyoubiometrics/merchandiser'</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="select-and-scale-logs">Select and scale logs<a class="anchor" aria-label="anchor" href="#select-and-scale-logs"></a>
 </h2>
-<p>The shipped tree is a synthetic example. The four products below are three Scribner sawlogs and green-ton pulp, with illustrative prices in United States dollars (<code>USD</code>).</p>
+<p>The shipped tree is a synthetic example. The four products below are three Scribner sawlogs and green-ton pulp, with illustrative prices in United States dollars. Product order in <code><a href="reference/products.html">products()</a></code> sets cutting priority.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Load the packages</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/siskiyoubiometrics/merchandiser" class="external-link">merchandiser</a></span><span class="op">)</span></span>
@@ -118,140 +119,73 @@
 <span></span>
 <span><span class="co">## Define each product: lengths, small end limit, trim, unit, and price</span></span>
 <span><span class="va">large</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Large sawlog'</span>,</span>
-<span>                 priority <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>                 lengths <span class="op">=</span> <span class="fl">32</span>,</span>
-<span>                 min_sed <span class="op">=</span> <span class="fl">12</span>,</span>
-<span>                 inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                 trim <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>                 volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,</span>
-<span>                 price <span class="op">=</span> <span class="fl">900</span>,</span>
-<span>                 price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span>                 min_length <span class="op">=</span> <span class="fl">32</span>,  <span class="co">## feet</span></span>
+<span>                 max_length <span class="op">=</span> <span class="fl">32</span>,  <span class="co">## feet</span></span>
+<span>                 min_sed <span class="op">=</span> <span class="fl">12</span>,  <span class="co">## inches, small end diameter</span></span>
+<span>                 inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## diameter limit is inside bark</span></span>
+<span>                 trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet added to each log</span></span>
+<span>                 volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## Scribner board feet</span></span>
+<span>                 price <span class="op">=</span> <span class="fl">900</span>,  <span class="co">## dollars</span></span>
+<span>                 price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>  <span class="co">## per thousand board feet</span></span>
 <span></span>
 <span><span class="va">medium</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Medium sawlog'</span>,</span>
-<span>                  priority <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>                  lengths <span class="op">=</span> <span class="fl">16</span>,</span>
-<span>                  min_sed <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>                  inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                  trim <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>                  volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,</span>
-<span>                  price <span class="op">=</span> <span class="fl">700</span>,</span>
-<span>                  price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span>                  min_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
+<span>                  max_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
+<span>                  min_sed <span class="op">=</span> <span class="fl">10</span>,  <span class="co">## inches, small end diameter</span></span>
+<span>                  inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## diameter limit is inside bark</span></span>
+<span>                  trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet added to each log</span></span>
+<span>                  volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## Scribner board feet</span></span>
+<span>                  price <span class="op">=</span> <span class="fl">700</span>,  <span class="co">## dollars</span></span>
+<span>                  price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>  <span class="co">## per thousand board feet</span></span>
 <span></span>
 <span><span class="va">small</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Small sawlog'</span>,</span>
-<span>                 priority <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>                 lengths <span class="op">=</span> <span class="fl">16</span>,</span>
-<span>                 min_sed <span class="op">=</span> <span class="fl">6</span>,</span>
-<span>                 inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                 trim <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>                 volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,</span>
-<span>                 price <span class="op">=</span> <span class="fl">500</span>,</span>
-<span>                 price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span>                 min_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
+<span>                 max_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
+<span>                 min_sed <span class="op">=</span> <span class="fl">6</span>,  <span class="co">## inches, small end diameter</span></span>
+<span>                 inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## diameter limit is inside bark</span></span>
+<span>                 trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet added to each log</span></span>
+<span>                 volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## Scribner board feet</span></span>
+<span>                 price <span class="op">=</span> <span class="fl">500</span>,  <span class="co">## dollars</span></span>
+<span>                 price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>  <span class="co">## per thousand board feet</span></span>
 <span></span>
 <span><span class="va">pulp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Pulp'</span>,</span>
-<span>                priority <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>                min_length <span class="op">=</span> <span class="fl">8</span>,</span>
-<span>                max_length <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>                length_step <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>                min_sed <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>                inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                trim <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>                volume_unit <span class="op">=</span> <span class="st">'green_ton'</span>,</span>
-<span>                price <span class="op">=</span> <span class="fl">30</span>,</span>
-<span>                price_per <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>                accepts_pulp_restriction <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>                min_length <span class="op">=</span> <span class="fl">8</span>,  <span class="co">## feet</span></span>
+<span>                max_length <span class="op">=</span> <span class="fl">20</span>,  <span class="co">## feet</span></span>
+<span>                min_sed <span class="op">=</span> <span class="fl">3</span>,  <span class="co">## inches, small end diameter</span></span>
+<span>                inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## diameter limit is inside bark</span></span>
+<span>                trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet added to each log</span></span>
+<span>                volume_unit <span class="op">=</span> <span class="st">'green_ton'</span>,  <span class="co">## green short tons</span></span>
+<span>                price <span class="op">=</span> <span class="fl">30</span>,  <span class="co">## dollars</span></span>
+<span>                price_per <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>  <span class="co">## per ton</span></span>
 <span></span>
-<span><span class="co">## Combine the products into one specification table</span></span>
+<span><span class="co">## Combine the products in cutting priority order</span></span>
 <span><span class="va">specifications</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/products.html">products</a></span><span class="op">(</span><span class="va">large</span>, <span class="va">medium</span>, <span class="va">small</span>, <span class="va">pulp</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Select logs from the tree</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                      dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                      ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                      spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                      products <span class="op">=</span> <span class="va">specifications</span>,</span>
+<span>                      model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
-<col width="17%">
-<col width="11%">
-<col width="16%">
-<col width="10%">
-<col width="7%">
-<col width="15%">
+<col width="4%">
+<col width="14%">
+<col width="12%">
+<col width="27%">
 <col width="8%">
+<col width="17%">
 <col width="12%">
 </colgroup>
 <thead><tr class="header">
-<th align="left">product</th>
-<th align="right">priority</th>
-<th align="left">lengths</th>
-<th align="right">min_sed</th>
-<th align="right">trim</th>
-<th align="left">volume_unit</th>
-<th align="right">price</th>
-<th align="right">price_per</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="left">Large sawlog</td>
-<td align="right">1</td>
-<td align="left">32</td>
-<td align="right">12</td>
-<td align="right">0.5</td>
-<td align="left">scribner</td>
-<td align="right">900</td>
-<td align="right">1000</td>
-</tr>
-<tr class="even">
-<td align="left">Medium sawlog</td>
-<td align="right">2</td>
-<td align="left">16</td>
-<td align="right">10</td>
-<td align="right">0.5</td>
-<td align="left">scribner</td>
-<td align="right">700</td>
-<td align="right">1000</td>
-</tr>
-<tr class="odd">
-<td align="left">Small sawlog</td>
-<td align="right">3</td>
-<td align="left">16</td>
-<td align="right">6</td>
-<td align="right">0.5</td>
-<td align="left">scribner</td>
-<td align="right">500</td>
-<td align="right">1000</td>
-</tr>
-<tr class="even">
-<td align="left">Pulp</td>
-<td align="right">4</td>
-<td align="left">8 to 20 by 1</td>
-<td align="right">3</td>
-<td align="right">0.5</td>
-<td align="left">green_ton</td>
-<td align="right">30</td>
-<td align="right">1</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select logs from the tree</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/merchandise.html">merchandise</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                      ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                      model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span>,</span>
-<span>                      species <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">species</span>,</span>
-<span>                      id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree</span>,</span>
-<span>                      products <span class="op">=</span> <span class="va">specifications</span>,</span>
-<span>                      currency <span class="op">=</span> <span class="st">'USD'</span>,</span>
-<span>                      status <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<colgroup>
-<col width="6%">
-<col width="20%">
-<col width="22%">
-<col width="11%">
-<col width="15%">
-<col width="23%">
-</colgroup>
-<thead><tr class="header">
-<th align="right">log</th>
-<th align="left">product</th>
-<th align="right">nominal_length</th>
-<th align="right">sed_ib</th>
-<th align="right">net_scale</th>
-<th align="left">scale_unit</th>
+<th align="right">Log</th>
+<th align="left">Product</th>
+<th align="right">Length (ft)</th>
+<th align="right">Small end inside bark (in)</th>
+<th align="right">Scale</th>
+<th align="left">Unit</th>
+<th align="right">Value (USD)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -260,7 +194,8 @@
 <td align="right">32</td>
 <td align="right">14.017</td>
 <td align="right">230.000</td>
-<td align="left">board_foot</td>
+<td align="left">board feet</td>
+<td align="right">207.000</td>
 </tr>
 <tr class="even">
 <td align="right">2</td>
@@ -268,7 +203,8 @@
 <td align="right">16</td>
 <td align="right">11.643</td>
 <td align="right">80.000</td>
-<td align="left">board_foot</td>
+<td align="left">board feet</td>
+<td align="right">56.000</td>
 </tr>
 <tr class="odd">
 <td align="right">3</td>
@@ -276,7 +212,8 @@
 <td align="right">16</td>
 <td align="right">8.413</td>
 <td align="right">40.000</td>
-<td align="left">board_foot</td>
+<td align="left">board feet</td>
+<td align="right">20.000</td>
 </tr>
 <tr class="even">
 <td align="right">4</td>
@@ -284,78 +221,69 @@
 <td align="right">20</td>
 <td align="right">3.341</td>
 <td align="right">0.098</td>
-<td align="left">green_short_ton</td>
+<td align="left">green short tons</td>
+<td align="right">2.951</td>
 </tr>
 </tbody>
 </table>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Draw the selected logs</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-5-1.png"><!-- --></p>
-<p><code>net_scale</code> uses the unit shown in <code>scale_unit</code>. The result also contains tree totals, residual intervals, deductions, and values.</p>
+<p><img src="reference/figures/README-unnamed-chunk-4-1.png"><!-- --></p>
+<p><code>scale</code> uses the unit shown in <code>volume_unit</code>. The result also contains residual intervals, tree status, and assumptions.</p>
 </div>
 <div class="section level2">
 <h2 id="biomass-and-carbon">Biomass and carbon<a class="anchor" aria-label="anchor" href="#biomass-and-carbon"></a>
 </h2>
-<p><code><a href="reference/biomass.html">biomass()</a></code> returns component masses and aboveground carbon from tree measurements. <code><a href="reference/nsvb_division_xy.html">nsvb_division_xy()</a></code> assigns the ecological division used by the National Scale Volume and Biomass equations.</p>
+<p><code><a href="reference/biomass.html">biomass()</a></code> returns dry mass and carbon in metric tonnes from diameters in inches and heights in feet. The default uses national coefficients.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select example trees and assign ecological divisions</span></span>
-<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">example_trees_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_head</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>division <span class="op">=</span> <span class="fu"><a href="reference/nsvb_division_xy.html">nsvb_division_xy</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">longitude</span>, y <span class="op">=</span> <span class="va">latitude</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co">## Select three example trees</span></span>
+<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_head</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Estimate dry biomass and carbon in pounds</span></span>
+<span><span class="co">## Estimate dry biomass and carbon in metric tonnes</span></span>
 <span><span class="va">mass</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/biomass.html">biomass</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht_simulated</span>,</span>
-<span>                spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
-<span>                division <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">division</span>,</span>
-<span>                id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
-<span>                status <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span>                ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
-<col width="6%">
-<col width="20%">
-<col width="20%">
-<col width="18%">
-<col width="13%">
+<col width="7%">
+<col width="24%">
+<col width="24%">
+<col width="23%">
 <col width="20%">
 </colgroup>
 <thead><tr class="header">
-<th align="right">id</th>
-<th align="right">dry_stem_wood</th>
-<th align="right">dry_stem_bark</th>
-<th align="right">dry_branches</th>
-<th align="right">carbon</th>
-<th align="right">carbon_status</th>
+<th align="right">Tree</th>
+<th align="right">Stem wood (tonnes)</th>
+<th align="right">Stem bark (tonnes)</th>
+<th align="right">Branches (tonnes)</th>
+<th align="right">Carbon (tonnes)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">1</td>
-<td align="right">4590.757</td>
-<td align="right">669.367</td>
-<td align="right">473.203</td>
-<td align="right">2958.397</td>
-<td align="right">0</td>
+<td align="right">0.224</td>
+<td align="right">0.039</td>
+<td align="right">0.063</td>
+<td align="right">0.168</td>
 </tr>
 <tr class="even">
 <td align="right">2</td>
-<td align="right">444.109</td>
-<td align="right">72.438</td>
-<td align="right">97.229</td>
-<td align="right">316.708</td>
-<td align="right">0</td>
+<td align="right">0.318</td>
+<td align="right">0.042</td>
+<td align="right">0.094</td>
+<td align="right">0.230</td>
 </tr>
 <tr class="odd">
 <td align="right">3</td>
-<td align="right">620.786</td>
-<td align="right">101.647</td>
-<td align="right">133.575</td>
-<td align="right">441.701</td>
-<td align="right">0</td>
+<td align="right">0.520</td>
+<td align="right">0.087</td>
+<td align="right">0.105</td>
+<td align="right">0.367</td>
 </tr>
 </tbody>
 </table>
-<p><code><a href="reference/biomass_component.html">biomass_component()</a></code> returns a selected component. <code><a href="reference/co2e.html">co2e()</a></code> returns metric tons of carbon dioxide equivalent. <code><a href="reference/green_weight.html">green_weight()</a></code> converts supplied cubic volume using species wood and bark properties.</p>
 </div>
 <div class="section level2">
 <h2 id="package-site">Package site<a class="anchor" aria-label="anchor" href="#package-site"></a>
@@ -372,13 +300,17 @@
 <li>
 <a href="https://siskiyoubiometrics.github.io/merchandiser/articles/taper-profiles.html">Taper and stem profiles</a>.</li>
 <li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/volumes-scaling.html">Volumes and scaling</a>.</li>
+<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/volumes-scaling.html">Volumes and green weight</a>.</li>
 <li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/biomass-carbon.html">Biomass, carbon, and green weight</a>.</li>
+<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/scaling-rules.html">Scaling rules</a>.</li>
 <li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/compiling-inventory.html">Compiling an inventory</a>.</li>
+<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/biomass-carbon.html">Biomass and carbon</a>.</li>
 <li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/bucking-prices.html">Bucking choices and prices</a>.</li>
+<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/pacific-northwest.html">Pacific Northwest tree list</a>.</li>
+<li>
+<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/southern.html">Southern stands</a>.</li>
+<li>
+<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/optimal-bucking.html">Optimal bucking</a>.</li>
 <li>
 <a href="https://siskiyoubiometrics.github.io/merchandiser/articles/assumptions-status.html">Assumptions and status</a>.</li>
 <li>

@@ -32,7 +32,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">merchandiser</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,10 +52,12 @@
     <a class="dropdown-item" href="../articles/defect-recording-conventions.html">Recording defect</a>
     <a class="dropdown-item" href="../articles/fill-missing-heights.html">Fitting and completing heights</a>
     <a class="dropdown-item" href="../articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and scaling</a>
-    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass, carbon, and green weight</a>
-    <a class="dropdown-item" href="../articles/compiling-inventory.html">Compiling an inventory</a>
-    <a class="dropdown-item" href="../articles/bucking-prices.html">Bucking choices and prices</a>
+    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and green weight</a>
+    <a class="dropdown-item" href="../articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass and carbon</a>
+    <a class="dropdown-item" href="../articles/pacific-northwest.html">Pacific Northwest tree list</a>
+    <a class="dropdown-item" href="../articles/southern.html">Southern stands</a>
+    <a class="dropdown-item" href="../articles/optimal-bucking.html">Optimal bucking</a>
     <a class="dropdown-item" href="../articles/assumptions-status.html">Assumptions and status</a>
     <a class="dropdown-item" href="../articles/methods-taper-equations.html">Taper equation methods</a>
     <a class="dropdown-item" href="../articles/methods-fitting-taper.html">Fitting taper equations</a>
@@ -100,180 +102,70 @@
 
     
     
-<p><code><a href="../reference/assumptions.html">assumptions()</a></code> returns choices recorded with a
-merchandising result. <code><a href="../reference/status_codes.html">status_codes()</a></code> describes calculation
-diagnoses. <code><a href="../reference/threads.html">threads()</a></code> queries or changes the worker count
-for compiled equations. Currency labels use United States dollars
-(<code>USD</code>) in the example.</p>
-<div class="section level2">
-<h2 id="recorded-settings">Recorded settings<a class="anchor" aria-label="anchor" href="#recorded-settings"></a>
-</h2>
+<p>Product order in <code><a href="../reference/products.html">products()</a></code> sets cutting priority.
+Recorded assumptions and status codes support checking a run before
+summarizing its logs.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select a shipped tree</span></span>
-<span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">tree</th>
-<th align="right">spcd</th>
-<th align="left">species</th>
-<th align="right">dbh</th>
-<th align="right">ht</th>
-<th align="left">model</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="right">5</td>
-<td align="right">202</td>
-<td align="left">Douglas-fir</td>
-<td align="right">20</td>
-<td align="right">100</td>
-<td align="left">F00FW2W202</td>
-</tr></tbody>
-</table>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Load the example specifications</span></span>
-<span><span class="va">specifications</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/example_products.html">example_products</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">'douglas_fir'</span><span class="op">)</span></span></code></pre></div>
-<table style="width:100%;" class="table">
-<colgroup>
-<col width="20%">
-<col width="11%">
-<col width="15%">
-<col width="15%">
-<col width="11%">
-<col width="7%">
-<col width="17%">
-</colgroup>
-<thead><tr class="header">
-<th align="left">product</th>
-<th align="left">lengths</th>
-<th align="right">min_length</th>
-<th align="right">max_length</th>
-<th align="right">min_sed</th>
-<th align="right">trim</th>
-<th align="left">volume_unit</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="left">Large sawlog</td>
-<td align="left">32</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">12</td>
-<td align="right">0.5</td>
-<td align="left">scribner</td>
-</tr>
-<tr class="even">
-<td align="left">Medium sawlog</td>
-<td align="left">16</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">10</td>
-<td align="right">0.5</td>
-<td align="left">scribner</td>
-</tr>
-<tr class="odd">
-<td align="left">Small sawlog</td>
-<td align="left">16</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">6</td>
-<td align="right">0.5</td>
-<td align="left">scribner</td>
-</tr>
-<tr class="even">
-<td align="left">Pulp</td>
-<td align="left"></td>
-<td align="right">8</td>
-<td align="right">20</td>
-<td align="right">3</td>
-<td align="right">0.5</td>
-<td align="left">green_ton</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select logs from the tree</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                      ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                      model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span>,</span>
-<span>                      species <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">species</span>,</span>
-<span>                      id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree</span>,</span>
-<span>                      products <span class="op">=</span> <span class="va">specifications</span>,</span>
-<span>                      currency <span class="op">=</span> <span class="st">'USD'</span>,</span>
-<span>                      status <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Extract the choices recorded with the result</span></span>
-<span><span class="va">recorded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assumptions.html">assumptions</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">result</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<colgroup>
-<col width="21%">
-<col width="15%">
-<col width="14%">
-<col width="7%">
-<col width="11%">
-<col width="28%">
-</colgroup>
-<thead><tr class="header">
-<th align="left">assumption</th>
-<th align="left">species</th>
-<th align="left">model</th>
-<th align="right">value</th>
-<th align="left">units</th>
-<th align="left">source</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="left">species_model</td>
-<td align="left">Douglas-fir</td>
-<td align="left">F00FW2W202</td>
-<td align="right">NA</td>
-<td align="left">NA</td>
-<td align="left">caller_model</td>
-</tr>
-<tr class="even">
-<td align="left">stump_height</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
-<td align="right">1</td>
-<td align="left">imperial</td>
-<td align="left">package_default</td>
-</tr>
-<tr class="odd">
-<td align="left">unit_system</td>
-<td align="left">NA</td>
-<td align="left">NA</td>
-<td align="right">NA</td>
-<td align="left">imperial</td>
-<td align="left">call</td>
-</tr>
-<tr class="even">
-<td align="left">utilization_top</td>
-<td align="left">Douglas-fir</td>
-<td align="left">NA</td>
-<td align="right">3</td>
-<td align="left">imperial</td>
-<td align="left">product_chain_default</td>
-</tr>
-</tbody>
-</table>
-<p>Records include equation mappings, defaults, units, and applicable
-species-property choices. They omit local model coefficients. Preserve
-fitted objects or coefficient records with results using local
-equations.</p>
-</div>
+<code class="sourceCode R"><span><span class="co">## Select example trees</span></span>
+<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_head</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Define domestic saw specifications</span></span>
+<span><span class="va">domestic_saw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'domestic_saw'</span>,  <span class="co">## product name, unitless</span></span>
+<span>                        min_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
+<span>                        max_length <span class="op">=</span> <span class="fl">40</span>,  <span class="co">## feet</span></span>
+<span>                        trim <span class="op">=</span> <span class="fl">1</span>,  <span class="co">## feet</span></span>
+<span>                        min_sed <span class="op">=</span> <span class="fl">6</span>,  <span class="co">## inches</span></span>
+<span>                        volume_unit <span class="op">=</span> <span class="st">'scribner'</span><span class="op">)</span>  <span class="co">## Scribner board feet</span></span>
+<span></span>
+<span><span class="co">## Combine products in cutting priority order</span></span>
+<span><span class="va">specifications</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/products.html">products</a></span><span class="op">(</span>domestic_saw <span class="op">=</span> <span class="va">domestic_saw</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Cut and scale the trees</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                      dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                      ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                      spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                      products <span class="op">=</span> <span class="va">specifications</span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="calculation-diagnoses">Calculation diagnoses<a class="anchor" aria-label="anchor" href="#calculation-diagnoses"></a>
+<h2 id="status">Status<a class="anchor" aria-label="anchor" href="#status"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## List the merchandising diagnoses</span></span>
-<span><span class="va">codes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/status_codes.html">status_codes</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">source</span> <span class="op">==</span> <span class="st">'merchandising'</span><span class="op">)</span></span></code></pre></div>
+<p>Only trees with nonzero status appear in <code>status</code>. A clean
+run returns an empty table.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Show a clean status table</span></span>
+<span><span class="va">result</span><span class="op">$</span><span class="va">status</span></span>
+<span><span class="co">#&gt; [1] tree_id     status      name        description</span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span>
+<span></span>
+<span><span class="co">## Introduce a missing diameter</span></span>
+<span><span class="va">bad_trees</span> <span class="op">&lt;-</span> <span class="va">trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span>condition <span class="op">=</span> <span class="va">tree</span> <span class="op">==</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">first</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">tree</span><span class="op">)</span>,</span>
+<span>                       true <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>                       false <span class="op">=</span> <span class="va">dbh</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Cut and scale the trees</span></span>
+<span><span class="va">bad_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">bad_trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                          dbh <span class="op">=</span> <span class="va">bad_trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                          ht <span class="op">=</span> <span class="va">bad_trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                          spcd <span class="op">=</span> <span class="va">bad_trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                          products <span class="op">=</span> <span class="va">specifications</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Show the failed input row</span></span>
+<span><span class="va">bad_result</span><span class="op">$</span><span class="va">status</span></span>
+<span><span class="co">#&gt;   tree_id status          name                                   description</span></span>
+<span><span class="co">#&gt; 1       1      1 missing_input A required input is missing or is not finite.</span></span></code></pre></div>
+<p>Structural errors, such as duplicate identifiers or unknown product
+fields, stop the call.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Look up the status descriptions</span></span>
+<span><span class="va">codes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/status_codes.html">status_codes</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
 <col width="3%">
-<col width="21%">
-<col width="11%">
-<col width="51%">
+<col width="20%">
+<col width="6%">
+<col width="58%">
 <col width="10%">
 </colgroup>
 <thead><tr class="header">
@@ -285,142 +177,313 @@ equations.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td align="right">0</td>
+<td align="left">ok</td>
+<td align="left">ok</td>
+<td align="left">The requested measurement is available.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="left">missing_input</td>
+<td align="left">input</td>
+<td align="left">A required input is missing or is not finite.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="left">invalid_dbh</td>
+<td align="left">input</td>
+<td align="left">Diameter at breast height must be greater than
+zero.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="left">invalid_height</td>
+<td align="left">input</td>
+<td align="left">Total tree height must be greater than zero.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="odd">
+<td align="right">4</td>
+<td align="left">height_out_of_range</td>
+<td align="left">input</td>
+<td align="left">The measurement height lies below ground or above the
+tree top.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="left">invalid_diameter</td>
+<td align="left">input</td>
+<td align="left">The requested diameter must be greater than zero.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="odd">
+<td align="right">6</td>
+<td align="left">empty_stem_section</td>
+<td align="left">input</td>
+<td align="left">The lower boundary must be below the upper
+boundary.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="left">unknown_species</td>
+<td align="left">input</td>
+<td align="left">The species code is not recognized.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="left">outside_divisions</td>
+<td align="left">input</td>
+<td align="left">The location falls outside the shipped ecological
+division boundaries.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="even">
+<td align="right">50</td>
+<td align="left">unknown_model</td>
+<td align="left">model</td>
+<td align="left">The taper model identifier is not registered.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="odd">
+<td align="right">51</td>
+<td align="left">missing_tree_measurement</td>
+<td align="left">model</td>
+<td align="left">The selected model needs an additional tree
+measurement.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="even">
+<td align="right">52</td>
+<td align="left">species_out_of_scope</td>
+<td align="left">model</td>
+<td align="left">The tree species is outside the model’s stated species
+range.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="odd">
+<td align="right">53</td>
+<td align="left">measurement_unavailable</td>
+<td align="left">model</td>
+<td align="left">The selected model cannot supply this measurement.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="even">
+<td align="right">54</td>
+<td align="left">model_failed</td>
+<td align="left">model</td>
+<td align="left">The selected model did not return a valid
+measurement.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="odd">
+<td align="right">100</td>
+<td align="left">diameter_above_tip</td>
+<td align="left">height</td>
+<td align="left">The requested diameter is smaller than the diameter at
+the tree top.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="even">
+<td align="right">101</td>
+<td align="left">diameter_below_stump</td>
+<td align="left">height</td>
+<td align="left">The requested diameter is larger than the diameter at
+the stump.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="odd">
+<td align="right">102</td>
+<td align="left">multiple_heights</td>
+<td align="left">height</td>
+<td align="left">The same diameter occurs at more than one height and
+the highest was returned.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="even">
 <td align="right">400</td>
 <td align="left">no_entry_product</td>
 <td align="left">product</td>
-<td align="left">no product passes the static entry rules</td>
+<td align="left">No product accepts this tree’s recorded
+attributes.</td>
 <td align="left">merchandising</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">401</td>
 <td align="left">defect_height_out_of_range</td>
 <td align="left">defect</td>
-<td align="left">a defect height is outside the physical tree</td>
+<td align="left">A defect height lies outside the tree.</td>
 <td align="left">merchandising</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="right">402</td>
 <td align="left">defect_interval_invalid</td>
 <td align="left">defect</td>
-<td align="left">a defect interval has invalid or reversed bounds</td>
+<td align="left">A defect section has reversed or equal bounds.</td>
 <td align="left">merchandising</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">403</td>
 <td align="left">defect_percent_out_of_range</td>
 <td align="left">defect</td>
-<td align="left">a defect percentage is outside zero through 100</td>
+<td align="left">A sweep percentage is missing, misplaced, or outside
+zero through 100.</td>
 <td align="left">merchandising</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="right">404</td>
 <td align="left">model_unresolved</td>
 <td align="left">model</td>
-<td align="left">no taper equation could be resolved for the
-species</td>
+<td align="left">No taper equation was selected for this species.</td>
 <td align="left">merchandising</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">406</td>
 <td align="left">unknown_defect_effect</td>
 <td align="left">defect</td>
-<td align="left">the defect effect is not in the supported
-vocabulary</td>
-<td align="left">merchandising</td>
-</tr>
-<tr class="odd">
-<td align="right">407</td>
-<td align="left">unknown_curvature_category</td>
-<td align="left">defect</td>
-<td align="left">a sweep or crook category is not in
-curvature_scale</td>
-<td align="left">merchandising</td>
-</tr>
-<tr class="even">
-<td align="right">408</td>
-<td align="left">missing_product_attribute</td>
-<td align="left">product</td>
-<td align="left">a product rule needs a tree attribute that was not
-supplied</td>
-<td align="left">merchandising</td>
-</tr>
-<tr class="odd">
-<td align="right">409</td>
-<td align="left">utilization_top_invalid</td>
-<td align="left">utilization</td>
-<td align="left">the utilization-top request is invalid for this
-tree</td>
+<td align="left">A defect effect is not cull, restrict, end, or
+sweep.</td>
 <td align="left">merchandising</td>
 </tr>
 <tr class="even">
 <td align="right">410</td>
 <td align="left">no_feasible_log</td>
 <td align="left">product</td>
-<td align="left">the tree is valid but no product log is feasible</td>
-<td align="left">merchandising</td>
-</tr>
-<tr class="odd">
-<td align="right">411</td>
-<td align="left">scale_input_unavailable</td>
-<td align="left">scaling</td>
-<td align="left">a requested product scale cannot be computed from
-available inputs</td>
-<td align="left">merchandising</td>
-</tr>
-<tr class="even">
-<td align="right">412</td>
-<td align="left">profile_adapter_failure</td>
-<td align="left">provider</td>
-<td align="left">the stem profile adapter failed for this tree</td>
-<td align="left">merchandising</td>
-</tr>
-<tr class="odd">
-<td align="right">413</td>
-<td align="left">reconciliation_failure</td>
-<td align="left">reconciliation</td>
-<td align="left">the physical volume ledger did not reconcile</td>
+<td align="left">The tree is valid but no log meets the product
+specifications.</td>
 <td align="left">merchandising</td>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Count tree statuses in the result</span></span>
-<span><span class="va">checks</span> <span class="op">&lt;-</span> <span class="va">result</span><span class="op">$</span><span class="va">trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">status</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">status</th>
-<th align="right">n</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="right">0</td>
-<td align="right">1</td>
-</tr></tbody>
-</table>
-<p><code>status = TRUE</code> retains diagnoses and suppresses
-tree-status warnings. Structural input errors still stop the call. The
-<code>no_feasible_log</code> diagnosis denotes valid zero log volume.
-Other merchandising failures require review before reporting totals.</p>
 </div>
 <div class="section level2">
-<h2 id="calculation-workers">Calculation workers<a class="anchor" aria-label="anchor" href="#calculation-workers"></a>
+<h2 id="assumptions">Assumptions<a class="anchor" aria-label="anchor" href="#assumptions"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Query the current worker count</span></span>
+<p><code><a href="../reference/assumptions.html">assumptions()</a></code> returns equation assignments, stump
+heights, and any inferred bark ratios recorded for the trees.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Extract recorded assumptions</span></span>
+<span><span class="va">recorded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assumptions.html">assumptions</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">result</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="8%">
+<col width="14%">
+<col width="5%">
+<col width="11%">
+<col width="20%">
+<col width="5%">
+<col width="6%">
+<col width="8%">
+<col width="22%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">tree_id</th>
+<th align="left">assumption</th>
+<th align="right">spcd</th>
+<th align="left">model</th>
+<th align="right">value (unit column)</th>
+<th align="left">unit</th>
+<th align="left">basis</th>
+<th align="left">product</th>
+<th align="left">source (abbreviated)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="left">species_model</td>
+<td align="right">202</td>
+<td align="left">F00FW2W202</td>
+<td align="right">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">pinned source library</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="left">species_model</td>
+<td align="right">263</td>
+<td align="left">F03FW2W263</td>
+<td align="right">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">pinned source library</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="left">species_model</td>
+<td align="right">202</td>
+<td align="left">F00FW2W202</td>
+<td align="right">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">pinned source library</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="left">stump_height</td>
+<td align="right">202</td>
+<td align="left">F00FW2W202</td>
+<td align="right">1</td>
+<td align="left">feet</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">stump_ht</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="left">stump_height</td>
+<td align="right">263</td>
+<td align="left">F03FW2W263</td>
+<td align="right">1</td>
+<td align="left">feet</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">stump_ht</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="left">stump_height</td>
+<td align="right">202</td>
+<td align="left">F00FW2W202</td>
+<td align="right">1</td>
+<td align="left">feet</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">stump_ht</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level2">
+<h2 id="workers">Workers<a class="anchor" aria-label="anchor" href="#workers"></a>
+</h2>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Inspect the worker count</span></span>
 <span><span class="fu"><a href="../reference/threads.html">threads</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1</span></span>
+<span><span class="co">#&gt; [1] 4</span></span>
 <span></span>
-<span><span class="co">## Calculate diameters with a temporary worker count</span></span>
+<span><span class="co">## Temporarily use a specified worker count</span></span>
 <span><span class="fu"><a href="../reference/with_threads.html">with_threads</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>             code <span class="op">=</span> <span class="fu"><a href="../reference/dib.html">dib</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                        ht <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>             code <span class="op">=</span> <span class="fu"><a href="../reference/dib.html">dib</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                        ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                        h <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>                        model <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">model</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1]  8.56020 11.00230 12.19541 14.74339 15.63832 20.14008</span></span></code></pre></div>
-<p><code><a href="../reference/with_threads.html">with_threads()</a></code> restores the previous count when the
-expression finishes. <code>MERCHANDISER_THREADS</code> sets the initial
-count when the package loads. Equations written in R execute in the main
-R process.</p>
+<span>                        spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`diameter inside bark (inches)` <span class="op">=</span> <span class="va">value</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   diameter inside bark (inches) status</span></span>
+<span><span class="co">#&gt; 1                       8.56020      0</span></span>
+<span><span class="co">#&gt; 2                      11.00230      0</span></span>
+<span><span class="co">#&gt; 3                      12.19541      0</span></span></code></pre></div>
+<p><code><a href="../reference/with_threads.html">with_threads()</a></code> restores the previous count.
+<code>MERCHANDISER_THREADS</code> sets the initial count when the
+package loads.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

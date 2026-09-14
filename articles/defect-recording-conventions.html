@@ -32,7 +32,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">merchandiser</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,10 +52,12 @@
     <a class="dropdown-item" href="../articles/defect-recording-conventions.html">Recording defect</a>
     <a class="dropdown-item" href="../articles/fill-missing-heights.html">Fitting and completing heights</a>
     <a class="dropdown-item" href="../articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and scaling</a>
-    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass, carbon, and green weight</a>
-    <a class="dropdown-item" href="../articles/compiling-inventory.html">Compiling an inventory</a>
-    <a class="dropdown-item" href="../articles/bucking-prices.html">Bucking choices and prices</a>
+    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and green weight</a>
+    <a class="dropdown-item" href="../articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass and carbon</a>
+    <a class="dropdown-item" href="../articles/pacific-northwest.html">Pacific Northwest tree list</a>
+    <a class="dropdown-item" href="../articles/southern.html">Southern stands</a>
+    <a class="dropdown-item" href="../articles/optimal-bucking.html">Optimal bucking</a>
     <a class="dropdown-item" href="../articles/assumptions-status.html">Assumptions and status</a>
     <a class="dropdown-item" href="../articles/methods-taper-equations.html">Taper equation methods</a>
     <a class="dropdown-item" href="../articles/methods-fitting-taper.html">Fitting taper equations</a>
@@ -100,317 +102,1540 @@
 
     
     
-<p><code><a href="../reference/defect.html">defect()</a></code> supplies located restrictions that can change
-log selection. <code><a href="../reference/apply_defect_pct.html">apply_defect_pct()</a></code> deducts percentages after
-bucking and retains the cuts.</p>
-<p>The example currency is United States dollars (<code>USD</code>).</p>
-<div class="section level2">
-<h2 id="located-conditions">Located conditions<a class="anchor" aria-label="anchor" href="#located-conditions"></a>
-</h2>
-<p><code><a href="../reference/defect.html">defect()</a></code> records a condition by tree identifier and
-height. Heights use the same units as the merchandising call.</p>
+<p>Product order in <code><a href="../reference/products.html">products()</a></code> sets cutting priority.
+Located defect records change available stem sections and product
+eligibility.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select a shipped tree</span></span>
-<span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">tree</th>
-<th align="right">spcd</th>
-<th align="left">species</th>
-<th align="right">dbh</th>
-<th align="right">ht</th>
-<th align="left">model</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="right">5</td>
-<td align="right">202</td>
-<td align="left">Douglas-fir</td>
-<td align="right">20</td>
-<td align="right">100</td>
-<td align="left">F00FW2W202</td>
-</tr></tbody>
-</table>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Record rot along the example stem</span></span>
-<span><span class="va">record</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree</span>,</span>
-<span>                 from <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>                 to <span class="op">=</span> <span class="fl">30</span>,</span>
-<span>                 effect <span class="op">=</span> <span class="st">'rot'</span>,</span>
-<span>                 percent <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">id</th>
-<th align="right">from</th>
-<th align="right">to</th>
-<th align="left">effect</th>
-<th align="right">percent</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="right">30</td>
-<td align="left">rot</td>
-<td align="right">20</td>
-</tr></tbody>
-</table>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Load specifications and validate the record against the tree</span></span>
-<span><span class="va">specifications</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/example_products.html">example_products</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">'douglas_fir'</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co">## Define export specifications</span></span>
+<span><span class="va">export</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'export'</span>,  <span class="co">## product name, unitless</span></span>
+<span>                  spcd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">202</span>, <span class="fl">263</span><span class="op">)</span>,  <span class="co">## species codes, unitless</span></span>
+<span>                  min_dbh <span class="op">=</span> <span class="fl">12</span>,  <span class="co">## inches</span></span>
+<span>                  min_length <span class="op">=</span> <span class="fl">32</span>,  <span class="co">## feet</span></span>
+<span>                  max_length <span class="op">=</span> <span class="fl">40</span>,  <span class="co">## feet</span></span>
+<span>                  trim <span class="op">=</span> <span class="fl">1</span>,  <span class="co">## feet</span></span>
+<span>                  min_sed <span class="op">=</span> <span class="fl">12</span>,  <span class="co">## inches</span></span>
+<span>                  inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## logical, unitless</span></span>
+<span>                  volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## board feet</span></span>
+<span>                  split_scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>  <span class="co">## logical, unitless</span></span>
 <span></span>
-<span><span class="co">## Check defect bounds and fields</span></span>
-<span><span class="va">checked</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/validate_defects.html">validate_defects</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">record</span>,</span>
-<span>                            products <span class="op">=</span> <span class="va">specifications</span>,</span>
-<span>                            ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                            id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">id</th>
-<th align="right">from</th>
-<th align="right">to</th>
-<th align="left">effect</th>
-<th align="right">percent</th>
-<th align="right">status</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="right">30</td>
-<td align="left">rot</td>
-<td align="right">20</td>
-<td align="right">0</td>
-</tr></tbody>
-</table>
+<span><span class="co">## Define domestic saw specifications</span></span>
+<span><span class="va">domestic_saw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'domestic_saw'</span>,  <span class="co">## product name, unitless</span></span>
+<span>                        spcd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">202</span>, <span class="fl">263</span><span class="op">)</span>,  <span class="co">## species codes, unitless</span></span>
+<span>                        min_dbh <span class="op">=</span> <span class="fl">10</span>,  <span class="co">## inches</span></span>
+<span>                        min_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
+<span>                        max_length <span class="op">=</span> <span class="fl">40</span>,  <span class="co">## feet</span></span>
+<span>                        trim <span class="op">=</span> <span class="fl">1</span>,  <span class="co">## feet</span></span>
+<span>                        min_sed <span class="op">=</span> <span class="fl">6</span>,  <span class="co">## inches</span></span>
+<span>                        inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## logical, unitless</span></span>
+<span>                        volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## board feet</span></span>
+<span>                        split_scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>  <span class="co">## logical, unitless</span></span>
+<span></span>
+<span><span class="co">## Define pulp specifications</span></span>
+<span><span class="va">pulp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'pulp'</span>,  <span class="co">## product name, unitless</span></span>
+<span>                spcd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">202</span>, <span class="fl">263</span><span class="op">)</span>,  <span class="co">## species codes, unitless</span></span>
+<span>                min_dbh <span class="op">=</span> <span class="fl">5</span>,  <span class="co">## inches</span></span>
+<span>                min_length <span class="op">=</span> <span class="fl">8</span>,  <span class="co">## feet</span></span>
+<span>                max_length <span class="op">=</span> <span class="fl">40</span>,  <span class="co">## feet</span></span>
+<span>                trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet</span></span>
+<span>                min_sed <span class="op">=</span> <span class="fl">3</span>,  <span class="co">## inches</span></span>
+<span>                inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## logical, unitless</span></span>
+<span>                volume_unit <span class="op">=</span> <span class="st">'green_ton'</span><span class="op">)</span>  <span class="co">## green short tons</span></span>
+<span></span>
+<span><span class="co">## Combine products in cutting priority order</span></span>
+<span><span class="va">specifications</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/products.html">products</a></span><span class="op">(</span>export <span class="op">=</span> <span class="va">export</span>,</span>
+<span>                           domestic_saw <span class="op">=</span> <span class="va">domestic_saw</span>,</span>
+<span>                           pulp <span class="op">=</span> <span class="va">pulp</span><span class="op">)</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="effects">Effects<a class="anchor" aria-label="anchor" href="#effects"></a>
+</h2>
+<p><code>cull</code> removes an interval. <code>restrict</code> allows
+only its named product within an interval. Both split the stem and
+restart priority.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Record a cull on an example tree</span></span>
+<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree</span><span class="op">[</span><span class="fl">7</span><span class="op">]</span>,</span>
+<span>       from <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>       to <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>       effect <span class="op">=</span> <span class="st">'cull'</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`from (feet)` <span class="op">=</span> <span class="va">from</span>,</span>
+<span>         `to (feet)` <span class="op">=</span> <span class="va">to</span>,</span>
+<span>         `percent (percent)` <span class="op">=</span> <span class="va">percent</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;merch_defects&gt; 1 records</span></span>
+<span><span class="co">#&gt;  tree_id from (feet) to (feet) effect product percent (percent)</span></span>
+<span><span class="co">#&gt;        7           1         8   cull    &lt;NA&gt;                NA</span></span>
+<span></span>
+<span><span class="co">## Record a product restriction</span></span>
+<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree</span><span class="op">[</span><span class="fl">28</span><span class="op">]</span>,</span>
+<span>       from <span class="op">=</span> <span class="fl">35</span>,</span>
+<span>       to <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>       effect <span class="op">=</span> <span class="st">'restrict'</span>,</span>
+<span>       product <span class="op">=</span> <span class="st">'pulp'</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`from (feet)` <span class="op">=</span> <span class="va">from</span>,</span>
+<span>         `to (feet)` <span class="op">=</span> <span class="va">to</span>,</span>
+<span>         `percent (percent)` <span class="op">=</span> <span class="va">percent</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;merch_defects&gt; 1 records</span></span>
+<span><span class="co">#&gt;  tree_id from (feet) to (feet)   effect product percent (percent)</span></span>
+<span><span class="co">#&gt;       28          35        NA restrict    pulp                NA</span></span></code></pre></div>
+<p><code>end</code> stops cutting at <code>from</code>.
+<code>sweep</code> rejects overlapping logs only when its percentage
+exceeds the product’s <code>max_sweep</code>.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Record an end</span></span>
+<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree</span><span class="op">[</span><span class="fl">21</span><span class="op">]</span>,</span>
+<span>       from <span class="op">=</span> <span class="fl">88</span>,</span>
+<span>       to <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>       effect <span class="op">=</span> <span class="st">'end'</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`from (feet)` <span class="op">=</span> <span class="va">from</span>,</span>
+<span>         `to (feet)` <span class="op">=</span> <span class="va">to</span>,</span>
+<span>         `percent (percent)` <span class="op">=</span> <span class="va">percent</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;merch_defects&gt; 1 records</span></span>
+<span><span class="co">#&gt;  tree_id from (feet) to (feet) effect product percent (percent)</span></span>
+<span><span class="co">#&gt;       21          88        NA    end    &lt;NA&gt;                NA</span></span>
+<span></span>
+<span><span class="co">## Record sweep severity</span></span>
+<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree</span><span class="op">[</span><span class="fl">35</span><span class="op">]</span>,</span>
+<span>       from <span class="op">=</span> <span class="fl">28</span>,</span>
+<span>       to <span class="op">=</span> <span class="fl">70</span>,</span>
+<span>       effect <span class="op">=</span> <span class="st">'sweep'</span>,</span>
+<span>       percent <span class="op">=</span> <span class="fl">25</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`from (feet)` <span class="op">=</span> <span class="va">from</span>,</span>
+<span>         `to (feet)` <span class="op">=</span> <span class="va">to</span>,</span>
+<span>         `percent (percent)` <span class="op">=</span> <span class="va">percent</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;merch_defects&gt; 1 records</span></span>
+<span><span class="co">#&gt;  tree_id from (feet) to (feet) effect product percent (percent)</span></span>
+<span><span class="co">#&gt;       35          28        70  sweep    &lt;NA&gt;                25</span></span></code></pre></div>
+<p>Missing <code>to</code> extends the record to the tree top. No defect
+percentage is applied within <code><a href="../reference/merchandise.html">merchandise()</a></code>.</p>
+</div>
+<div class="section level2">
+<h2 id="mapped-defects">Mapped defects<a class="anchor" aria-label="anchor" href="#mapped-defects"></a>
+</h2>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select logs from the tree</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                      ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                      model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span>,</span>
-<span>                      species <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">species</span>,</span>
-<span>                      id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree</span>,</span>
-<span>                      products <span class="op">=</span> <span class="va">specifications</span>,</span>
-<span>                      currency <span class="op">=</span> <span class="st">'USD'</span>,</span>
-<span>                      status <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                      defects <span class="op">=</span> <span class="va">record</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Check the shipped defect records</span></span>
+<span><span class="va">checked</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/validate_defects.html">validate_defects</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">example_defects_pnw</span>,</span>
+<span>                            products <span class="op">=</span> <span class="va">specifications</span>,</span>
+<span>                            ht <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                            tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
-<col width="6%">
-<col width="21%">
-<col width="22%">
-<col width="10%">
+<col width="12%">
+<col width="18%">
 <col width="15%">
-<col width="24%">
+<col width="13%">
+<col width="12%">
+<col width="18%">
+<col width="10%">
 </colgroup>
 <thead><tr class="header">
-<th align="right">log</th>
+<th align="right">tree_id</th>
+<th align="right">from (feet)</th>
+<th align="right">to (feet)</th>
+<th align="left">effect</th>
 <th align="left">product</th>
-<th align="right">nominal_length</th>
-<th align="right">sed_ib</th>
-<th align="right">net_scale</th>
-<th align="left">scale_unit</th>
+<th align="right">percent (%)</th>
+<th align="right">status</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td align="right">7</td>
 <td align="right">1</td>
-<td align="left">Large sawlog</td>
-<td align="right">32</td>
-<td align="right">14.017</td>
-<td align="right">203.942</td>
-<td align="left">board_foot</td>
+<td align="right">8</td>
+<td align="left">cull</td>
+<td align="left">NA</td>
+<td align="right">NA</td>
+<td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">2</td>
-<td align="left">Medium sawlog</td>
-<td align="right">16</td>
-<td align="right">11.643</td>
-<td align="right">80.000</td>
-<td align="left">board_foot</td>
+<td align="right">14</td>
+<td align="right">12</td>
+<td align="right">15</td>
+<td align="left">cull</td>
+<td align="left">NA</td>
+<td align="right">NA</td>
+<td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="right">3</td>
-<td align="left">Small sawlog</td>
-<td align="right">16</td>
-<td align="right">8.413</td>
-<td align="right">40.000</td>
-<td align="left">board_foot</td>
+<td align="right">21</td>
+<td align="right">88</td>
+<td align="right">NA</td>
+<td align="left">end</td>
+<td align="left">NA</td>
+<td align="right">NA</td>
+<td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">4</td>
-<td align="left">Pulp</td>
-<td align="right">20</td>
-<td align="right">3.341</td>
-<td align="right">0.098</td>
-<td align="left">green_short_ton</td>
+<td align="right">28</td>
+<td align="right">35</td>
+<td align="right">NA</td>
+<td align="left">restrict</td>
+<td align="left">pulp</td>
+<td align="right">NA</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">35</td>
+<td align="right">28</td>
+<td align="right">70</td>
+<td align="left">sweep</td>
+<td align="left">NA</td>
+<td align="right">25</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">42</td>
+<td align="right">1</td>
+<td align="right">8</td>
+<td align="left">cull</td>
+<td align="left">NA</td>
+<td align="right">NA</td>
+<td align="right">0</td>
 </tr>
 </tbody>
 </table>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Draw the cuts and located defect</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
-<p><img src="defect-recording-conventions_files/figure-html/unnamed-chunk-9-1.png" alt="" width="672"></p>
-<p>Rot deductions use overlapping inside-bark volume. Overlapping rot
-percentages use the greatest percentage. Cull intervals remove stem
-sections and restart product selection above them. Pulp intervals
-restrict eligibility to the product with
-<code>accepts_pulp_restriction = TRUE</code>.</p>
-<p>Sweep and crook use caller-defined ordered categories. They restrict
-eligibility without assigning a percentage deduction. A break ends
-selection at its height. A fork applies a pulp restriction above its
-height.</p>
+<code class="sourceCode R"><span><span class="co">## Select the tree with the first shipped cull</span></span>
+<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">example_trees_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree</span> <span class="op">==</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">first</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">example_defects_pnw</span><span class="op">$</span><span class="va">tree_id</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Select its mapped defects</span></span>
+<span><span class="va">records</span> <span class="op">&lt;-</span> <span class="va">example_defects_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree_id</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Cut and scale the trees</span></span>
+<span><span class="va">clean</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                     dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                     ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                     spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                     products <span class="op">=</span> <span class="va">specifications</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Cut and scale the trees</span></span>
+<span><span class="va">affected</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                        dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                        ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                        spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                        products <span class="op">=</span> <span class="va">specifications</span>,</span>
+<span>                        defects <span class="op">=</span> <span class="va">records</span><span class="op">)</span></span></code></pre></div>
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="6%">
+<col width="5%">
+<col width="2%">
+<col width="9%">
+<col width="14%">
+<col width="12%">
+<col width="9%">
+<col width="19%">
+<col width="19%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">run</th>
+<th align="right">tree_id</th>
+<th align="right">log</th>
+<th align="left">product</th>
+<th align="right">start height (feet)</th>
+<th align="right">end height (feet)</th>
+<th align="right">length (feet)</th>
+<th align="right">small end diameter (inches)</th>
+<th align="right">scale (Scribner board feet)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">clean</td>
+<td align="right">7</td>
+<td align="right">1</td>
+<td align="left">domestic_saw</td>
+<td align="right">1</td>
+<td align="right">42</td>
+<td align="right">40</td>
+<td align="right">10.106</td>
+<td align="right">150</td>
+</tr>
+<tr class="even">
+<td align="left">clean</td>
+<td align="right">7</td>
+<td align="right">2</td>
+<td align="left">domestic_saw</td>
+<td align="right">42</td>
+<td align="right">70</td>
+<td align="right">27</td>
+<td align="right">6.019</td>
+<td align="right">30</td>
+</tr>
+<tr class="odd">
+<td align="left">affected</td>
+<td align="right">7</td>
+<td align="right">1</td>
+<td align="left">domestic_saw</td>
+<td align="right">8</td>
+<td align="right">49</td>
+<td align="right">40</td>
+<td align="right">9.315</td>
+<td align="right">120</td>
+</tr>
+<tr class="even">
+<td align="left">affected</td>
+<td align="right">7</td>
+<td align="right">2</td>
+<td align="left">domestic_saw</td>
+<td align="right">49</td>
+<td align="right">70</td>
+<td align="right">20</td>
+<td align="right">6.019</td>
+<td align="right">20</td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col width="6%">
+<col width="5%">
+<col width="2%">
+<col width="5%">
+<col width="14%">
+<col width="13%">
+<col width="10%">
+<col width="20%">
+<col width="18%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">run</th>
+<th align="right">tree_id</th>
+<th align="right">log</th>
+<th align="left">product</th>
+<th align="right">start height (feet)</th>
+<th align="right">end height (feet)</th>
+<th align="right">length (feet)</th>
+<th align="right">small end diameter (inches)</th>
+<th align="right">scale (green short tons)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">clean</td>
+<td align="right">7</td>
+<td align="right">3</td>
+<td align="left">pulp</td>
+<td align="right">70</td>
+<td align="right">84.5</td>
+<td align="right">14</td>
+<td align="right">3.017</td>
+<td align="right">0.04</td>
+</tr>
+<tr class="even">
+<td align="left">affected</td>
+<td align="right">7</td>
+<td align="right">3</td>
+<td align="left">pulp</td>
+<td align="right">70</td>
+<td align="right">84.5</td>
+<td align="right">14</td>
+<td align="right">3.017</td>
+<td align="right">0.04</td>
+</tr>
+</tbody>
+</table>
+<details><summary>
+Drawing measurements
+</summary><table class="table">
+<thead><tr class="header">
+<th align="right">tree_id</th>
+<th align="right">height (feet)</th>
+<th align="right">radius inside bark (inches)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">0.0</td>
+<td align="right">8.8198</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">0.5</td>
+<td align="right">8.1238</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">1.0</td>
+<td align="right">7.7100</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">1.5</td>
+<td align="right">7.4290</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">2.0</td>
+<td align="right">7.2244</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">2.5</td>
+<td align="right">7.0691</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">3.0</td>
+<td align="right">6.9475</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">3.5</td>
+<td align="right">6.8503</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">4.0</td>
+<td align="right">6.7712</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">4.5</td>
+<td align="right">6.7059</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">5.0</td>
+<td align="right">6.6512</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">5.5</td>
+<td align="right">6.6049</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">6.0</td>
+<td align="right">6.5651</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">6.5</td>
+<td align="right">6.5304</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">7.0</td>
+<td align="right">6.4999</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">7.5</td>
+<td align="right">6.4725</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">8.0</td>
+<td align="right">6.4477</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">8.5</td>
+<td align="right">6.4247</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">9.0</td>
+<td align="right">6.4032</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">9.5</td>
+<td align="right">6.3826</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">10.0</td>
+<td align="right">6.3628</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">10.5</td>
+<td align="right">6.3434</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">11.0</td>
+<td align="right">6.3241</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">11.5</td>
+<td align="right">6.3048</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">12.0</td>
+<td align="right">6.2855</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">12.5</td>
+<td align="right">6.2662</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">13.0</td>
+<td align="right">6.2469</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">13.5</td>
+<td align="right">6.2277</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">14.0</td>
+<td align="right">6.2084</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">14.5</td>
+<td align="right">6.1891</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">15.0</td>
+<td align="right">6.1698</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">15.5</td>
+<td align="right">6.1505</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">16.0</td>
+<td align="right">6.1313</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">16.5</td>
+<td align="right">6.1120</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">17.0</td>
+<td align="right">6.0927</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">17.5</td>
+<td align="right">6.0734</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">18.0</td>
+<td align="right">6.0542</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">18.5</td>
+<td align="right">6.0349</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">19.0</td>
+<td align="right">6.0156</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">19.5</td>
+<td align="right">5.9963</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">20.0</td>
+<td align="right">5.9770</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">20.5</td>
+<td align="right">5.9578</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">21.0</td>
+<td align="right">5.9385</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">21.5</td>
+<td align="right">5.9192</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">22.0</td>
+<td align="right">5.8999</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">22.5</td>
+<td align="right">5.8806</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">23.0</td>
+<td align="right">5.8614</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">23.5</td>
+<td align="right">5.8421</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">24.0</td>
+<td align="right">5.8228</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">24.5</td>
+<td align="right">5.8035</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">25.0</td>
+<td align="right">5.7842</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">25.5</td>
+<td align="right">5.7650</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">26.0</td>
+<td align="right">5.7457</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">26.5</td>
+<td align="right">5.7264</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">27.0</td>
+<td align="right">5.7071</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">27.5</td>
+<td align="right">5.6878</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">28.0</td>
+<td align="right">5.6684</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">28.5</td>
+<td align="right">5.6489</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">29.0</td>
+<td align="right">5.6294</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">29.5</td>
+<td align="right">5.6098</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">30.0</td>
+<td align="right">5.5900</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">30.5</td>
+<td align="right">5.5701</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">31.0</td>
+<td align="right">5.5501</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">31.5</td>
+<td align="right">5.5300</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">32.0</td>
+<td align="right">5.5096</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">32.5</td>
+<td align="right">5.4891</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">33.0</td>
+<td align="right">5.4684</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">33.5</td>
+<td align="right">5.4475</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">34.0</td>
+<td align="right">5.4264</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">34.5</td>
+<td align="right">5.4051</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">35.0</td>
+<td align="right">5.3835</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">35.5</td>
+<td align="right">5.3617</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">36.0</td>
+<td align="right">5.3397</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">36.5</td>
+<td align="right">5.3174</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">37.0</td>
+<td align="right">5.2948</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">37.5</td>
+<td align="right">5.2720</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">38.0</td>
+<td align="right">5.2489</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">38.5</td>
+<td align="right">5.2254</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">39.0</td>
+<td align="right">5.2018</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">39.5</td>
+<td align="right">5.1778</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">40.0</td>
+<td align="right">5.1535</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">40.5</td>
+<td align="right">5.1288</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">41.0</td>
+<td align="right">5.1039</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">41.5</td>
+<td align="right">5.0786</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">42.0</td>
+<td align="right">5.0531</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">42.5</td>
+<td align="right">5.0271</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">43.0</td>
+<td align="right">5.0009</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">43.5</td>
+<td align="right">4.9742</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">44.0</td>
+<td align="right">4.9473</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">44.5</td>
+<td align="right">4.9199</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">45.0</td>
+<td align="right">4.8923</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">45.5</td>
+<td align="right">4.8642</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">46.0</td>
+<td align="right">4.8358</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">46.5</td>
+<td align="right">4.8070</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">47.0</td>
+<td align="right">4.7779</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">47.5</td>
+<td align="right">4.7483</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">48.0</td>
+<td align="right">4.7184</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">48.5</td>
+<td align="right">4.6881</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">49.0</td>
+<td align="right">4.6574</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">49.5</td>
+<td align="right">4.6263</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">50.0</td>
+<td align="right">4.5949</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">50.5</td>
+<td align="right">4.5630</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">51.0</td>
+<td align="right">4.5307</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">51.5</td>
+<td align="right">4.4981</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">52.0</td>
+<td align="right">4.4650</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">52.5</td>
+<td align="right">4.4316</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">53.0</td>
+<td align="right">4.3977</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">53.5</td>
+<td align="right">4.3635</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">54.0</td>
+<td align="right">4.3288</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">54.5</td>
+<td align="right">4.2937</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">55.0</td>
+<td align="right">4.2583</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">55.5</td>
+<td align="right">4.2224</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">56.0</td>
+<td align="right">4.1861</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">56.5</td>
+<td align="right">4.1494</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">57.0</td>
+<td align="right">4.1123</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">57.5</td>
+<td align="right">4.0749</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">58.0</td>
+<td align="right">4.0370</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">58.5</td>
+<td align="right">3.9987</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">59.0</td>
+<td align="right">3.9599</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">59.5</td>
+<td align="right">3.9208</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">60.0</td>
+<td align="right">3.8813</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">60.5</td>
+<td align="right">3.8414</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">61.0</td>
+<td align="right">3.8011</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">61.5</td>
+<td align="right">3.7604</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">62.0</td>
+<td align="right">3.7193</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">62.5</td>
+<td align="right">3.6778</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">63.0</td>
+<td align="right">3.6359</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">63.5</td>
+<td align="right">3.5936</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">64.0</td>
+<td align="right">3.5509</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">64.5</td>
+<td align="right">3.5079</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">65.0</td>
+<td align="right">3.4644</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">65.5</td>
+<td align="right">3.4206</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">66.0</td>
+<td align="right">3.3764</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">66.5</td>
+<td align="right">3.3318</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">67.0</td>
+<td align="right">3.2868</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">67.5</td>
+<td align="right">3.2415</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">68.0</td>
+<td align="right">3.1958</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">68.5</td>
+<td align="right">3.1498</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">69.0</td>
+<td align="right">3.1033</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">69.5</td>
+<td align="right">3.0565</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">70.0</td>
+<td align="right">3.0094</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">70.5</td>
+<td align="right">2.9619</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">71.0</td>
+<td align="right">2.9141</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">71.5</td>
+<td align="right">2.8659</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">72.0</td>
+<td align="right">2.8174</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">72.5</td>
+<td align="right">2.7685</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">73.0</td>
+<td align="right">2.7193</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">73.5</td>
+<td align="right">2.6698</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">74.0</td>
+<td align="right">2.6200</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">74.5</td>
+<td align="right">2.5699</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">75.0</td>
+<td align="right">2.5194</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">75.5</td>
+<td align="right">2.4686</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">76.0</td>
+<td align="right">2.4176</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">76.5</td>
+<td align="right">2.3662</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">77.0</td>
+<td align="right">2.3145</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">77.5</td>
+<td align="right">2.2626</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">78.0</td>
+<td align="right">2.2103</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">78.5</td>
+<td align="right">2.1578</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">79.0</td>
+<td align="right">2.1051</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">79.5</td>
+<td align="right">2.0520</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">80.0</td>
+<td align="right">1.9987</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">80.5</td>
+<td align="right">1.9452</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">81.0</td>
+<td align="right">1.8914</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">81.5</td>
+<td align="right">1.8374</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">82.0</td>
+<td align="right">1.7831</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">82.5</td>
+<td align="right">1.7286</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">83.0</td>
+<td align="right">1.6739</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">83.5</td>
+<td align="right">1.6189</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">84.0</td>
+<td align="right">1.5638</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">84.5</td>
+<td align="right">1.5084</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">85.0</td>
+<td align="right">1.4529</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">85.5</td>
+<td align="right">1.3972</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">86.0</td>
+<td align="right">1.3413</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">86.5</td>
+<td align="right">1.2852</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">87.0</td>
+<td align="right">1.2289</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">87.5</td>
+<td align="right">1.1725</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">88.0</td>
+<td align="right">1.1160</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">88.5</td>
+<td align="right">1.0593</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">89.0</td>
+<td align="right">1.0024</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">89.5</td>
+<td align="right">0.9455</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">90.0</td>
+<td align="right">0.8884</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">90.5</td>
+<td align="right">0.8312</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">91.0</td>
+<td align="right">0.7739</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">91.5</td>
+<td align="right">0.7165</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">92.0</td>
+<td align="right">0.6590</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">92.5</td>
+<td align="right">0.6015</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">93.0</td>
+<td align="right">0.5438</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">93.5</td>
+<td align="right">0.4862</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">94.0</td>
+<td align="right">0.4284</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">94.5</td>
+<td align="right">0.3706</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">95.0</td>
+<td align="right">0.3128</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">95.5</td>
+<td align="right">0.2549</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">96.0</td>
+<td align="right">0.1970</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">96.5</td>
+<td align="right">0.1392</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">97.0</td>
+<td align="right">0.0825</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="right">97.5</td>
+<td align="right">0.0335</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="right">98.0</td>
+<td align="right">0.0000</td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<thead><tr class="header">
+<th align="left">run</th>
+<th align="right">tree_id</th>
+<th align="right">from (feet)</th>
+<th align="right">to (feet)</th>
+<th align="left">cause</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">clean</td>
+<td align="right">7</td>
+<td align="right">0.000</td>
+<td align="right">1.000</td>
+<td align="left">stump</td>
+</tr>
+<tr class="even">
+<td align="left">clean</td>
+<td align="right">7</td>
+<td align="right">41.000</td>
+<td align="right">42.000</td>
+<td align="left">trim</td>
+</tr>
+<tr class="odd">
+<td align="left">clean</td>
+<td align="right">7</td>
+<td align="right">69.000</td>
+<td align="right">70.000</td>
+<td align="left">trim</td>
+</tr>
+<tr class="even">
+<td align="left">clean</td>
+<td align="right">7</td>
+<td align="right">84.000</td>
+<td align="right">84.500</td>
+<td align="left">trim</td>
+</tr>
+<tr class="odd">
+<td align="left">clean</td>
+<td align="right">7</td>
+<td align="right">84.500</td>
+<td align="right">84.576</td>
+<td align="left">short_remainder</td>
+</tr>
+<tr class="even">
+<td align="left">clean</td>
+<td align="right">7</td>
+<td align="right">84.576</td>
+<td align="right">98.000</td>
+<td align="left">top</td>
+</tr>
+<tr class="odd">
+<td align="left">affected</td>
+<td align="right">7</td>
+<td align="right">0.000</td>
+<td align="right">1.000</td>
+<td align="left">stump</td>
+</tr>
+<tr class="even">
+<td align="left">affected</td>
+<td align="right">7</td>
+<td align="right">1.000</td>
+<td align="right">8.000</td>
+<td align="left">cull</td>
+</tr>
+<tr class="odd">
+<td align="left">affected</td>
+<td align="right">7</td>
+<td align="right">48.000</td>
+<td align="right">49.000</td>
+<td align="left">trim</td>
+</tr>
+<tr class="even">
+<td align="left">affected</td>
+<td align="right">7</td>
+<td align="right">69.000</td>
+<td align="right">70.000</td>
+<td align="left">trim</td>
+</tr>
+<tr class="odd">
+<td align="left">affected</td>
+<td align="right">7</td>
+<td align="right">84.000</td>
+<td align="right">84.500</td>
+<td align="left">trim</td>
+</tr>
+<tr class="even">
+<td align="left">affected</td>
+<td align="right">7</td>
+<td align="right">84.500</td>
+<td align="right">84.576</td>
+<td align="left">short_remainder</td>
+</tr>
+<tr class="odd">
+<td align="left">affected</td>
+<td align="right">7</td>
+<td align="right">84.576</td>
+<td align="right">98.000</td>
+<td align="left">top</td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<thead><tr class="header">
+<th align="right">tree_id</th>
+<th align="right">from (feet)</th>
+<th align="right">to (feet)</th>
+<th align="left">effect</th>
+<th align="left">product</th>
+<th align="right">percent (percent)</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td align="right">7</td>
+<td align="right">1</td>
+<td align="right">8</td>
+<td align="left">cull</td>
+<td align="left">NA</td>
+<td align="right">NA</td>
+</tr></tbody>
+</table></details><p>The cull moves the first usable cut upward. The left drawing omits
+defects, and the right drawing uses the shipped record.</p>
+<p><img src="defect-recording-conventions_files/figure-html/unnamed-chunk-10-1.png" alt="" width="1440"></p>
 </div>
 <div class="section level2">
 <h2 id="stopping-heights">Stopping heights<a class="anchor" aria-label="anchor" href="#stopping-heights"></a>
 </h2>
-<p><code><a href="../reference/defects_from_stoppers.html">defects_from_stoppers()</a></code> converts recorded stopping
-heights into cull and pulp intervals. A jump butt removes the lower
-interval. A saw stop starts a pulp restriction, and a pulp stop removes
-the remaining top.</p>
+<p><code><a href="../reference/defects_from_stoppers.html">defects_from_stoppers()</a></code> converts jump butts to culls,
+saw stops to restrictions, and pulp stops to ends. The <a href="southern.html">southern workflow</a> applies the converted rows to
+the complete list.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select complete example measurements with stopping heights</span></span>
-<span><span class="va">stopped</span> <span class="op">&lt;-</span> <span class="va">example_trees_south</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">saw_stop</span><span class="op">)</span> <span class="op">|</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">pulp_stop</span><span class="op">)</span> <span class="op">|</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">jump_butt</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_head</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Convert the shipped stopper columns</span></span>
+<span><span class="va">stoppers</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/defects_from_stoppers.html">defects_from_stoppers</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                                  ht <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                                  saw_stop <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">saw_stop</span>,</span>
+<span>                                  pulp_stop <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">pulp_stop</span>,</span>
+<span>                                  jump_butt <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">jump_butt</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <thead><tr class="header">
-<th align="right">tree</th>
-<th align="right">ht_simulated</th>
-<th align="right">saw_stop</th>
-<th align="right">pulp_stop</th>
-<th align="right">jump_butt</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="right">2</td>
-<td align="right">43.7</td>
-<td align="right">25.4</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-</tr>
-<tr class="even">
-<td align="right">5</td>
-<td align="right">51.2</td>
-<td align="right">NA</td>
-<td align="right">40.9</td>
-<td align="right">NA</td>
-</tr>
-<tr class="odd">
-<td align="right">24</td>
-<td align="right">57.3</td>
-<td align="right">33.3</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Convert stopping heights to located records</span></span>
-<span><span class="va">intervals</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/defects_from_stoppers.html">defects_from_stoppers</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">stopped</span><span class="op">$</span><span class="va">tree</span>,</span>
-<span>                                   ht <span class="op">=</span> <span class="va">stopped</span><span class="op">$</span><span class="va">ht_simulated</span>,</span>
-<span>                                   saw_stop <span class="op">=</span> <span class="va">stopped</span><span class="op">$</span><span class="va">saw_stop</span>,</span>
-<span>                                   pulp_stop <span class="op">=</span> <span class="va">stopped</span><span class="op">$</span><span class="va">pulp_stop</span>,</span>
-<span>                                   jump_butt <span class="op">=</span> <span class="va">stopped</span><span class="op">$</span><span class="va">jump_butt</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">id</th>
-<th align="right">from</th>
-<th align="right">to</th>
+<th align="right">tree_id</th>
+<th align="right">from (feet)</th>
+<th align="right">to (feet)</th>
 <th align="left">effect</th>
+<th align="left">product</th>
+<th align="right">percent (%)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">2</td>
 <td align="right">25.4</td>
-<td align="right">43.7</td>
-<td align="left">pulp</td>
+<td align="right">NA</td>
+<td align="left">restrict</td>
+<td align="left">pulpwood</td>
+<td align="right">NA</td>
 </tr>
 <tr class="even">
 <td align="right">5</td>
 <td align="right">40.9</td>
-<td align="right">51.2</td>
-<td align="left">cull</td>
+<td align="right">NA</td>
+<td align="left">end</td>
+<td align="left">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="odd">
 <td align="right">24</td>
 <td align="right">33.3</td>
-<td align="right">57.3</td>
-<td align="left">pulp</td>
+<td align="right">NA</td>
+<td align="left">restrict</td>
+<td align="left">pulpwood</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="right">31</td>
+<td align="right">34.2</td>
+<td align="right">NA</td>
+<td align="left">end</td>
+<td align="left">NA</td>
+<td align="right">NA</td>
+</tr>
+<tr class="odd">
+<td align="right">40</td>
+<td align="right">24.6</td>
+<td align="right">NA</td>
+<td align="left">end</td>
+<td align="left">NA</td>
+<td align="right">NA</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section level2">
-<h2 id="percentages">Percentages<a class="anchor" aria-label="anchor" href="#percentages"></a>
+<h2 id="stem-thirds">Stem thirds<a class="anchor" aria-label="anchor" href="#stem-thirds"></a>
 </h2>
-<p><code><a href="../reference/defect_pct_from_thirds.html">defect_pct_from_thirds()</a></code> weights supplied percentages by
-modeled inside-bark volume in each third of total height.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Combine example percentages by stem-third volume</span></span>
-<span><span class="va">percentage</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/defect_pct_from_thirds.html">defect_pct_from_thirds</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                                     ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                                     model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span>,</span>
-<span>                                     pct_lower <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>                                     pct_middle <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>                                     pct_upper <span class="op">=</span> <span class="fl">30</span>,</span>
-<span>                                     status <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">value</th>
-<th align="right">status</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="right">14.254</td>
-<td align="right">0</td>
-</tr></tbody>
-</table>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Apply the percentage to current net quantities</span></span>
-<span><span class="va">deducted</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/apply_defect_pct.html">apply_defect_pct</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">result</span>,</span>
-<span>                             pct <span class="op">=</span> <span class="va">percentage</span><span class="op">$</span><span class="va">value</span>,</span>
-<span>                             kind <span class="op">=</span> <span class="st">'thirds'</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">log</th>
-<th align="right">gross_scale</th>
-<th align="right">located_net_scale</th>
-<th align="right">net_scale</th>
-<th align="left">scale_unit</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="right">1</td>
-<td align="right">230.000</td>
-<td align="right">203.942</td>
-<td align="right">174.873</td>
-<td align="left">board_foot</td>
-</tr>
-<tr class="even">
-<td align="right">2</td>
-<td align="right">80.000</td>
-<td align="right">80.000</td>
-<td align="right">68.597</td>
-<td align="left">board_foot</td>
-</tr>
-<tr class="odd">
-<td align="right">3</td>
-<td align="right">40.000</td>
-<td align="right">40.000</td>
-<td align="right">34.299</td>
-<td align="left">board_foot</td>
-</tr>
-<tr class="even">
-<td align="right">4</td>
-<td align="right">0.098</td>
-<td align="right">0.098</td>
-<td align="right">0.084</td>
-<td align="left">green_short_ton</td>
-</tr>
-</tbody>
-</table>
-<p><code><a href="../reference/apply_defect_pct.html">apply_defect_pct()</a></code> returns an updated result. It updates
-physical quantities, measurements, values, and deduction records.
-Repeated calls compound on current net quantities.</p>
-<p>Missing quantities remain missing. Missing or invalid percentages
-stop the call.</p>
+<p><code><a href="../reference/defect_pct_from_thirds.html">defect_pct_from_thirds()</a></code> weights percentages by modeled
+inside bark volume in each third of total height. It returns a
+standalone percentage and status. Applying the percentage is a separate
+script calculation.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Combine percentages using species default taper</span></span>
+<span><span class="fu"><a href="../reference/defect_pct_from_thirds.html">defect_pct_from_thirds</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                       ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                       spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                       pct_lower <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>                       pct_middle <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>                       pct_upper <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`defect (percent)` <span class="op">=</span> <span class="va">value</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   defect (percent) status</span></span>
+<span><span class="co">#&gt; 1         12.65994      0</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

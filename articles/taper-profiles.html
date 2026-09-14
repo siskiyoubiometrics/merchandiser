@@ -32,7 +32,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">merchandiser</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,10 +52,12 @@
     <a class="dropdown-item" href="../articles/defect-recording-conventions.html">Recording defect</a>
     <a class="dropdown-item" href="../articles/fill-missing-heights.html">Fitting and completing heights</a>
     <a class="dropdown-item" href="../articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and scaling</a>
-    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass, carbon, and green weight</a>
-    <a class="dropdown-item" href="../articles/compiling-inventory.html">Compiling an inventory</a>
-    <a class="dropdown-item" href="../articles/bucking-prices.html">Bucking choices and prices</a>
+    <a class="dropdown-item" href="../articles/volumes-scaling.html">Volumes and green weight</a>
+    <a class="dropdown-item" href="../articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="../articles/biomass-carbon.html">Biomass and carbon</a>
+    <a class="dropdown-item" href="../articles/pacific-northwest.html">Pacific Northwest tree list</a>
+    <a class="dropdown-item" href="../articles/southern.html">Southern stands</a>
+    <a class="dropdown-item" href="../articles/optimal-bucking.html">Optimal bucking</a>
     <a class="dropdown-item" href="../articles/assumptions-status.html">Assumptions and status</a>
     <a class="dropdown-item" href="../articles/methods-taper-equations.html">Taper equation methods</a>
     <a class="dropdown-item" href="../articles/methods-fitting-taper.html">Fitting taper equations</a>
@@ -100,59 +102,48 @@
 
     
     
-<p>Stem functions accept measurement vectors and equation identifiers.
-Default diameters use inches, heights use feet, and volumes use cubic
-feet. <code>units = 'metric'</code> requires centimeters and meters and
-returns cubic meters.</p>
-<p><code>step</code> uses diameter units: inches for imperial calls and
-centimeters for metric calls.</p>
-<div class="section level2">
-<h2 id="materialize-a-profile">Materialize a profile<a class="anchor" aria-label="anchor" href="#materialize-a-profile"></a>
-</h2>
+<p>Stem functions return diameters, heights, and cumulative volumes for
+checking the modeled stem. Inputs use inches and feet, and volumes use
+cubic feet.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select a shipped tree</span></span>
+<code class="sourceCode R"><span><span class="co">## Select a tree for the profile</span></span>
 <span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">tree</th>
-<th align="right">spcd</th>
-<th align="left">species</th>
-<th align="right">dbh</th>
-<th align="right">ht</th>
-<th align="left">model</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="right">5</td>
-<td align="right">202</td>
-<td align="left">Douglas-fir</td>
-<td align="right">20</td>
-<td align="right">100</td>
-<td align="left">F00FW2W202</td>
-</tr></tbody>
-</table>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Calculate a stem profile</span></span>
-<span><span class="va">profile</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stem_profile.html">stem_profile</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Measure the stem profile</span></span>
+<span><span class="va">profile</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stem_profile.html">stem_profile</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span>                        dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                        ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                        spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span>,</span>
 <span>                        model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span>,</span>
-<span>                        id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree</span>,</span>
-<span>                        step <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>                        status <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
+<span>                        step <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></code></pre></div>
+<p><code>step</code> is spacing in inches along the stem. Cumulative
+volume starts at the lower bound.</p>
+<details><summary>
+Stem profile measurements
+</summary><table class="table">
+<colgroup>
+<col width="7%">
+<col width="8%">
+<col width="12%">
+<col width="12%">
+<col width="25%">
+<col width="25%">
+<col width="6%">
+</colgroup>
 <thead><tr class="header">
-<th align="right">id</th>
-<th align="right">h</th>
-<th align="right">dib</th>
-<th align="right">dob</th>
-<th align="right">cum_volume_ib</th>
-<th align="right">cum_volume_ob</th>
+<th align="right">tree_id</th>
+<th align="right">h (feet)</th>
+<th align="right">dib (inches)</th>
+<th align="right">dob (inches)</th>
+<th align="right">cum_volume_ib (cubic feet)</th>
+<th align="right">cum_volume_ob (cubic feet)</th>
 <th align="right">status</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="right">5</td>
-<td align="right">1.000</td>
+<td align="right">1</td>
 <td align="right">21.085</td>
 <td align="right">23.711</td>
 <td align="right">0.000</td>
@@ -161,162 +152,955 @@ centimeters for metric calls.</p>
 </tr>
 <tr class="even">
 <td align="right">5</td>
-<td align="right">1.833</td>
-<td align="right">19.914</td>
-<td align="right">22.244</td>
-<td align="right">1.912</td>
-<td align="right">2.388</td>
+<td align="right">2</td>
+<td align="right">19.739</td>
+<td align="right">22.024</td>
+<td align="right">2.275</td>
+<td align="right">2.833</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
 <td align="right">5</td>
-<td align="right">2.667</td>
-<td align="right">19.160</td>
-<td align="right">21.293</td>
-<td align="right">3.689</td>
-<td align="right">4.536</td>
+<td align="right">3</td>
+<td align="right">18.924</td>
+<td align="right">20.995</td>
+<td align="right">4.378</td>
+<td align="right">5.348</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
 <td align="right">5</td>
-<td align="right">3.500</td>
-<td align="right">18.621</td>
-<td align="right">20.610</td>
-<td align="right">5.395</td>
-<td align="right">6.528</td>
+<td align="right">4</td>
+<td align="right">18.365</td>
+<td align="right">20.282</td>
+<td align="right">6.396</td>
+<td align="right">7.668</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
 <td align="right">5</td>
-<td align="right">4.333</td>
-<td align="right">18.215</td>
-<td align="right">20.090</td>
-<td align="right">7.057</td>
-<td align="right">8.408</td>
+<td align="right">5</td>
+<td align="right">17.954</td>
+<td align="right">19.754</td>
+<td align="right">8.366</td>
+<td align="right">9.851</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
 <td align="right">5</td>
-<td align="right">5.167</td>
-<td align="right">17.896</td>
-<td align="right">19.678</td>
-<td align="right">8.658</td>
-<td align="right">10.204</td>
+<td align="right">6</td>
+<td align="right">17.639</td>
+<td align="right">19.343</td>
+<td align="right">10.093</td>
+<td align="right">11.933</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">7</td>
+<td align="right">17.388</td>
+<td align="right">19.014</td>
+<td align="right">11.773</td>
+<td align="right">13.938</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">8</td>
+<td align="right">17.183</td>
+<td align="right">18.741</td>
+<td align="right">13.419</td>
+<td align="right">15.881</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">9</td>
+<td align="right">17.009</td>
+<td align="right">18.509</td>
+<td align="right">15.038</td>
+<td align="right">17.773</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">10</td>
+<td align="right">16.858</td>
+<td align="right">18.307</td>
+<td align="right">16.602</td>
+<td align="right">19.620</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">11</td>
+<td align="right">16.723</td>
+<td align="right">18.126</td>
+<td align="right">18.141</td>
+<td align="right">21.430</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">12</td>
+<td align="right">16.597</td>
+<td align="right">17.958</td>
+<td align="right">19.659</td>
+<td align="right">23.205</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">13</td>
+<td align="right">16.476</td>
+<td align="right">17.799</td>
+<td align="right">21.155</td>
+<td align="right">24.949</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">14</td>
+<td align="right">16.356</td>
+<td align="right">17.644</td>
+<td align="right">22.625</td>
+<td align="right">26.661</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">15</td>
+<td align="right">16.236</td>
+<td align="right">17.492</td>
+<td align="right">24.074</td>
+<td align="right">28.345</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">16</td>
+<td align="right">16.117</td>
+<td align="right">17.341</td>
+<td align="right">25.501</td>
+<td align="right">29.999</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">17</td>
+<td align="right">15.997</td>
+<td align="right">17.193</td>
+<td align="right">26.908</td>
+<td align="right">31.625</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">18</td>
+<td align="right">15.878</td>
+<td align="right">17.046</td>
+<td align="right">28.293</td>
+<td align="right">33.224</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">19</td>
+<td align="right">15.758</td>
+<td align="right">16.901</td>
+<td align="right">29.658</td>
+<td align="right">34.795</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">20</td>
+<td align="right">15.638</td>
+<td align="right">16.757</td>
+<td align="right">31.002</td>
+<td align="right">36.340</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">21</td>
+<td align="right">15.519</td>
+<td align="right">16.615</td>
+<td align="right">32.326</td>
+<td align="right">37.858</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">22</td>
+<td align="right">15.399</td>
+<td align="right">16.474</td>
+<td align="right">33.630</td>
+<td align="right">39.351</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">23</td>
+<td align="right">15.279</td>
+<td align="right">16.334</td>
+<td align="right">34.913</td>
+<td align="right">40.819</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">24</td>
+<td align="right">15.160</td>
+<td align="right">16.195</td>
+<td align="right">36.177</td>
+<td align="right">42.261</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">25</td>
+<td align="right">15.040</td>
+<td align="right">16.057</td>
+<td align="right">37.421</td>
+<td align="right">43.680</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">26</td>
+<td align="right">14.921</td>
+<td align="right">15.920</td>
+<td align="right">38.645</td>
+<td align="right">45.074</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">27</td>
+<td align="right">14.801</td>
+<td align="right">15.784</td>
+<td align="right">39.850</td>
+<td align="right">46.445</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">28</td>
+<td align="right">14.681</td>
+<td align="right">15.649</td>
+<td align="right">41.035</td>
+<td align="right">47.792</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">29</td>
+<td align="right">14.562</td>
+<td align="right">15.514</td>
+<td align="right">42.202</td>
+<td align="right">49.116</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">30</td>
+<td align="right">14.442</td>
+<td align="right">15.380</td>
+<td align="right">43.349</td>
+<td align="right">50.417</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">31</td>
+<td align="right">14.322</td>
+<td align="right">15.247</td>
+<td align="right">44.477</td>
+<td align="right">51.696</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">32</td>
+<td align="right">14.201</td>
+<td align="right">15.113</td>
+<td align="right">45.586</td>
+<td align="right">52.953</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">33</td>
+<td align="right">14.078</td>
+<td align="right">14.978</td>
+<td align="right">46.677</td>
+<td align="right">54.188</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">34</td>
+<td align="right">13.955</td>
+<td align="right">14.842</td>
+<td align="right">47.748</td>
+<td align="right">55.400</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">35</td>
+<td align="right">13.829</td>
+<td align="right">14.705</td>
+<td align="right">48.801</td>
+<td align="right">56.591</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">36</td>
+<td align="right">13.702</td>
+<td align="right">14.566</td>
+<td align="right">49.834</td>
+<td align="right">57.759</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">37</td>
+<td align="right">13.572</td>
+<td align="right">14.426</td>
+<td align="right">50.848</td>
+<td align="right">58.905</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">38</td>
+<td align="right">13.441</td>
+<td align="right">14.284</td>
+<td align="right">51.843</td>
+<td align="right">60.029</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">39</td>
+<td align="right">13.307</td>
+<td align="right">14.139</td>
+<td align="right">52.819</td>
+<td align="right">61.131</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">40</td>
+<td align="right">13.170</td>
+<td align="right">13.992</td>
+<td align="right">53.774</td>
+<td align="right">62.210</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">41</td>
+<td align="right">13.031</td>
+<td align="right">13.843</td>
+<td align="right">54.710</td>
+<td align="right">63.266</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">42</td>
+<td align="right">12.888</td>
+<td align="right">13.691</td>
+<td align="right">55.626</td>
+<td align="right">64.300</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">43</td>
+<td align="right">12.743</td>
+<td align="right">13.536</td>
+<td align="right">56.522</td>
+<td align="right">65.311</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">44</td>
+<td align="right">12.596</td>
+<td align="right">13.379</td>
+<td align="right">57.397</td>
+<td align="right">66.299</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">45</td>
+<td align="right">12.445</td>
+<td align="right">13.219</td>
+<td align="right">58.251</td>
+<td align="right">67.263</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">46</td>
+<td align="right">12.291</td>
+<td align="right">13.055</td>
+<td align="right">59.086</td>
+<td align="right">68.205</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">47</td>
+<td align="right">12.133</td>
+<td align="right">12.889</td>
+<td align="right">59.899</td>
+<td align="right">69.123</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">48</td>
+<td align="right">11.973</td>
+<td align="right">12.719</td>
+<td align="right">60.691</td>
+<td align="right">70.017</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">49</td>
+<td align="right">11.809</td>
+<td align="right">12.546</td>
+<td align="right">61.462</td>
+<td align="right">70.887</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">50</td>
+<td align="right">11.643</td>
+<td align="right">12.370</td>
+<td align="right">62.212</td>
+<td align="right">71.734</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">51</td>
+<td align="right">11.472</td>
+<td align="right">12.190</td>
+<td align="right">62.940</td>
+<td align="right">72.556</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">52</td>
+<td align="right">11.299</td>
+<td align="right">12.008</td>
+<td align="right">63.647</td>
+<td align="right">73.355</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">53</td>
+<td align="right">11.122</td>
+<td align="right">11.821</td>
+<td align="right">64.333</td>
+<td align="right">74.129</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">54</td>
+<td align="right">10.942</td>
+<td align="right">11.632</td>
+<td align="right">64.996</td>
+<td align="right">74.879</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">55</td>
+<td align="right">10.758</td>
+<td align="right">11.439</td>
+<td align="right">65.639</td>
+<td align="right">75.605</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">56</td>
+<td align="right">10.572</td>
+<td align="right">11.242</td>
+<td align="right">66.259</td>
+<td align="right">76.306</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">57</td>
+<td align="right">10.382</td>
+<td align="right">11.042</td>
+<td align="right">66.858</td>
+<td align="right">76.984</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">58</td>
+<td align="right">10.188</td>
+<td align="right">10.839</td>
+<td align="right">67.435</td>
+<td align="right">77.636</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">59</td>
+<td align="right">9.991</td>
+<td align="right">10.632</td>
+<td align="right">67.990</td>
+<td align="right">78.265</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">60</td>
+<td align="right">9.791</td>
+<td align="right">10.422</td>
+<td align="right">68.524</td>
+<td align="right">78.870</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">61</td>
+<td align="right">9.588</td>
+<td align="right">10.208</td>
+<td align="right">69.036</td>
+<td align="right">79.450</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">62</td>
+<td align="right">9.381</td>
+<td align="right">9.991</td>
+<td align="right">69.527</td>
+<td align="right">80.006</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">63</td>
+<td align="right">9.172</td>
+<td align="right">9.770</td>
+<td align="right">69.996</td>
+<td align="right">80.539</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">64</td>
+<td align="right">8.959</td>
+<td align="right">9.546</td>
+<td align="right">70.445</td>
+<td align="right">81.048</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">65</td>
+<td align="right">8.743</td>
+<td align="right">9.319</td>
+<td align="right">70.873</td>
+<td align="right">81.533</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">66</td>
+<td align="right">8.524</td>
+<td align="right">9.089</td>
+<td align="right">71.279</td>
+<td align="right">81.995</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">67</td>
+<td align="right">8.302</td>
+<td align="right">8.855</td>
+<td align="right">71.666</td>
+<td align="right">82.434</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">68</td>
+<td align="right">8.077</td>
+<td align="right">8.618</td>
+<td align="right">72.032</td>
+<td align="right">82.850</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">69</td>
+<td align="right">7.849</td>
+<td align="right">8.378</td>
+<td align="right">72.379</td>
+<td align="right">83.244</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">70</td>
+<td align="right">7.619</td>
+<td align="right">8.135</td>
+<td align="right">72.705</td>
+<td align="right">83.616</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">71</td>
+<td align="right">7.385</td>
+<td align="right">7.888</td>
+<td align="right">73.012</td>
+<td align="right">83.966</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">72</td>
+<td align="right">7.149</td>
+<td align="right">7.639</td>
+<td align="right">73.301</td>
+<td align="right">84.295</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">73</td>
+<td align="right">6.910</td>
+<td align="right">7.387</td>
+<td align="right">73.572</td>
+<td align="right">84.603</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">74</td>
+<td align="right">6.669</td>
+<td align="right">7.132</td>
+<td align="right">73.823</td>
+<td align="right">84.890</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">75</td>
+<td align="right">6.425</td>
+<td align="right">6.874</td>
+<td align="right">74.057</td>
+<td align="right">85.158</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">76</td>
+<td align="right">6.179</td>
+<td align="right">6.614</td>
+<td align="right">74.275</td>
+<td align="right">85.406</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">77</td>
+<td align="right">5.931</td>
+<td align="right">6.353</td>
+<td align="right">74.476</td>
+<td align="right">85.635</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">78</td>
+<td align="right">5.680</td>
+<td align="right">6.090</td>
+<td align="right">74.660</td>
+<td align="right">85.847</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">79</td>
+<td align="right">5.427</td>
+<td align="right">5.826</td>
+<td align="right">74.829</td>
+<td align="right">86.040</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">80</td>
+<td align="right">5.173</td>
+<td align="right">5.560</td>
+<td align="right">74.983</td>
+<td align="right">86.217</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">81</td>
+<td align="right">4.916</td>
+<td align="right">5.292</td>
+<td align="right">75.124</td>
+<td align="right">86.378</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">82</td>
+<td align="right">4.657</td>
+<td align="right">5.022</td>
+<td align="right">75.249</td>
+<td align="right">86.523</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">83</td>
+<td align="right">4.397</td>
+<td align="right">4.751</td>
+<td align="right">75.361</td>
+<td align="right">86.653</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">84</td>
+<td align="right">4.135</td>
+<td align="right">4.477</td>
+<td align="right">75.461</td>
+<td align="right">86.769</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">85</td>
+<td align="right">3.872</td>
+<td align="right">4.202</td>
+<td align="right">75.551</td>
+<td align="right">86.872</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">86</td>
+<td align="right">3.607</td>
+<td align="right">3.924</td>
+<td align="right">75.627</td>
+<td align="right">86.962</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">87</td>
+<td align="right">3.341</td>
+<td align="right">3.645</td>
+<td align="right">75.693</td>
+<td align="right">87.040</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">88</td>
+<td align="right">3.073</td>
+<td align="right">3.363</td>
+<td align="right">75.751</td>
+<td align="right">87.107</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">89</td>
+<td align="right">2.805</td>
+<td align="right">3.079</td>
+<td align="right">75.800</td>
+<td align="right">87.164</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">90</td>
+<td align="right">2.535</td>
+<td align="right">2.793</td>
+<td align="right">75.839</td>
+<td align="right">87.211</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">91</td>
+<td align="right">2.265</td>
+<td align="right">2.504</td>
+<td align="right">75.871</td>
+<td align="right">87.249</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">92</td>
+<td align="right">1.994</td>
+<td align="right">2.213</td>
+<td align="right">75.897</td>
+<td align="right">87.279</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">93</td>
+<td align="right">1.722</td>
+<td align="right">1.919</td>
+<td align="right">75.918</td>
+<td align="right">87.303</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">94</td>
+<td align="right">1.450</td>
+<td align="right">1.623</td>
+<td align="right">75.932</td>
+<td align="right">87.320</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">95</td>
+<td align="right">1.178</td>
+<td align="right">1.324</td>
+<td align="right">75.942</td>
+<td align="right">87.332</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">96</td>
+<td align="right">0.905</td>
+<td align="right">1.022</td>
+<td align="right">75.949</td>
+<td align="right">87.339</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">97</td>
+<td align="right">0.633</td>
+<td align="right">0.718</td>
+<td align="right">75.955</td>
+<td align="right">87.343</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">98</td>
+<td align="right">0.373</td>
+<td align="right">0.425</td>
+<td align="right">75.956</td>
+<td align="right">87.345</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">99</td>
+<td align="right">0.153</td>
+<td align="right">0.175</td>
+<td align="right">75.957</td>
+<td align="right">87.346</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">100</td>
+<td align="right">0.000</td>
+<td align="right">0.000</td>
+<td align="right">75.958</td>
+<td align="right">87.346</td>
 <td align="right">0</td>
 </tr>
 </tbody>
-</table>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Draw the modeled profile</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">profile</span><span class="op">)</span></span></code></pre></div>
-<p><img src="taper-profiles_files/figure-html/unnamed-chunk-5-1.png" alt="" width="672"></p>
-<p>The profile contains inside- and outside-bark diameters and
-cumulative volumes from its lower bound. <code>status</code> is always
-present. <code>status = TRUE</code> suppresses row warnings. Unsupported
-outside-bark quantities remain missing.</p>
-</div>
+</table></details><p>The solid and dashed lines show inside and outside bark
+diameters.</p>
+<p><img src="taper-profiles_files/figure-html/unnamed-chunk-3-1.png" alt="" width="960"></p>
 <div class="section level2">
 <h2 id="diameters-and-heights">Diameters and heights<a class="anchor" aria-label="anchor" href="#diameters-and-heights"></a>
 </h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Estimate diameter on both bark bases</span></span>
-<span><span class="va">diameters</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/transmute.html" class="external-link">transmute</a></span><span class="op">(</span><span class="va">tree</span>,</span>
-<span>            inside <span class="op">=</span> <span class="fu"><a href="../reference/dib.html">dib</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">dbh</span>, ht <span class="op">=</span> <span class="va">ht</span>, h <span class="op">=</span> <span class="fl">20</span>, model <span class="op">=</span> <span class="va">model</span><span class="op">)</span>,</span>
-<span>            outside <span class="op">=</span> <span class="fu"><a href="../reference/dob.html">dob</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">dbh</span>, ht <span class="op">=</span> <span class="va">ht</span>, h <span class="op">=</span> <span class="fl">20</span>, model <span class="op">=</span> <span class="va">model</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">tree</th>
-<th align="right">inside</th>
-<th align="right">outside</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="right">1</td>
-<td align="right">8.560</td>
-<td align="right">9.109</td>
-</tr>
-<tr class="even">
-<td align="right">2</td>
-<td align="right">11.002</td>
-<td align="right">11.640</td>
-</tr>
-<tr class="odd">
-<td align="right">3</td>
-<td align="right">12.195</td>
-<td align="right">13.019</td>
-</tr>
-<tr class="even">
-<td align="right">4</td>
-<td align="right">14.743</td>
-<td align="right">15.584</td>
-</tr>
-<tr class="odd">
-<td align="right">5</td>
-<td align="right">15.638</td>
-<td align="right">16.757</td>
-</tr>
-<tr class="even">
-<td align="right">6</td>
-<td align="right">20.140</td>
-<td align="right">21.282</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Find heights at the specified diameters</span></span>
-<span><span class="va">heights</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/transmute.html" class="external-link">transmute</a></span><span class="op">(</span><span class="va">tree</span>,</span>
-<span>            inside <span class="op">=</span> <span class="fu"><a href="../reference/height_at_dib.html">height_at_dib</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">dbh</span>, ht <span class="op">=</span> <span class="va">ht</span>, dib <span class="op">=</span> <span class="fl">6</span>, model <span class="op">=</span> <span class="va">model</span><span class="op">)</span>,</span>
-<span>            outside <span class="op">=</span> <span class="fu"><a href="../reference/height_at_dob.html">height_at_dob</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">dbh</span>, ht <span class="op">=</span> <span class="va">ht</span>, dob <span class="op">=</span> <span class="fl">6</span>, model <span class="op">=</span> <span class="va">model</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">tree</th>
-<th align="right">inside</th>
-<th align="right">outside</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="right">1</td>
-<td align="right">34.120</td>
-<td align="right">35.872</td>
-</tr>
-<tr class="even">
-<td align="right">2</td>
-<td align="right">44.117</td>
-<td align="right">45.662</td>
-</tr>
-<tr class="odd">
-<td align="right">3</td>
-<td align="right">55.598</td>
-<td align="right">57.263</td>
-</tr>
-<tr class="even">
-<td align="right">4</td>
-<td align="right">64.505</td>
-<td align="right">66.249</td>
-</tr>
-<tr class="odd">
-<td align="right">5</td>
-<td align="right">76.723</td>
-<td align="right">78.342</td>
-</tr>
-<tr class="even">
-<td align="right">6</td>
-<td align="right">94.939</td>
-<td align="right">97.008</td>
-</tr>
-</tbody>
-</table>
-<p>The inverse functions return the highest crossing. Additional
-crossings produce a diagnosis with the retained height.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Calculate dib</span></span>
+<span><span class="fu"><a href="../reference/dib.html">dib</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>    ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>    h <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>    spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>    model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`diameter inside bark (inches)` <span class="op">=</span> <span class="va">value</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   diameter inside bark (inches) status</span></span>
+<span><span class="co">#&gt; 1                      15.63832      0</span></span>
+<span></span>
+<span><span class="co">## Calculate dob</span></span>
+<span><span class="fu"><a href="../reference/dob.html">dob</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>    ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>    h <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>    spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>    model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`diameter outside bark (inches)` <span class="op">=</span> <span class="va">value</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   diameter outside bark (inches) status</span></span>
+<span><span class="co">#&gt; 1                        16.7571      0</span></span>
+<span></span>
+<span><span class="co">## Calculate height at dib</span></span>
+<span><span class="fu"><a href="../reference/height_at_dib.html">height_at_dib</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>              ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>              dib <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>              spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>              model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`height (feet)` <span class="op">=</span> <span class="va">value</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   height (feet) status</span></span>
+<span><span class="co">#&gt; 1       76.7227      0</span></span>
+<span></span>
+<span><span class="co">## Calculate height at dob</span></span>
+<span><span class="fu"><a href="../reference/height_at_dob.html">height_at_dob</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>              ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>              dob <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>              spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>              model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`height (feet)` <span class="op">=</span> <span class="va">value</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   height (feet) status</span></span>
+<span><span class="co">#&gt; 1      78.34176      0</span></span></code></pre></div>
+<p>Diameter results use inches. Inverse results use feet and retain the
+highest crossing when several exist. Status identifies unavailable
+measurements and multiple crossings.</p>
 </div>
 <div class="section level2">
-<h2 id="equations-and-registry">Equations and registry<a class="anchor" aria-label="anchor" href="#equations-and-registry"></a>
+<h2 id="taper-registry">Taper registry<a class="anchor" aria-label="anchor" href="#taper-registry"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## List equations for the example species</span></span>
-<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/taper_models.html">taper_models</a></span><span class="op">(</span>species <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span></code></pre></div>
+<p><code>has_inverse</code> records a model-provided inverse. Numeric
+inversion remains available for the selected model when this flag is
+false.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## List models for the selected species</span></span>
+<span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/taper_models.html">taper_models</a></span><span class="op">(</span>spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <thead><tr class="header">
 <th align="left">id</th>
@@ -370,44 +1154,26 @@ crossings produce a diagnosis with the retained height.</p>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Inspect the selected equation and its capabilities</span></span>
-<span><span class="fu"><a href="../reference/get_taper_model.html">get_taper_model</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &lt;taper_model F00FW2W202&gt;</span></span>
-<span><span class="co">#&gt;   family: flewelling_2pt</span></span>
-<span><span class="co">#&gt;   kernel: compiled</span></span>
-<span><span class="co">#&gt;   units: imperial</span></span>
-<span><span class="co">#&gt;   oracle verified: yes</span></span>
-<span><span class="co">#&gt;   capabilities: dob, integral</span></span>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Inspect the selected model</span></span>
+<span><span class="fu"><a href="../reference/get_taper_model.html">get_taper_model</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span><span class="op">$</span><span class="va">id</span></span>
+<span><span class="co">#&gt; [1] "F00FW2W202"</span></span>
 <span></span>
-<span><span class="co">## Check the equation's available operations</span></span>
-<span><span class="va">capabilities</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/model_capabilities.html">model_capabilities</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="left">id</th>
-<th align="left">has_dob</th>
-<th align="left">has_inverse</th>
-<th align="left">has_integral</th>
-</tr></thead>
-<tbody><tr class="odd">
-<td align="left">F00FW2W202</td>
-<td align="left">TRUE</td>
-<td align="left">FALSE</td>
-<td align="left">TRUE</td>
-</tr></tbody>
-</table>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Check availability and the species assignment</span></span>
+<span><span class="co">## Check model capabilities</span></span>
+<span><span class="fu"><a href="../reference/model_capabilities.html">model_capabilities</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="co">#&gt;           id has_dob has_inverse has_integral</span></span>
+<span><span class="co">#&gt; 1 F00FW2W202    TRUE       FALSE         TRUE</span></span>
+<span></span>
+<span><span class="co">## Check availability and species scope</span></span>
 <span><span class="fu"><a href="../reference/has_taper_model.html">has_taper_model</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span></span>
-<span><span class="co">## Validate the equation mapping</span></span>
+<span><span class="co">## Check the assignment</span></span>
 <span><span class="fu"><a href="../reference/check_taper_models.html">check_taper_models</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span>, spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] row     id      code    problem input  </span></span>
 <span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre></div>
-<p><a href="methods-taper-equations.html">Source equations</a> support
-package and source compatibility modes. <a href="methods-fitting-taper.html">fit_taper()</a> estimates coefficients
-for session registration.</p>
+<p><a href="methods-fitting-taper.html">Fitting taper equations</a>
+creates local models for the same stem functions.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>
