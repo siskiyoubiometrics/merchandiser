@@ -1,0 +1,118 @@
+---
+title: 'Assumptions and status'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Assumptions and status}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+`assumptions()` returns choices recorded with a merchandising result.
+`status_codes()` describes calculation diagnoses. `threads()` queries or changes the worker count for compiled equations. Currency labels use United States dollars (`USD`) in the example.
+
+## Recorded settings
+
+```{r}
+## Select a shipped tree
+tree <- example_trees %>%
+  filter(tree == 5)
+```
+
+```{r, echo = FALSE}
+tree %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Load the example specifications
+specifications <- example_products(name = 'douglas_fir')
+```
+
+```{r, echo = FALSE}
+specifications %>%
+  mutate(lengths = vapply(lengths, paste, character(1), collapse = ', ')) %>%
+  select(product, lengths, min_length, max_length, min_sed, trim, volume_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Select logs from the tree
+result <- merchandise(dbh = tree$dbh,
+                      ht = tree$ht,
+                      model = tree$model,
+                      species = tree$species,
+                      id = tree$tree,
+                      products = specifications,
+                      currency = 'USD',
+                      status = TRUE)
+```
+
+```{r}
+## Extract the choices recorded with the result
+recorded <- assumptions(x = result)
+```
+
+```{r, echo = FALSE}
+recorded %>%
+  select(assumption, species, model, value, units, source) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Records include equation mappings, defaults, units, and applicable species-property choices.
+They omit local model coefficients. Preserve fitted objects or coefficient records with results using local equations.
+
+## Calculation diagnoses
+
+```{r}
+## List the merchandising diagnoses
+codes <- status_codes() %>%
+  filter(source == 'merchandising')
+```
+
+```{r, echo = FALSE}
+codes %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Count tree statuses in the result
+checks <- result$trees %>%
+  count(status)
+```
+
+```{r, echo = FALSE}
+checks %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+`status = TRUE` retains diagnoses and suppresses tree-status warnings.
+Structural input errors still stop the call.
+The `no_feasible_log` diagnosis denotes valid zero log volume. Other merchandising failures require review before reporting totals.
+
+## Calculation workers
+
+```{r}
+## Query the current worker count
+threads()
+
+## Calculate diameters with a temporary worker count
+with_threads(n = 4,
+             code = dib(dbh = example_trees$dbh,
+                        ht = example_trees$ht,
+                        h = 20,
+                        model = example_trees$model))
+```
+
+`with_threads()` restores the previous count when the expression finishes.
+`MERCHANDISER_THREADS` sets the initial count when the package loads.
+Equations written in R execute in the main R process.

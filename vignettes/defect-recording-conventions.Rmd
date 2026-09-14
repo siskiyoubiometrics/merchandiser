@@ -1,0 +1,172 @@
+---
+title: 'Recording defect'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Recording defect}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+`defect()` supplies located restrictions that can change log selection. `apply_defect_pct()` deducts percentages after bucking and retains the cuts.
+
+The example currency is United States dollars (`USD`).
+
+## Located conditions
+
+`defect()` records a condition by tree identifier and height. Heights use the same units as the merchandising call.
+
+```{r}
+## Select a shipped tree
+tree <- example_trees %>%
+  filter(tree == 5)
+```
+
+```{r, echo = FALSE}
+tree %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Record rot along the example stem
+record <- defect(id = tree$tree,
+                 from = 10,
+                 to = 30,
+                 effect = 'rot',
+                 percent = 20)
+```
+
+```{r, echo = FALSE}
+record %>%
+  select(id, from, to, effect, percent) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Load specifications and validate the record against the tree
+specifications <- example_products(name = 'douglas_fir')
+
+## Check defect bounds and fields
+checked <- validate_defects(x = record,
+                            products = specifications,
+                            ht = tree$ht,
+                            id = tree$tree)
+```
+
+```{r, echo = FALSE}
+checked %>%
+  select(id, from, to, effect, percent, status) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Select logs from the tree
+result <- merchandise(dbh = tree$dbh,
+                      ht = tree$ht,
+                      model = tree$model,
+                      species = tree$species,
+                      id = tree$tree,
+                      products = specifications,
+                      currency = 'USD',
+                      status = TRUE,
+                      defects = record)
+```
+
+```{r, echo = FALSE}
+result$logs %>%
+  select(log, product, nominal_length, sed_ib, net_scale, scale_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Draw the cuts and located defect
+plot(result)
+```
+
+Rot deductions use overlapping inside-bark volume. Overlapping rot percentages use the greatest percentage.
+Cull intervals remove stem sections and restart product selection above them.
+Pulp intervals restrict eligibility to the product with `accepts_pulp_restriction = TRUE`.
+
+Sweep and crook use caller-defined ordered categories. They restrict eligibility without assigning a percentage deduction.
+A break ends selection at its height. A fork applies a pulp restriction above its height.
+
+## Stopping heights
+
+`defects_from_stoppers()` converts recorded stopping heights into cull and pulp intervals.
+A jump butt removes the lower interval. A saw stop starts a pulp restriction, and a pulp stop removes the remaining top.
+
+```{r}
+## Select complete example measurements with stopping heights
+stopped <- example_trees_south %>%
+  filter(!is.na(saw_stop) | !is.na(pulp_stop) | !is.na(jump_butt)) %>%
+  slice_head(n = 3)
+```
+
+```{r, echo = FALSE}
+stopped %>%
+  select(tree, ht_simulated, saw_stop, pulp_stop, jump_butt) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Convert stopping heights to located records
+intervals <- defects_from_stoppers(id = stopped$tree,
+                                   ht = stopped$ht_simulated,
+                                   saw_stop = stopped$saw_stop,
+                                   pulp_stop = stopped$pulp_stop,
+                                   jump_butt = stopped$jump_butt)
+```
+
+```{r, echo = FALSE}
+intervals %>%
+  select(id, from, to, effect) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+## Percentages
+
+`defect_pct_from_thirds()` weights supplied percentages by modeled inside-bark volume in each third of total height.
+
+
+```{r}
+## Combine example percentages by stem-third volume
+percentage <- defect_pct_from_thirds(dbh = tree$dbh,
+                                     ht = tree$ht,
+                                     model = tree$model,
+                                     pct_lower = 10,
+                                     pct_middle = 20,
+                                     pct_upper = 30,
+                                     status = TRUE)
+```
+
+```{r, echo = FALSE}
+percentage %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Apply the percentage to current net quantities
+deducted <- apply_defect_pct(x = result,
+                             pct = percentage$value,
+                             kind = 'thirds')
+```
+
+```{r, echo = FALSE}
+deducted$logs %>%
+  select(log, gross_scale, located_net_scale, net_scale, scale_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+`apply_defect_pct()` returns an updated result. It updates physical quantities, measurements, values, and deduction records.
+Repeated calls compound on current net quantities.
+
+Missing quantities remain missing. Missing or invalid percentages stop the call.

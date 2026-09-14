@@ -1,0 +1,5 @@
+## Do not set CXX_STD. C++17 is R's current default toolchain requirement
+## for this package, and setting it explicitly draws an R CMD check NOTE.
+
+PKG_CPPFLAGS += -I../inst/include
+PKG_LIBS += $(shell "${R_HOME}/bin/Rscript" -e "RcppParallel::RcppParallelLibs()")

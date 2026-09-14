@@ -1,0 +1,41 @@
+---
+title: 'Source agreement'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Source agreement}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+The packaged agreement table records comparisons against the pinned National Volume Estimator Library build.
+It reports precision, compatibility mode, compared rows, tolerance, maximum relative difference, and named exclusions.
+
+`DIB` denotes diameter inside bark, and `DOB` denotes diameter outside bark.
+
+```{r}
+## Report the pinned source revision
+nvel_source_revision()
+```
+
+```{r, echo = FALSE}
+agreement <- read.csv(system.file('extdata',
+                                  'oracle-agreement.csv',
+                                  package = 'merchandiser'))
+agreement %>%
+  mutate(max_relative_difference = format(max_relative_difference, scientific = TRUE, digits = 12),
+         tolerance = format(tolerance, scientific = TRUE, digits = 12)) %>%
+  knitr::kable(row.names = FALSE)
+```
+
+Fixture tests enforce each tolerance and exclusion count. The full source fixtures live outside the package.
+[Compatibility modes](methods-taper-equations.html) select package or source behavior for the documented differences.

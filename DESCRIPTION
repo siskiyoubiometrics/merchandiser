@@ -1,0 +1,45 @@
+Package: merchandiser
+Title: Estimate Log and Product Volumes from Forest Inventory
+Version: 0.4.0
+Authors@R:
+    person("Hunter", "Stanke", , "hunter@siskiyoubiometrics.com", role = c("aut", "cre", "cph"))
+Description: Estimates log and product volumes from forest inventory.
+    Combines stem profiles, height models, biomass equations, product
+    specifications, located defects, bucking, and summaries. The National
+    Volume Estimator Library supplies the shipped source equations.
+License: MIT + file LICENSE
+Copyright: See inst/COPYRIGHTS for copyright holders of ported material.
+URL: https://github.com/siskiyoubiometrics/merchandiser
+BugReports: https://github.com/siskiyoubiometrics/merchandiser/issues
+Depends:
+    R (>= 4.1)
+LazyData: true
+Imports:
+    nlme,
+    Rcpp,
+    RcppParallel
+LinkingTo:
+    Rcpp,
+    RcppParallel
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    covr,
+    profmem,
+    lintr,
+    dplyr,
+    data.table,
+    digest,
+    callr,
+    pkgload,
+    pkgdown,
+    sf,
+    bench
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-US
+Roxygen: list(markdown = TRUE)
+SystemRequirements: GNU make
+Config/roxygen2/version: 8.0.0

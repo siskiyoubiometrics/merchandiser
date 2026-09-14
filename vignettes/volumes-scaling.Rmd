@@ -1,0 +1,133 @@
+---
+title: 'Volumes and scaling'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Volumes and scaling}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+`stem_volume()` calculates volume between stem bounds. `tree_cubic_volume()` returns the physical volume of selected logs.
+The example currency is United States dollars (`USD`).
+Product measurements are stored separately in `gross_scale` and `net_scale`.
+
+## Stem and log volume
+
+```{r}
+## Calculate volume from stump to a specified inside-bark top
+volumes <- example_trees %>%
+  transmute(tree,
+            stem_cubic = stem_volume(dbh = dbh,
+                                     ht = ht,
+                                     model = model,
+                                     upper = 6,
+                                     upper_type = 'dib'))
+```
+
+```{r, echo = FALSE}
+volumes %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Calculate physical log volume under the example specifications
+log_volumes <- example_trees %>%
+  transmute(tree,
+            log_cubic = tree_cubic_volume(dbh = dbh,
+                                          ht = ht,
+                                          species = species,
+                                          model = model,
+                                          products = example_products(name = 'pnw')))
+```
+
+```{r, echo = FALSE}
+log_volumes %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+`stem_volume()` accepts height, inside-bark diameter, outside-bark diameter, stump, or tip bounds.
+Its default interval runs from the model's stump height to the tip.
+Physical log volume includes trim. Product scaling uses nominal length and excludes trim.
+
+## Measurement fields
+
+`volume_unit` selects Scribner, International, Doyle, cubic volume, green tons, or cords.
+`inside_bark` sets acceptance diameter basis. Cubic and cord measurements use that bark basis.
+
+Board-foot measurements use inside bark. Green weight includes wood and attached bark.
+
+`split_scale` selects whole-log or section scaling for Scribner. It creates measurement sections without additional physical cuts.
+`round` selects default, downward, nearest-inch, or unrounded diameter preprocessing.
+The underlying board-foot procedure retains its prescribed internal rounding.
+
+```{r}
+## Select a shipped tree
+tree <- example_trees %>%
+  filter(tree == 5)
+```
+
+```{r, echo = FALSE}
+tree %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Load the example specifications
+specifications <- example_products(name = 'douglas_fir')
+```
+
+```{r, echo = FALSE}
+specifications %>%
+  mutate(lengths = vapply(lengths, paste, character(1), collapse = ', ')) %>%
+  select(product, lengths, min_length, max_length, min_sed, trim, volume_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Select logs from the tree
+result <- merchandise(dbh = tree$dbh,
+                      ht = tree$ht,
+                      model = tree$model,
+                      species = tree$species,
+                      id = tree$tree,
+                      products = specifications,
+                      currency = 'USD',
+                      status = TRUE,
+                      report_also = c('smalian', 'huber', 'international', 'doyle'))
+```
+
+```{r, echo = FALSE}
+result$logs %>%
+  select(log, product, nominal_length, sed_ib, net_scale, scale_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Select additional measurements on the existing cuts
+measurements <- result$scales %>%
+  filter(!is_product) %>%
+  select(log, scale_rule, gross, net, unit, bark_basis)
+```
+
+```{r, echo = FALSE}
+measurements %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+`report_also` measures existing cuts with additional procedures. It does not change product acceptance or bucking.
+
+Smalian and Huber reports use the nominal log body. Named definitions support fixed units and additional rounding operators.
+[Scaling rules](../reference/scaling_rules.html) map product fields to measurement procedures.
+
+Green tons follow the call's units: short tons for imperial and metric tons for metric.
+Cord measurement requires `cord_solid_fraction`. [green_weight()](biomass-carbon.html) converts cubic volume to weight.

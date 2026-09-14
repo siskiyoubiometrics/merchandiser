@@ -1,0 +1,12 @@
+year <- sub("-.*", "", meta$Date)
+if (!length(year) || !nzchar(year)) year <- format(Sys.Date(), "%Y")
+note <- sprintf("R package version %s", meta$Version)
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "{merchandiser}: Turn Tree Lists into Logs, Scale, Weight, and Value",
+  author   = person("Hunter", "Stanke"),
+  year     = year,
+  note     = note,
+  url      = "https://github.com/siskiyoubiometrics/merchandiser"
+)

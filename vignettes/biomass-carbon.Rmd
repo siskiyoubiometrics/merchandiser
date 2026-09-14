@@ -1,0 +1,126 @@
+---
+title: 'Biomass, carbon, and green weight'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Biomass, carbon, and green weight}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+`biomass()` estimates dry and green component masses, aboveground carbon, and carbon dioxide equivalent.
+The National Scale Volume and Biomass system supplies these equations.
+`green_weight()` converts an existing cubic volume using species properties.
+
+## Biomass components
+
+`nsvb_division_xy()` assigns ecological divisions from coordinates. The example inventory supplies longitude and latitude.
+
+```{r}
+## Assign ecological divisions to the shipped inventory
+trees <- example_trees_pnw %>%
+  mutate(division = nsvb_division_xy(x = longitude, y = latitude)) %>%
+  slice_head(n = 5)
+```
+
+```{r, echo = FALSE}
+trees %>%
+  select(tree, species, dbh, ht_simulated, division) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Estimate component masses in pounds
+mass <- biomass(dbh = trees$dbh,
+                ht = trees$ht_simulated,
+                spcd = trees$spcd,
+                division = trees$division,
+                id = trees$tree,
+                status = TRUE)
+```
+
+```{r, echo = FALSE}
+mass %>%
+  select(id,
+         dry_agb_no_foliage,
+         dry_stem_wood,
+         dry_stem_bark,
+         dry_branches,
+         dry_foliage,
+         carbon,
+         carbon_status) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+`dry_` fields report oven-dry mass. `green_` fields include moisture.
+Imperial calls return pounds, and metric calls return kilograms.
+The aboveground total excludes foliage, and component fields overlap with totals.
+
+The result includes stump, primary section, secondary section, tip, branch, and foliage components.
+`decay_class` and `cull` apply the biomass system's tree-condition adjustments.
+Its product limits are separate from merchandising specifications and selected cuts.
+
+## One component and carbon dioxide equivalent
+
+`biomass_component()` returns one named quantity per tree.
+`co2e()` returns metric tons of carbon dioxide equivalent, regardless of the input measurement system.
+
+```{r}
+## Add dry stem mass and carbon dioxide equivalent to tree records
+carbon <- trees %>%
+  transmute(tree,
+            dry_wood_lb = biomass_component(dbh = dbh,
+                                            ht = ht_simulated,
+                                            spcd = spcd,
+                                            division = division,
+                                            component = 'dry_stem_wood'),
+            carbon_dioxide_t = co2e(dbh = dbh,
+                                    ht = ht_simulated,
+                                    spcd = spcd,
+                                    division = division),
+            fraction = carbon_fraction(spcd = spcd))
+```
+
+```{r, echo = FALSE}
+carbon %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Carbon excludes foliage. `carbon_fraction()` returns the live-tree species fraction with a source attribute.
+Dead-tree carbon follows the decay-specific rules in `biomass()`.
+The `co2e` column in `biomass()` uses pounds or kilograms, unlike the separate `co2e()` function.
+
+## Weight from cubic volume
+
+`green_weight()` uses species wood density, bark volume, and moisture properties.
+Its default returns green wood and attached bark weight from inside-bark cubic volume.
+
+```{r}
+## Convert modeled stem volume to green pounds
+weight <- example_trees %>%
+  mutate(cubic = stem_volume(dbh = dbh, ht = ht, model = model),
+         green_lb = green_weight(volume = cubic, spcd = spcd),
+         dry_wood_lb = green_weight(volume = cubic,
+                                    spcd = spcd,
+                                    component = 'wood',
+                                    moisture = 'dry')) %>%
+  select(tree, species, cubic, green_lb, dry_wood_lb)
+```
+
+```{r, echo = FALSE}
+weight %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Property overrides include `specific_gravity`, `moisture_pct`, and corresponding bark fields.
+`volume_basis = 'outside'` accepts volume including bark.
+This volume conversion is independent of the fitted biomass system.

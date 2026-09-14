@@ -1,0 +1,181 @@
+---
+title: 'Defining products'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Defining products}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+`product()` creates a specification row. `products()` combines rows and validates the resulting table.
+Lower `priority` values are considered first.
+
+## Product fields
+
+```{r}
+## Define a sawlog specification
+saw <- product(product = 'saw',
+               priority = 1,
+               lengths = c(16, 32),
+               trim = 0.5,
+               min_sed = 6,
+               volume_unit = 'scribner',
+               inside_bark = TRUE)
+```
+
+```{r, echo = FALSE}
+saw %>%
+  select(product, priority, lengths, trim, min_sed, volume_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Define a pulp specification
+pulp <- product(product = 'pulp',
+                priority = 2,
+                min_length = 8,
+                max_length = 20,
+                length_step = 1,
+                trim = 0.5,
+                min_sed = 3,
+                volume_unit = 'green_ton',
+                accepts_pulp_restriction = TRUE)
+```
+
+```{r}
+## Combine and check the specifications
+specifications <- products(saw, pulp) %>%
+  validate_products()
+```
+
+```{r, echo = FALSE}
+specifications %>%
+  select(product, priority, min_sed, volume_unit, accepts_pulp_restriction) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Use `lengths` for discrete lengths or `min_length`, `max_length`, and `length_step` for a range.
+`min_sed` tests the physical small end, including trim. `inside_bark` chooses the diameter basis for acceptance.
+
+Tree entry checks species, diameter, age, and pruning restrictions.
+`allow_after_higher_product` controls later use after an earlier product.
+`allow_lower_products` controls progression to subsequent products.
+[Product fields](../reference/product_schema.html) control tree entry, log acceptance, and measurement.
+
+```{r}
+## Select a shipped tree
+tree <- example_trees %>%
+  filter(tree == 5)
+```
+
+```{r, echo = FALSE}
+tree %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Apply the specifications to the example tree
+result <- merchandise(dbh = tree$dbh,
+                      ht = tree$ht,
+                      model = tree$model,
+                      species = tree$species,
+                      products = specifications,
+                      status = TRUE)
+```
+
+```{r, echo = FALSE}
+result$logs %>%
+  select(log, product, nominal_length, sed_ib, net_scale, scale_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+## Shipped specifications
+
+`example_product_names()` lists the available tables. `example_products()` loads one.
+`product_presets()` and `product_preset()` are compatibility names for the same operations.
+
+```{r}
+## List the example tables
+available <- example_product_names()
+```
+
+```{r, echo = FALSE}
+available %>%
+  select(name, status) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Load the example specifications
+specifications <- example_products(name = 'pnw')
+```
+
+```{r, echo = FALSE}
+specifications %>%
+  mutate(lengths = vapply(lengths, paste, character(1), collapse = ', ')) %>%
+  select(product, lengths, min_length, max_length, min_sed, trim, volume_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Load the same specifications through the compatibility names
+preset_names <- product_presets()
+
+## Load a preset table
+preset_products <- product_preset(name = 'pnw')
+```
+
+```{r, echo = FALSE}
+preset_products %>%
+  select(product, priority, volume_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+## Source rule records
+
+`nvel_rules()` records National Volume Estimator Library settings.
+`products_from_nvel_rules()` translates a complete record into products and accompanying stem limits.
+
+
+```{r}
+## Record the source segmentation and measurement settings
+rules <- nvel_rules(even_or_odd = 2,
+                    option = 14,
+                    maximum_length = 40,
+                    minimum_length = 8,
+                    minimum_top_length = 8,
+                    merchantable_length = 80,
+                    primary_top = 6,
+                    secondary_top = 4,
+                    stump = 1,
+                    trim = 0.5,
+                    bark_ratio = 0.9,
+                    minimum_board_foot_dbh = 1,
+                    scribner = 'table')
+```
+
+```{r}
+## Translate the complete rule record
+translated <- products_from_nvel_rules(x = rules)
+```
+
+```{r, echo = FALSE}
+translated$products %>%
+  select(product, min_sed, min_length, max_length, scale_rule) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Translated products retain expanded source measurement fields.
+The returned list also contains `stump_ht`, `utilization_height`, and `model_aux`.
+The translated height cap adds `stump` to `merchantable_length`.
+Both translated products retain board-foot measurement, including the product accepting pulp restrictions.

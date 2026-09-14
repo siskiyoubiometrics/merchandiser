@@ -1,0 +1,129 @@
+---
+title: 'Taper and stem profiles'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Taper and stem profiles}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+Stem functions accept measurement vectors and equation identifiers.
+Default diameters use inches, heights use feet, and volumes use cubic feet.
+`units = 'metric'` requires centimeters and meters and returns cubic meters.
+
+`step` uses diameter units: inches for imperial calls and centimeters for metric calls.
+
+## Materialize a profile
+
+```{r}
+## Select a shipped tree
+tree <- example_trees %>%
+  filter(tree == 5)
+```
+
+```{r, echo = FALSE}
+tree %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Calculate a stem profile
+profile <- stem_profile(dbh = tree$dbh,
+                        ht = tree$ht,
+                        model = tree$model,
+                        id = tree$tree,
+                        step = 10,
+                        status = TRUE)
+```
+
+```{r, echo = FALSE}
+profile %>%
+  slice_head(n = 6) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Draw the modeled profile
+plot(profile)
+```
+
+The profile contains inside- and outside-bark diameters and cumulative volumes from its lower bound.
+`status` is always present. `status = TRUE` suppresses row warnings. Unsupported outside-bark quantities remain missing.
+
+## Diameters and heights
+
+```{r}
+## Estimate diameter on both bark bases
+diameters <- example_trees %>%
+  transmute(tree,
+            inside = dib(dbh = dbh, ht = ht, h = 20, model = model),
+            outside = dob(dbh = dbh, ht = ht, h = 20, model = model))
+```
+
+```{r, echo = FALSE}
+diameters %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Find heights at the specified diameters
+heights <- example_trees %>%
+  transmute(tree,
+            inside = height_at_dib(dbh = dbh, ht = ht, dib = 6, model = model),
+            outside = height_at_dob(dbh = dbh, ht = ht, dob = 6, model = model))
+```
+
+```{r, echo = FALSE}
+heights %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The inverse functions return the highest crossing. Additional crossings produce a diagnosis with the retained height.
+
+## Equations and registry
+
+```{r}
+## List equations for the example species
+models <- taper_models(species = tree$spcd)
+```
+
+```{r, echo = FALSE}
+models %>%
+  select(id, family, has_dob, has_inverse, has_integral) %>%
+  slice_head(n = 6) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Inspect the selected equation and its capabilities
+get_taper_model(id = tree$model)
+
+## Check the equation's available operations
+capabilities <- model_capabilities(id = tree$model)
+```
+
+```{r, echo = FALSE}
+capabilities %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Check availability and the species assignment
+has_taper_model(id = tree$model)
+
+## Validate the equation mapping
+check_taper_models(id = tree$model, spcd = tree$spcd)
+```
+
+[Source equations](methods-taper-equations.html) support package and source compatibility modes.
+[fit_taper()](methods-fitting-taper.html) estimates coefficients for session registration.

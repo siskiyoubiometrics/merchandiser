@@ -1,0 +1,145 @@
+---
+title: 'Compiling an inventory'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Compiling an inventory}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+`stand_table()` expands tree counts, basal area, log counts, and product quantities.
+`stock_table()` uses the same calculation with product and diameter-class grouping by default.
+Both require the complete inventory and supplied expansion factors.
+
+```{r}
+## Use the complete simulated heights and retain tree identifiers
+trees <- example_trees_pnw %>%
+  mutate(id = tree, ht = ht_simulated)
+```
+
+```{r}
+## Load the inventory specifications
+specifications <- example_products(name = 'pnw')
+```
+
+```{r}
+## Apply the product table to the inventory
+result <- merchandise(dbh = trees$dbh,
+                      ht = trees$ht,
+                      species = trees$species,
+                      id = trees$id,
+                      products = specifications,
+                      status = TRUE)
+```
+
+## Stand and stock tables
+
+```{r}
+## Expand tree counts and quantities by species
+stand <- stand_table(x = result,
+                     trees = trees,
+                     expansion = trees$expansion_factor,
+                     by = 'species')
+```
+
+```{r, echo = FALSE}
+stand %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Expand stock by product
+stock <- stock_table(x = result,
+                     trees = trees,
+                     expansion = trees$expansion_factor,
+                     by = 'product')
+```
+
+```{r, echo = FALSE}
+stock %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+`trees$id` joins the inventory to the result. Expansion follows the caller's inventory row order.
+`area_unit` labels expansion without converting it. These are weighted sums without variance estimates.
+
+A tree contributing to multiple products appears in each product group.
+Omit `product` from grouping to count each tree once in its inventory group.
+Different measurement units receive separate quantity columns.
+
+## Product summaries
+
+`product_summary()` summarizes a saved result. `table = 'logs'` groups by product and measurement fields.
+`table = 'trees'` summarizes tree quantities. `na_action = 'propagate'` retains missing quantities in totals.
+
+```{r}
+## Sum log quantities by product
+summary <- product_summary(x = result,
+                           table = 'logs',
+                           expansion = trees$expansion_factor,
+                           na_action = 'propagate')
+```
+
+```{r, echo = FALSE}
+summary %>%
+  select(product, scale_unit, input_trees, net_scale) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Calculate product totals directly from inventory measurements
+direct <- product_summary_by_tree(dbh = trees$dbh,
+                                  ht = trees$ht,
+                                  species = trees$species,
+                                  products = specifications,
+                                  status = TRUE)
+```
+
+```{r, echo = FALSE}
+direct %>%
+  select(product, scale_unit, input_trees, net_scale) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The direct call uses unexpanded totals unless `expansion` is supplied.
+`merch_summary()` is the deprecated name for `product_summary()` and returns the same table.
+
+```{r}
+## Summarize a saved result through the compatibility name
+legacy <- merch_summary(x = result, table = 'trees')
+```
+
+```{r, echo = FALSE}
+legacy %>%
+  select(input_trees, log_count, log_net_cubic_ib) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Add selected log counts to the complete example tree list
+counts <- example_trees %>%
+  transmute(tree,
+            logs = tree_log_count(dbh = dbh,
+                                  ht = ht,
+                                  species = species,
+                                  model = model,
+                                  products = specifications))
+```
+
+```{r, echo = FALSE}
+counts %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Stand and stock tables retain valid zero-log trees, failures, and trees absent from the result.
+`merchandising_status` separates those groups. Missing quantities propagate within applicable groups.

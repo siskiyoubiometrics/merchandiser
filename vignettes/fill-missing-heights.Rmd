@@ -1,0 +1,97 @@
+---
+title: 'Fitting and completing heights'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Fitting and completing heights}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+`fit_height()` fits height from diameter by species. A `group` vector adds supported group effects.
+`complete_heights()` retains finite heights and fills missing or nonfinite values.
+
+## Fit measured heights
+
+```{r}
+## Select retained height measurements
+measured <- example_trees_pnw %>%
+  filter(!is.na(ht_observed))
+```
+
+```{r}
+## Fit height by species with plot effects
+fit <- fit_height(dbh = measured$dbh,
+                  ht = measured$ht_observed,
+                  spcd = measured$spcd,
+                  group = measured$plot)
+```
+
+```{r, echo = FALSE}
+fit$fixed_effects %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+`pooled` identifies species using the pooled relationship. Species with too few measurements or unsuccessful separate fits use that relationship.
+Available forms are `chapman_richards`, `curtis`, `wykoff`, `naslund`, and `schumacher`.
+
+```{r}
+## Draw measured heights and fitted curves
+plot(fit)
+```
+
+## Complete inventory heights
+
+```{r}
+## Retain observed heights and fill the missing values
+trees <- example_trees_pnw %>%
+  mutate(ht = complete_heights(dbh = dbh,
+                               ht = ht_observed,
+                               spcd = spcd,
+                               group = plot,
+                               fit = fit))
+```
+
+```{r, echo = FALSE}
+trees %>%
+  filter(is.na(ht_observed)) %>%
+  select(tree, species, dbh, ht_observed, ht) %>%
+  slice_head(n = 5) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Pass a fitted object to reuse the same model across data groups.
+With `fit = NULL`, completion fits from the supplied observations.
+
+## Predict heights
+
+`predict_height()` predicts every supplied tree. `re_form = 'population'` omits fitted group effects.
+Groups absent from the fit use its population relationship. Species absent from the fit receive missing predictions.
+
+```{r}
+## Predict heights for the complete shipped tree list
+predictions <- predict_height(fit = fit,
+                              dbh = example_trees$dbh,
+                              spcd = example_trees$spcd,
+                              re_form = 'population',
+                              interval = TRUE,
+                              seed = 7)
+```
+
+```{r, echo = FALSE}
+predictions %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+With `interval = TRUE`, the result contains `fit`, `lower`, and `upper`.
+Simulated limits include group variation and residual error with coefficients held fixed.
+They exclude coefficient uncertainty and inventory sampling uncertainty.

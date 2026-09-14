@@ -1,0 +1,140 @@
+---
+title: 'Fitting taper equations'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Fitting taper equations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+`fit_taper()` estimates coefficients for compiled taper forms from repeated stem measurements.
+`as_taper_model()` converts a fit into a model accepted by the stem registry.
+
+## Fitting data and forms
+
+Required columns are `tree`, `dbh`, `ht`, `h`, and `dib`.
+Tree diameter and total height must remain constant within each tree.
+The shipped `example_stem_measurements` contains modeled diameters from `example_trees`, not independent field measurements.
+
+```{r}
+## Select the shipped fitting measurements
+measurements <- example_stem_measurements %>%
+  select(tree, dbh, ht, h, dib)
+```
+
+```{r, echo = FALSE}
+measurements %>%
+  slice_head(n = 5) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r, echo = FALSE}
+forms <- dplyr::tribble(~form,
+                        ~source,
+                        ~structure,
+                        'kozak_1988',
+                        'Kozak (1988), doi:10.1139/x88-213',
+                        'Variable exponent with reference point',
+                        'kozak_2002',
+                        'Kozak (2004), doi:10.5558/tfc80507-4',
+                        'Variable exponent with tree and height terms',
+                        'max_burkhart',
+                        'Max and Burkhart (1976), doi:10.1093/forestscience/22.3.283',
+                        'Segmented polynomial with fitted join points')
+knitr::kable(forms)
+```
+
+The package supplies equation forms without published coefficient vectors.
+`units` describes the input measurements. Fitted coefficients use centimeters and meters.
+
+## Fit and inspect
+
+```{r}
+## Fit the segmented taper form
+fit <- fit_taper(data = measurements,
+                 form = 'max_burkhart',
+                 units = 'imperial')
+```
+
+```{r, echo = FALSE}
+fit$fit_statistics$overall %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Draw fitted diameters and residuals
+plot(fit)
+```
+
+The fit stores coefficients, fitted values, residuals, and fit statistics.
+`rmse` is root mean squared error, and `bias` is mean observed minus fitted diameter. Both use centimeters.
+
+`summary()` reports fit statistics and coefficients. `predict()` evaluates new measurement rows.
+
+Supplying `group` requests a mixed-effects fit.
+The random effect acts on the Kozak scale parameter or the segmented form's `b1` parameter.
+Predictions use population coefficients when a group was absent from the fitting data.
+
+```{r}
+## Predict diameters at the supplied measurement heights
+predicted <- measurements %>%
+  mutate(fitted_dib = predict(object = fit,
+                              newdata = measurements,
+                              units = 'imperial'))
+```
+
+```{r, echo = FALSE}
+predicted %>%
+  slice_head(n = 5) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+## Register fitted coefficients
+
+`as_taper_model()` creates a model from population coefficients. `register_taper_model()` makes it available for the current session.
+An explicit `bark_ratio` enables outside-bark calculations for the fitted model.
+
+```{r}
+## Create and register a model from the fitted coefficients
+local_model <- as_taper_model(x = fit,
+                              id = 'example.segmented',
+                              bark_ratio = 0.9)
+
+## Make the model available for stem calculations
+register_taper_model(model = local_model)
+```
+
+```{r}
+## Calculate volume with the fitted model
+volumes <- example_trees %>%
+  transmute(tree,
+            cubic = stem_volume(dbh = dbh,
+                                ht = ht,
+                                model = local_model$id))
+```
+
+```{r, echo = FALSE}
+volumes %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Validate and remove the session model
+validate_taper_model(x = local_model)
+
+## Remove the example registration
+unregister_taper_model(id = local_model$id)
+```
+
+`taper_model_from_coefficients()` constructs the same compiled model type from a named coefficient vector.
+`new_taper_model()` constructs a model from R callbacks.

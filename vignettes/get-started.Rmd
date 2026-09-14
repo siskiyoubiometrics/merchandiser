@@ -1,0 +1,135 @@
+---
+title: 'Get started'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+`merchandise()` selects logs from tree measurements and an ordered product table.
+It returns log dimensions, scaled quantities, tree totals, residual intervals, and recorded settings.
+The shipped tree inventories and product specifications are synthetic examples.
+
+## Tree and products
+
+Default inputs use inches for diameter and feet for height.
+
+```{r}
+## Select a shipped tree
+tree <- example_trees %>%
+  filter(tree == 5)
+```
+
+```{r, echo = FALSE}
+tree %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Load the example specifications
+specifications <- example_products(name = 'douglas_fir')
+```
+
+```{r, echo = FALSE}
+specifications %>%
+  mutate(lengths = vapply(lengths, paste, character(1), collapse = ', ')) %>%
+  select(product, lengths, min_length, max_length, min_sed, trim, volume_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+`volume_unit` specifies each product's measurement. The example prices use United States dollars (`USD`).
+
+## Logs and result tables
+
+```{r}
+## Select logs from the tree
+result <- merchandise(dbh = tree$dbh,
+                      ht = tree$ht,
+                      model = tree$model,
+                      species = tree$species,
+                      id = tree$tree,
+                      products = specifications,
+                      currency = 'USD',
+                      status = TRUE)
+```
+
+```{r, echo = FALSE}
+result$logs %>%
+  select(log, product, nominal_length, sed_ib, net_scale, scale_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+`logs` holds the selected cuts. `trees` retains every input tree, including trees without logs.
+`net_scale` uses the accompanying `scale_unit`.
+
+```{r}
+## Select tree totals
+totals <- result$trees %>%
+  select(id, log_count, log_net_cubic_ib, net_value, status)
+```
+
+```{r, echo = FALSE}
+totals %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Draw the selected logs
+plot(result)
+```
+
+`residuals` records stem intervals outside the logs. `scales` contains product measurements and any additional reports.
+`defect_accounting` records deductions, and `values` records priced quantities.
+
+
+## Inventory
+
+`ht_simulated` supplies complete example heights. [complete_heights()](fill-missing-heights.html) fills missing `ht_observed` values from retained measurements.
+
+```{r}
+## Use the complete simulated heights and retain tree identifiers
+trees <- example_trees_pnw %>%
+  mutate(id = tree, ht = ht_simulated)
+```
+
+```{r}
+## Load the inventory product specifications
+specifications <- example_products(name = 'pnw')
+```
+
+```{r}
+## Apply the product table to the inventory
+result <- merchandise(dbh = trees$dbh,
+                      ht = trees$ht,
+                      species = trees$species,
+                      id = trees$id,
+                      products = specifications,
+                      status = TRUE)
+```
+
+```{r}
+## Expand the inventory by species
+stand <- stand_table(x = result,
+                     trees = trees,
+                     expansion = trees$expansion_factor,
+                     by = 'species')
+```
+
+```{r, echo = FALSE}
+stand %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Expansion factors are used as supplied. These example weights do not represent a sampling design.
+`merchandising_status` separates valid quantities, failed calculations, and inventory trees absent from the result.

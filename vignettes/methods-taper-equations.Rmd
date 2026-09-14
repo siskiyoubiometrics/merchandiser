@@ -1,0 +1,245 @@
+---
+title: 'Taper equation methods'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Taper equation methods}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = '#>',
+                      message = FALSE,
+                      fig.width = 7,
+                      fig.height = 4)
+library(merchandiser)
+library(dplyr)
+```
+
+The shipped equations follow a pinned National Volume Estimator Library source revision.
+`nvel_source_revision()` returns that revision and attributes identifying the repository and fixture release.
+
+`DIB` denotes diameter inside bark, and `DOB` denotes diameter outside bark.
+
+```{r}
+## Report the equation source revision
+nvel_source_revision()
+```
+
+## Source routines
+
+Coefficient inventories retain source files, line locations, and revision identifiers.
+
+
+```{r, echo = FALSE}
+families <- c('Flewelling variable-shape profiles',
+              'Clark regional profiles',
+              'Alaska and Mathis regional profiles',
+              'Smaller regional profile families',
+              'National scale volume and biomass profiles',
+              'Identifier and merchandising support')
+
+flewelling_files <- paste(c('f_west.f',
+                            'f_ingy.f',
+                            'f_alaska.f',
+                            'f_other.f',
+                            'sf_2pt.f',
+                            'sf_2pth.f',
+                            'sf_3pt.f',
+                            'sf_3z.f',
+                            'sf_corr.f',
+                            'sf_dfz.f',
+                            'sf_ds.f',
+                            'sf_hs.f',
+                            'sf_shp.f',
+                            'sf_taper.f',
+                            'sf_yhat.f',
+                            'sf_yhat3.f',
+                            'sf_zero.f'),
+                          collapse = ', ')
+
+clark_files <- paste(c('r8clkdib.f',
+                       'r8dib.f',
+                       'r8dib.inc',
+                       'r8clkcoef.inc',
+                       'r8cfo.inc',
+                       'r8clist.inc',
+                       'r8vlist.f',
+                       'r8vlist.inc',
+                       'r8init.f',
+                       'r8prep.f',
+                       'r8vol.f',
+                       'r8vol1.f',
+                       'r8vol2.f',
+                       'r9clarkdib.f',
+                       'r9clark.f',
+                       'r9coeff.inc',
+                       'r9init.f',
+                       'r9vol.f',
+                       'r9logs.f',
+                       'clkcoef_mod.f',
+                       'calcdia.f',
+                       'ht2topd.f',
+                       'profile.f',
+                       'volinit.f',
+                       'voleqdef.f'),
+                     collapse = ', ')
+
+alaska_files <- paste(c('r10tap.f',
+                        'r10tapo.f',
+                        'r10d2h.f',
+                        'r10vol.f',
+                        'r10vol1.f',
+                        'r10volo.f',
+                        'r4d2h.f',
+                        'r4vol.f',
+                        'profile.f',
+                        'calcdia.f',
+                        'ht2topd.f'),
+                      collapse = ', ')
+
+regional_files <- paste(c('r1tap.f',
+                          'r2tap.f',
+                          'r5tap.f',
+                          'r12tap.f',
+                          'stump.f',
+                          'blmtap.f',
+                          'blmvol.f',
+                          'formclas.f',
+                          'r6vol3.f'),
+                        collapse = ', ')
+
+national_files <- paste(c('nsvb.f',
+                          'tables1.inc through tables11.inc',
+                          'dist_ecoprov.inc',
+                          'regndftdata.inc',
+                          'scrib.f'),
+                        collapse = ', ')
+
+identifier_files <- paste(c('voleqdef.f', 'fiaeq2nveleq.for', 'mrules.f'),
+                          collapse = ', ')
+
+family_sources <- data.frame(family = families,
+                             source_files = c(flewelling_files,
+                                              clark_files,
+                                              alaska_files,
+                                              regional_files,
+                                              national_files,
+                                              identifier_files))
+
+knitr::kable(family_sources, row.names = FALSE)
+```
+
+National biomass diameter and cumulative-volume calculations use distinct fitted relationships.
+[Stem functions](stem-model-overview.html) accept equation identifiers and measurement vectors.
+[fit_taper()](methods-fitting-taper.html) estimates local coefficients.
+
+## Identifier fields
+
+The source identifiers use fixed character positions. Field meanings depend on the family.
+
+```{r, echo = FALSE}
+regional_id <- nvel_default_equation(region = 1, forest = 3, district = 0, spcd = 202)
+national_id <- 'NVB0210202'
+```
+
+```{r, echo = FALSE}
+regional_parts <- data.frame(layout = 'regional profile',
+                             field = c('geographic equation selection',
+                                       'equation mnemonic',
+                                       'family-specific variant',
+                                       'species suffix'),
+                             positions = c('1:3', '4:6', '7', '8:10'),
+                             value = c(substr(regional_id, 1, 3),
+                                       substr(regional_id, 4, 6),
+                                       substr(regional_id, 7, 7),
+                                       substr(regional_id, 8, 10)))
+
+national_parts <- data.frame(layout = 'national scale',
+                             field = c('system marker',
+                                       'mountain indicator or zero',
+                                       'ecological division',
+                                       'species suffix'),
+                             positions = c('1:3', '4', '5:7', '8:10'),
+                             value = c(substr(national_id, 1, 3),
+                                       substr(national_id, 4, 4),
+                                       substr(national_id, 5, 7),
+                                       substr(national_id, 8, 10)))
+
+identifier_parts <- bind_rows(regional_parts, national_parts)
+
+knitr::kable(identifier_parts, row.names = FALSE)
+```
+
+`check_taper_models()` checks resolved identifiers and species scope.
+[nvel_default_equation()](identifiers-defaults.html) resolves identifiers from agency and species codes.
+
+## Compatibility behavior
+
+`options(merchandiser.compat = 'port')` is the default.
+`options(merchandiser.compat = 'nvel')` selects source-compatible calculations.
+Restore the previous process option after a source comparison.
+
+```{r, echo = FALSE}
+area <- c('FIAEQ2NVELEQ geographic substitution',
+          'Flewelling SF_HS inverse',
+          'Clark 834CLKE110 inverse',
+          'Regional Clark R9LOGS error 12',
+          'Regional R10 height selection and cedar equality',
+          'Smaller-family inverse search',
+          'Regional R12 height selection',
+          'National scale CALCDIA outside-bark diameter',
+          'National scale Table S10 carbon fraction')
+
+port <- c('applies the intended trimmed geographic substitutions',
+          'inverts the displayed profile and selects its highest crossing',
+          'returns the highest actual crossing',
+          'retains a computable total in the internal volume record',
+          'inverts the registered profile consistently',
+          'returns the precise numeric crossing',
+          'inverts the public profile',
+          'returns the outside-bark diameter computed internally',
+          'returns the fraction used by the biomass calculation')
+
+nvel <- c('reproduces fixed-width source string semantics',
+          'reproduces the source bark-height argument and crossing selection',
+          'reproduces the source two-root addition',
+          'reproduces the source error and cleared record',
+          'retains source height results and the cedar equality rule',
+          'reproduces the source rounded search',
+          'retains the source result for an unselected calculation',
+          'reproduces the unassigned source output slot',
+          'returns the raw source-table fraction')
+
+compatibility_differences <- data.frame(area = area, port = port, nvel = nvel)
+
+knitr::kable(compatibility_differences, row.names = FALSE)
+```
+
+## Fixture agreement
+
+Differential tests compare package results with double- and single-precision source builds.
+They enforce tolerances and named exclusions for each family and operation.
+
+```{r, echo = FALSE}
+agreement <- read.csv(system.file('extdata',
+                                  'oracle-agreement.csv',
+                                  package = 'merchandiser'))
+```
+
+```{r, echo = FALSE}
+agreement %>%
+  distinct(precision, compat) %>%
+  arrange(precision, compat) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r, echo = FALSE}
+agreement %>%
+  mutate(max_relative_difference = format(max_relative_difference, scientific = TRUE, digits = 12),
+         tolerance = format(tolerance, scientific = TRUE, digits = 12)) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The saved table ships with the package. Full source fixtures are supplied separately to the test suite.

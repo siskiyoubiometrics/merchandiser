@@ -1,0 +1,75 @@
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+name: test-coverage.yaml
+
+permissions: read-all
+
+jobs:
+  test-coverage:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::covr, any::xml2
+          needs: coverage
+
+      - name: Test coverage
+        run: |
+          cov <- covr::package_coverage(
+            quiet = FALSE,
+            clean = FALSE,
+            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
+          )
+          covr::to_cobertura(cov)
+          r_cov <- cov[grepl("[.]R:", names(cov))]
+          cpp_cov <- cov[grepl("[.](cpp|cc|cxx|h|hpp):", names(cov))]
+          class(r_cov) <- class(cov)
+          class(cpp_cov) <- class(cov)
+          r_pct <- covr::percent_coverage(r_cov)
+          cpp_pct <- covr::percent_coverage(cpp_cov)
+          cat(sprintf("R line coverage: %.2f%%\n", r_pct))
+          cat(sprintf("C++ line coverage: %.2f%%\n", cpp_pct))
+          if (r_pct < 90) {
+            stop(sprintf("R line coverage %.2f%% is below the 90%% floor.", r_pct))
+          }
+          if (cpp_pct < 80) {
+            stop(sprintf("C++ line coverage %.2f%% is below the 80%% floor.", cpp_pct))
+          }
+        shell: Rscript {0}
+
+      # Upload to Codecov is optional. No token is configured on this
+      # repository yet, so the upload is best-effort and never gates CI.
+      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7
+        continue-on-error: true
+        with:
+          fail_ci_if_error: false
+          files: ./cobertura.xml
+          plugins: noop
+          disable_search: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Show testthat output
+        if: always()
+        run: |
+          find '${{ runner.temp }}/package' -name 'testthat.Rout*' -exec cat '{}' \; || true
+        shell: bash
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-test-failures
+          path: ${{ runner.temp }}/package

@@ -1,0 +1,26 @@
+linters: linters_with_defaults(
+    line_length_linter(100),
+    object_name_linter(styles = "snake_case"),
+    object_usage_linter = NULL,
+    cyclocomp_linter = NULL
+  )
+encoding: "UTF-8"
+exclusions: list(
+    "tests/fixtures",
+    "tests/fixtures-full",
+    "vignettes/get-started.Rmd" = list(quotes_linter = Inf),
+    "vignettes/defining-products.Rmd" = list(quotes_linter = Inf),
+    "vignettes/defect-recording-conventions.Rmd" = list(quotes_linter = Inf),
+    "vignettes/fill-missing-heights.Rmd" = list(quotes_linter = Inf),
+    "vignettes/taper-profiles.Rmd" = list(quotes_linter = Inf),
+    "vignettes/volumes-scaling.Rmd" = list(quotes_linter = Inf),
+    "vignettes/biomass-carbon.Rmd" = list(quotes_linter = Inf),
+    "vignettes/compiling-inventory.Rmd" = list(quotes_linter = Inf),
+    "vignettes/bucking-prices.Rmd" = list(quotes_linter = Inf),
+    "vignettes/assumptions-status.Rmd" = list(quotes_linter = Inf),
+    "vignettes/methods-taper-equations.Rmd" = list(quotes_linter = Inf),
+    "vignettes/methods-fitting-taper.Rmd" = list(quotes_linter = Inf),
+    "vignettes/stem-model-overview.Rmd" = list(quotes_linter = Inf),
+    "vignettes/oracle-agreement.Rmd" = list(quotes_linter = Inf),
+    "vignettes/identifiers-defaults.Rmd" = list(quotes_linter = Inf)
+  )

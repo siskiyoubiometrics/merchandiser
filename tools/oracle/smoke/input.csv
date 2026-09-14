@@ -1,0 +1,24 @@
+call,REGN,FORST,DIST,VAR,SPEC,PROD,VOLEQ,DBHOB,HTTOT,HTTYPE,MTOPP,MTOPS,STUMP,HT1PRD,HT2PRD,UPSHT1,UPSD1,HTREF,FCLASS,DBTBH,BTR,CTYPE,LIVE,CONSPEC,FIASPCD,CR,CULL,DECAYCD,BRKHT,BRKHTD,HTUP,STEMDIB,MRULEMOD,NEWMAXLEN,NEWMINLEN,NEWTRIM,note
+d,6,12,01,,202,01,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,VOLEQDEF R6 Siuslaw Douglas-fir
+d,6,12,01,,263,01,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,VOLEQDEF R6 Siuslaw western hemlock
+d,1,16,01,,202,01,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,VOLEQDEF R1 forest 16 Douglas-fir
+d,8,01,01,,131,01,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,VOLEQDEF R8 forest 01 loblolly
+d,9,09,01,,371,01,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,VOLEQDEF R9 forest 09 yellow birch
+d,10,04,01,,98,01,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,VOLEQDEF R10 forest 04 Sitka spruce
+e,6,12,01,,202,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,NVB_DefaultEq R6 Siuslaw 202
+e,8,01,01,,131,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,NVB_DefaultEq R8 forest 01 131
+a,6,12,01,,202,01,F00FW2W202,18.5,110,F,6,4,1,0,0,0,0,0,0,0,0,C,L,,,,,,,,,,N,,,,VOLUMELIBRARY R6 Flewelling 2-point Douglas-fir
+a,6,12,01,,263,01,F03FW2W263,14.2,95,F,6,4,1,0,0,0,0,0,0,0,0,C,L,,,,,,,,,,N,,,,VOLUMELIBRARY R6 Flewelling 2-point western hemlock
+a,6,12,01,,202,01,F00FW2W202,18.5,110,F,6,4,1,0,0,0,0,0,0,0,0,C,L,,,,,,,,,,Y,32,8,0.5,VOLUMELIBRARY R6 DF with MRULEMOD=Y override (32 ft logs)
+a,1,16,01,,202,01,I00FW3W202,20.1,105,F,6,4,1,0,0,40,14.5,0,0,0,0,C,L,,,,,,,,,,N,,,,VOLUMELIBRARY R1 Flewelling three-point (FW3 identifier plus UPSHT1/UPSD1; VOLEQDEF default is the FW2 form)
+a,1,16,01,,202,01,I00FW2W202,20.1,105,F,6,4,1,0,0,0,0,0,0,0,0,C,L,,,,,,,,,,N,,,,VOLUMELIBRARY R1 same tree without upper-stem point (2-point control)
+a,8,01,01,,131,01,841CLKE131,12.3,78,F,7,4,1,0,0,0,0,0,0,0,0,C,L,,,,,,,,,,N,,,,VOLUMELIBRARY R8 Clark loblolly
+a,9,09,01,,371,01,900CLKE371,15.7,72,F,9,4,1,0,0,0,0,0,0,0,0,C,L,,,,,,,,,,N,,,,VOLUMELIBRARY R9 Clark yellow birch
+a,10,04,01,,98,01,A00F32W098,22.4,120,F,6,4,1,0,0,0,0,0,0,0,0,C,L,,,,,,,,,,N,,,,VOLUMELIBRARY R10 Sitka spruce
+a,6,12,01,,202,01,F00FW2W202,18.5,0,F,6,4,1,0,0,0,0,0,0,0,0,C,L,,,,,,,,,,N,,,,VOLUMELIBRARY R6 DF with no height (expected nonzero ERRFLAG)
+c,6,12,01,,202,01,NVBM240202,18.5,110,F,6,4,1,0,0,0,0,0,0,0,0,C,L,,202,40,0,0,0,0,,,N,,,,NVBC NSVB R6 Douglas-fir
+c,8,01,01,,131,01,NVB0230131,12.3,78,F,7,4,1,0,0,0,0,0,0,0,0,C,L,,131,35,0,0,0,0,,,N,,,,NVBC NSVB R8 loblolly
+b,6,12,01,,202,01,F00FW2W202,18.5,110,F,,,1,0,0,0,0,0,0,0,0,,,,,,,,,,33,6,N,,,,CALCDIA at 33 ft and HT2TOPD to 6 in on R6 DF Flewelling tree
+b,6,12,01,,202,01,F00FW2W202,18.5,110,F,,,1,0,0,0,0,0,0,0,0,,,,,,,,,,66.5,4,N,,,,CALCDIA at 66.5 ft and HT2TOPD to 4 in on R6 DF Flewelling tree
+b,1,16,01,,202,01,I00FW3W202,20.1,105,F,,,1,0,0,40,14.5,0,0,0,0,,,,,,,,,,50,6,N,,,,CALCDIA at 50 ft and HT2TOPD to 6 in on R1 three-point tree (FW3 with UPSHT1/UPSD1)
+b,8,01,01,,131,01,841CLKE131,12.3,78,F,,,1,0,0,0,0,0,0,0,0,,,,,,,,,,17.3,6,N,,,,CALCDIA at 17.3 ft and HT2TOPD to 6 in on R8 Clark loblolly

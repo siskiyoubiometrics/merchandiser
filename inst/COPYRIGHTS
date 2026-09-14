@@ -1,0 +1,122 @@
+Copyright holders of material ported into merchandiser
+=======================================================
+
+merchandiser is MIT-licensed (see LICENSE and LICENSE.md). This file records
+copyright notices and authorship credits found in upstream source material so
+attribution is preserved when independently implemented R and C++ routines are
+added.
+
+NVEL scaling and segmentation provenance
+========================================
+
+Version 0.1.0 independently ports the `NUMLOG`, `SEGMNT`, `SCRIB`, and
+`INTL14` routines from the US Forest Service National Volume Estimator Library
+at commit 38548071d5aa652bb90c7f111f86b427f798a1c9. The upstream files read
+were `numlog.f`, `segmnt.f`, and `scrib.f`.
+
+The `numlog.f` and `segmnt.f` headers carry this authorship credit:
+
+    THE LOGIC WAS DEVELOPED BY JIM BRICKELL, TCFPM R-1, AND
+    IMPLEMENTED BY WO-TM.
+
+This is an authorship credit, not a copyright notice. No additional copyright
+holder is inferred from it. The reviewed headers of `scrib.f`, including the
+`INTL14` routine in that file, contain no copyright or authorship notice.
+
+The source repository, pinned revision, files, and date read are recorded in
+`inst/NOTES.md`. Later discoveries must be added rather than silently dropped.
+
+
+## Stem model sources imported for merchandiser 0.2.0
+
+1. Flewelling taper routines (sf_*.f and related files)
+   -------------------------------------------------------
+   The following header text is transcribed verbatim from f_west.f,
+   lines 17 through 19, at commit
+   38548071d5aa652bb90c7f111f86b427f798a1c9:
+
+   c                      Coefficients for NW TAPER Coop  April, 1994
+   c                         (REGN  CD17.coe)
+   c                       Copyright  J. W. Flewelling, 1994
+
+   Equivalent J. W. Flewelling copyright headers recur in the other
+   `f_*.f` and `sf_*.f` routines read by `data-raw/flewelling.R`. The
+   Flewelling routines are published by the US Forest Service in the
+   National Volume Estimator Library.
+
+2. Language Systems SZERO note (sf_zero.f)
+   -------------------------------------------
+   sf_zero.f, lines 4 through 8, at the pinned commit states:
+
+   c           Adopted from SZERO found in MATH77 Subr Library of
+   c               Language Systems   Sterling, VA.
+   c
+   c           Code is Copyright by Language Systems.
+   c           Source, object and executable MAY be distributed with SF_TEST.
+
+   treevolume does not copy or use SF_ZERO or SZERO. Its compiled Flewelling
+   kernel uses an independently written bounded bisection method.
+
+3. Region 10 volume routine attribution (r10volo.f)
+   --------------------------------------------------
+   The following header text is transcribed verbatim from r10volo.f,
+   lines 8 through 10, at the pinned commit:
+
+   *  SUBROUTINE NAME: R10VOL                                            *
+   *          AUTHOR: D.DeMars/M.Schmidt                                 *
+   *    CONVERTED BY: K.CORMIER/B.JONES                                  *
+
+   The header contains attribution but no copyright notice. No additional
+   copyright holder is inferred from the author and converter fields.
+
+Authorship credits recorded as provenance (maintainer decision, 2026-09-06)
+===================================================================
+
+The following authorship credits appear in the library's source comments. They
+are not copyright notices. They are preserved so each ported equation set has
+an auditable lineage. No additional copyright holder is inferred from them.
+All citations refer to upstream commit
+38548071d5aa652bb90c7f111f86b427f798a1c9.
+
+- `profile.f`, lines 8 through 11, credits taper or profile models developed by
+  Jim Flewelling, Ray Czaplewski, Wensel and Olson, and John Byrne, and credits
+  the Forest Management Service Center for merchandising logic.
+- `f_other.f`, lines 175 through 177, credits additions to K. Cormier and the
+  original code to J. W. Flewelling.
+- `r1tap.f`, lines 22 through 23, credits the primary profile coefficients to
+  John Byrne. Line 109 credits the other-species coefficients to Chojnacky and
+  Cutler.
+- `r4d2h.f`, line 7, credits the equation to David Chojnacky and Research Paper
+  INT-339.
+- `r10d2h.f`, lines 5 and 16 through 19, credits equations or references to
+  Larsen and Winterberger, Larson and coauthors, Haack, Gregory and coauthors,
+  Brackett, and Malone and coauthors. It also records a modification by Y. Wang.
+- `r10volo.f`, line 9, names D. DeMars and M. Schmidt as authors and K. Cormier
+  and B. Jones as converters.
+- `r8vol2.f`, line 26, names Ken Cormier and Brad Jones as authors.
+- `r9coeff.inc`, lines 4 through 9, identifies the Clark and others 1991
+  profile equations in Research Paper SE-282 and records Mike VanDyck's 2013
+  yellow birch coefficient refit.
+- `r5tap.f`, lines 14 and 35, identifies the Wensel and Krumland profile model.
+- `r12tap.f`, line 5, identifies the Hawaii profile as the Sharpneck model.
+- `blmtap.f` identifies its coefficient system as Behre's hyperbola.
+  The following credit lines are transcribed verbatim from commit
+  38548071d5aa652bb90c7f111f86b427f798a1c9:
+
+  Line 93:
+
+      C     Jim Alegria, OSO 930.
+
+  Line 101:
+
+      C--  using an iterative method devised by Jim Alegria, September, 1993.
+
+  Line 218:
+
+      C      20 Sep 93; R. Miller, OSO 931.5
+- `stump.f`, lines 1 through 3, records creation by Y. Wang and a Raile 1982
+  equation. Line 177 credits Raile for the integration formula.
+
+The inventory includes the BLMTAP credits added under the standing maintainer
+ruling. It does not establish that all attribution strings have been found.
+Later discoveries must be added here rather than silently dropped.
