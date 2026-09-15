@@ -77,12 +77,14 @@
 <span>  <span class="va">ht</span>,</span>
 <span>  <span class="va">spcd</span>,</span>
 <span>  model <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  lower <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  lower_type <span class="op">=</span> <span class="st">'stump'</span>,</span>
-<span>  upper <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  upper_type <span class="op">=</span> <span class="st">'tip'</span>,</span>
+<span>  from <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  to <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  from_dib <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  from_dob <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  to_dib <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  to_dob <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  stump_ht <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  stump_ht <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -91,12 +93,12 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>dbh</dt>
 <dd><p>Diameter at breast height outside bark. Numeric vector,
-inches. Required, with no default.</p></dd>
+inches, greater than zero and at most 400. Required, with no default.</p></dd>
 
 
 <dt>ht</dt>
 <dd><p>Total height above ground. Numeric vector, feet.
-Required, with no default.</p></dd>
+Required, with no default. Heights must be greater than zero and at most 500 feet.</p></dd>
 
 
 <dt>spcd</dt>
@@ -106,27 +108,35 @@ vector, species codes. Required, with no default.</p></dd>
 
 <dt>model</dt>
 <dd><p>Registered taper model identifier. Character vector of
-registered model identifiers. Default: <code>NULL</code>.</p></dd>
+registered model identifiers. Default: <code>NULL</code>.
+model NULL selects the shipped default for the species, see <a href="default_taper_models.html">default_taper_models</a>.
+Species without a default return status 404.</p></dd>
 
 
-<dt>lower</dt>
-<dd><p>The lower boundary sets where the stem section starts. Numeric vector, feet for a
-height or offset and inches for a diameter. Default: <code>0</code>.</p></dd>
+<dt>from</dt>
+<dd><p>Start height above ground. Numeric vector, feet. Default <code>NULL</code> uses <code>stump_ht</code>.</p></dd>
 
 
-<dt>lower_type</dt>
-<dd><p>The boundary type tells how to interpret the lower measurement. Character
-vector, one of 'height', 'stump', 'tip', 'dib', or 'dob'. Default: <code>'stump'</code>.</p></dd>
+<dt>to</dt>
+<dd><p>End height above ground. Numeric vector, feet. Default <code>NULL</code> uses the tree tip.</p></dd>
 
 
-<dt>upper</dt>
-<dd><p>The upper boundary sets where the stem section ends. Numeric vector, feet for a
-height or offset and inches for a diameter. Default: <code>0</code>.</p></dd>
+<dt>from_dib</dt>
+<dd><p>Inside bark diameter at the start. Numeric vector, inches, default <code>NULL</code>.</p></dd>
 
 
-<dt>upper_type</dt>
-<dd><p>The boundary type tells how to interpret the upper measurement. Character
-vector, one of 'height', 'stump', 'tip', 'dib', or 'dob'. Default: <code>'tip'</code>.</p></dd>
+<dt>from_dob</dt>
+<dd><p>Outside bark diameter at the start. Numeric vector, inches, default <code>NULL</code>.</p></dd>
+
+
+<dt>to_dib</dt>
+<dd><p>Inside bark diameter at the end. Numeric vector, inches, default <code>NULL</code>.</p></dd>
+
+
+<dt>to_dob</dt>
+<dd><p>Outside bark diameter at the end. Numeric vector, inches, default <code>NULL</code>.
+Diameter bounds use <code><a href="height_at_dib.html">height_at_dib()</a></code> or <code><a href="height_at_dob.html">height_at_dob()</a></code>, including their status conventions.
+Supply at most one start argument and at most one end argument.</p></dd>
 
 
 <dt>inside_bark</dt>
@@ -136,7 +146,7 @@ default TRUE excludes bark.</p></dd>
 
 <dt>stump_ht</dt>
 <dd><p>Stump height above ground. Numeric
-vector, feet. Default: <code>NULL</code>.</p></dd>
+vector, feet. Default: <code>1</code>.</p></dd>
 
 
 <dt>...</dt>

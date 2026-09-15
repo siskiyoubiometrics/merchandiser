@@ -73,22 +73,22 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_taper_model</span><span class="op">(</span></span>
-<span>  <span class="va">id</span></span>
+<span>  <span class="va">model</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
-    <dl><dt>id</dt>
-<dd><p>The identifier names the taper model in the registry. Character vector of model
-identifiers. Required, with no default.</p></dd>
+    <dl><dt>model</dt>
+<dd><p>The identifier names the taper model in the registry. Character scalar model
+identifier. Required, with no default.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>A taper_model list containing id, family, kernel, inputs, spcd, stump_ht,
+<p>A taper_model list containing id, form, kernel, inputs, spcd, stump_ht,
 bark_ratio (diameter ratio), source (provenance), and internal equation metadata.
 <code>measurement_system</code> identifies the internal units.
 <code>stump_ht</code> uses feet for imperial models and meters for metric models.</p>
@@ -97,9 +97,9 @@ bark_ratio (diameter ratio), source (provenance), and internal equation metadata
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">## Inspect the model used for an example tree.</span></span></span>
-<span class="r-in"><span><span class="fu">get_taper_model</span><span class="op">(</span>id <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">model</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">get_taper_model</span><span class="op">(</span>model <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">model</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;taper_model F00FW2W202&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   family: flewelling_2pt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   form: flewelling_2pt</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   kernel: compiled</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   units: imperial</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   oracle verified: yes</span>

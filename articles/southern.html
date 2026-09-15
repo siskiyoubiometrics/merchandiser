@@ -161,16 +161,27 @@ stand from the southern tree list.</p>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Convert the stopper columns</span></span>
-<span><span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/defects_from_stoppers.html">defects_from_stoppers</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
-<span>                                 ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                                 saw_stop <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">saw_stop</span>,</span>
-<span>                                 pulp_stop <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">pulp_stop</span>,</span>
-<span>                                 jump_butt <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">jump_butt</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/defects_from_stoppers.html">defects_from_stoppers</a></span><span class="op">(</span></span>
+<span>  tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree_id</span>,</span>
+<span>  ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>  topwood_product <span class="op">=</span> <span class="st">"pulpwood"</span>,</span>
+<span>  saw_stop <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">saw_stop</span>,</span>
+<span>  pulp_stop <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">pulp_stop</span>,</span>
+<span>  jump_butt <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">jump_butt</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <table class="table">
+<colgroup>
+<col width="10%">
+<col width="26%">
+<col width="23%">
+<col width="11%">
+<col width="11%">
+<col width="15%">
+</colgroup>
 <thead><tr class="header">
 <th align="right">tree_id</th>
-<th align="right">from (feet)</th>
-<th align="right">to (feet)</th>
+<th align="right">start_height (feet)</th>
+<th align="right">end_height (feet)</th>
 <th align="left">effect</th>
 <th align="left">product</th>
 <th align="right">percent (%)</th>
@@ -228,7 +239,7 @@ stand from the southern tree list.</p>
 </table>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Cut and scale the trees</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree_id</span>,</span>
 <span>                      dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                      ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                      spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
@@ -239,7 +250,7 @@ stand from the southern tree list.</p>
 <span><span class="co">## Join logs to stand and diameter</span></span>
 <span><span class="va">logs</span> <span class="op">&lt;-</span> <span class="va">result</span><span class="op">$</span><span class="va">logs</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">trees</span>,</span>
-<span>            by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'tree_id'</span> <span class="op">=</span> <span class="st">'tree'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>            by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'tree_id'</span> <span class="op">=</span> <span class="st">'tree_id'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="product-yield">Product yield<a class="anchor" aria-label="anchor" href="#product-yield"></a>
@@ -538,7 +549,7 @@ restrict product eligibility.</p>
 <span>                           pulpwood <span class="op">=</span> <span class="va">pulpwood</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Cut and scale the trees</span></span>
-<span><span class="va">age_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span><span class="va">age_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree_id</span>,</span>
 <span>                          dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                          ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                          spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>

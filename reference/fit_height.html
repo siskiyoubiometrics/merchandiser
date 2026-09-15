@@ -86,12 +86,12 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>dbh</dt>
 <dd><p>Diameter at breast height outside bark. Numeric vector,
-inches. Required, with no default.</p></dd>
+inches, greater than zero and at most 400. Required, with no default.</p></dd>
 
 
 <dt>ht</dt>
 <dd><p>Total height above ground. Numeric vector, feet.
-Required, with no default.</p></dd>
+Required, with no default. Heights must be greater than zero and at most 500 feet.</p></dd>
 
 
 <dt>spcd</dt>
@@ -127,6 +127,12 @@ The random_effects table records model_key, group, and effect (local coefficient
 The n_by_species table has spcd (species code) and n (measured tree count).
 Other elements retain the equation form, fitted models, model_map, internal_fixed_effects,
 groups_seen, pooled_species, convergence_pooled_species, min_n, and package metadata.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Invalid rows are omitted with one warning giving the count and reasons. Diameters
+must be at most 400 inches and total heights at most 500 feet. Species must occur
+in <code>species_reference</code>.</p>
     </div>
 
     <div class="section level2">

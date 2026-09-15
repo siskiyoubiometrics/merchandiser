@@ -101,11 +101,13 @@ This identifier links every result row to its input tree. Values must be unique 
 
 
 <dt>dbh</dt>
-<dd><p>Supply diameter at breast height outside bark. Numeric, inches, required.</p></dd>
+<dd><p>Supply diameter at breast height outside bark. Numeric, inches, required.
+Must be greater than zero and at most 400.</p></dd>
 
 
 <dt>ht</dt>
-<dd><p>Supply total tree height above ground. Numeric, feet, required.</p></dd>
+<dd><p>Supply total tree height above ground. Numeric, feet, required.
+Must be greater than zero and at most 500.</p></dd>
 
 
 <dt>spcd</dt>
@@ -151,7 +153,7 @@ in feet and sweep in percent, default <code>NULL</code> records no defects.</p><
 <dd><p>Choose how to select cuts. Character, unitless, default <code>'cascade'</code> takes
 the longest feasible log in supplied product order at each step.
 <code>'optimize'</code> maximizes total value with any eligible product at each cut position.
-Product order has no effect on optimization, and every product must have a price.
+Product order has no effect on optimization, and every product must have a positive price.
 Equal values prefer fewer logs, then longer logs lower on the stem.
 Remaining ties prefer lower physical ends, then product names in byte order.
 Value differences within eight machine epsilons of the larger total are treated as ties.</p></dd>
@@ -209,7 +211,7 @@ Their <code>scaling_length</code> is reported for the mill's records only.</p>
 as that rule rounds it. It is <code>NA</code> for cubic, green weight, and cord products.</p>
 
 
-<p><code>residuals</code> has <code>from</code>, <code>to</code> (feet above ground), and <code>cause</code> (text).</p>
+<p><code>residuals</code> has <code>start_height</code>, <code>end_height</code> (feet above ground), and <code>cause</code> (text).</p>
 
 
 <p><code>status</code> has only nonzero tree codes in <code>status</code>, with <code>name</code> and <code>description</code> (text).
@@ -220,11 +222,17 @@ An empty status table means all trees completed cleanly.</p>
 <code>product</code>, and <code>source</code>.
 Codes and labels are unitless, and <code>unit</code> describes each numeric value.</p>
     </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Invalid stump heights return status 411 on their tree. Invalid pruning heights return
+status 408. Negative, nonfinite, and above-tree values are invalid, and stumps must
+be strictly below the tree height. Orphan defects are dropped before validation.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">## Cut and scale the shipped trees with an explicit product</span></span></span>
-<span class="r-in"><span><span class="fu">merchandise</span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">tree</span>,</span></span>
+<span class="r-in"><span><span class="fu">merchandise</span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">tree_id</span>,</span></span>
 <span class="r-in"><span>            dbh <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">dbh</span>,</span></span>
 <span class="r-in"><span>            ht <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">ht</span>,</span></span>
 <span class="r-in"><span>            spcd <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">spcd</span>,</span></span>

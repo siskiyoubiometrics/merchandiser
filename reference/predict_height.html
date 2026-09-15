@@ -94,7 +94,7 @@ object. Required, with no default.</p></dd>
 
 <dt>dbh</dt>
 <dd><p>Diameter at breast height outside bark. Numeric vector,
-inches. Required, with no default.</p></dd>
+inches, greater than zero and at most 400. Required, with no default.</p></dd>
 
 
 <dt>spcd</dt>
@@ -124,7 +124,7 @@ scalar, fraction between zero and one. Default: <code>0.95</code>.</p></dd>
 
 <dt>nsim</dt>
 <dd><p>The simulation count controls the number of draws for prediction intervals. Numeric
-scalar, number of draws. Default: <code>1000</code>.</p></dd>
+scalar, number of draws, at most 1e6. Default: <code>1000</code>.</p></dd>
 
 
 <dt>seed</dt>

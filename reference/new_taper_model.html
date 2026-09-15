@@ -74,7 +74,7 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">new_taper_model</span><span class="op">(</span></span>
 <span>  <span class="va">id</span>,</span>
-<span>  <span class="va">family</span>,</span>
+<span>  <span class="va">form</span>,</span>
 <span>  <span class="va">dib</span>,</span>
 <span>  dob <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  height_at_dib <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -83,20 +83,19 @@
 <span>  spcd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  stump_ht <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  bark_ratio <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
-<span>  source <span class="op">=</span> <span class="st">''</span></span>
+<span>  source <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>id</dt>
-<dd><p>The identifier names the taper model in the registry. Character vector of model
-identifiers. Required, with no default.</p></dd>
+<dd><p>The identifier names the taper model in the registry. Character scalar model
+identifier. Required, with no default.</p></dd>
 
 
-<dt>family</dt>
-<dd><p>The family groups taper models that use the same equation form. Character vector
-of family names. Required, with no default.</p></dd>
+<dt>form</dt>
+<dd><p>Equation form used by the taper model. Character scalar. Required, with no default.</p></dd>
 
 
 <dt>dib</dt>
@@ -136,7 +135,7 @@ codes. Default: <code><a href="https://rdrr.io/r/base/integer.html" class="exter
 
 <dt>stump_ht</dt>
 <dd><p>Stump height above ground. Numeric
-vector, feet. Default: <code>1</code>.</p></dd>
+scalar, feet. Default: <code>1</code>.</p></dd>
 
 
 <dt>bark_ratio</dt>
@@ -146,14 +145,14 @@ Numeric scalar, inside diameter divided by outside diameter. Default: <code>NA_r
 
 <dt>source</dt>
 <dd><p>The source records where the model came from. Character scalar, provenance text.
-Default: <code>''</code>.</p></dd>
+Default: <code>NULL</code> stores an empty string.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>A validated taper_model list containing id, family, kernel (callbacks), inputs,
+<p>A validated taper_model list containing id, form, kernel (callbacks), inputs,
 spcd, stump_ht (feet), bark_ratio (diameter ratio), source (provenance), and internal
 equation metadata.</p>
     </div>
@@ -161,17 +160,17 @@ equation metadata.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">## Inspect the shipped demonstration callback</span></span></span>
-<span class="r-in"><span><span class="va">base</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_taper_model.html">get_taper_model</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">'demo.paraboloid.r'</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">base</span> <span class="op">&lt;-</span> <span class="fu"><a href="get_taper_model.html">get_taper_model</a></span><span class="op">(</span>model <span class="op">=</span> <span class="st">'demo.paraboloid.r'</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Construct a local model from the callback</span></span></span>
 <span class="r-in"><span><span class="va">local_model</span> <span class="op">&lt;-</span> <span class="fu">new_taper_model</span><span class="op">(</span>id <span class="op">=</span> <span class="st">'example.callback'</span>,</span></span>
-<span class="r-in"><span>                               family <span class="op">=</span> <span class="st">'demonstration'</span>,</span></span>
+<span class="r-in"><span>                               form <span class="op">=</span> <span class="st">'demonstration'</span>,</span></span>
 <span class="r-in"><span>                               dib <span class="op">=</span> <span class="va">base</span><span class="op">$</span><span class="va">dib</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Inspect the local model</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">local_model</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;taper_model example.callback&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   family: demonstration</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   form: demonstration</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   kernel: r</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   units: imperial</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   oracle verified: not applicable</span>

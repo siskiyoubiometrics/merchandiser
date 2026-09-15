@@ -115,7 +115,7 @@
 <span></span>
 <span><span class="co">## Select the example tree</span></span>
 <span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree_id</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Define each product: lengths, small end limit, trim, unit, and price</span></span>
 <span><span class="va">large</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Large sawlog'</span>,</span>
@@ -162,7 +162,7 @@
 <span><span class="va">specifications</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/products.html">products</a></span><span class="op">(</span><span class="va">large</span>, <span class="va">medium</span>, <span class="va">small</span>, <span class="va">pulp</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Select logs from the tree</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree_id</span>,</span>
 <span>                      dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                      ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                      spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span>,</span>

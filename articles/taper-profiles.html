@@ -108,16 +108,18 @@ cubic feet.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Select a tree for the profile</span></span>
 <span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree_id</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Measure the stem profile</span></span>
-<span><span class="va">profile</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stem_profile.html">stem_profile</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree</span>,</span>
-<span>                        dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                        ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                        spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span>,</span>
-<span>                        model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span>,</span>
-<span>                        step <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></code></pre></div>
-<p><code>step</code> is spacing in inches along the stem. Cumulative
+<span><span class="va">profile</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stem_profile.html">stem_profile</a></span><span class="op">(</span></span>
+<span>  tree_id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree_id</span>,</span>
+<span>  dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>  ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>  spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>  model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span>,</span>
+<span>  step <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><code>step</code> is spacing in feet along the stem. Cumulative
 volume starts at the lower bound.</p>
 <details><summary>
 Stem profile measurements
@@ -1104,7 +1106,7 @@ false.</p>
 <table class="table">
 <thead><tr class="header">
 <th align="left">id</th>
-<th align="left">family</th>
+<th align="left">form</th>
 <th align="left">has_dob</th>
 <th align="left">has_inverse</th>
 <th align="left">has_integral</th>
@@ -1156,21 +1158,23 @@ false.</p>
 </table>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Inspect the selected model</span></span>
-<span><span class="fu"><a href="../reference/get_taper_model.html">get_taper_model</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span><span class="op">$</span><span class="va">id</span></span>
+<span><span class="fu"><a href="../reference/get_taper_model.html">get_taper_model</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span><span class="op">$</span><span class="va">id</span></span>
 <span><span class="co">#&gt; [1] "F00FW2W202"</span></span>
 <span></span>
 <span><span class="co">## Check model capabilities</span></span>
-<span><span class="fu"><a href="../reference/model_capabilities.html">model_capabilities</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/taper_models.html">taper_models</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">id</span> <span class="op">==</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">id</span>, <span class="va">has_dob</span>, <span class="va">has_inverse</span>, <span class="va">has_integral</span><span class="op">)</span></span>
 <span><span class="co">#&gt;           id has_dob has_inverse has_integral</span></span>
 <span><span class="co">#&gt; 1 F00FW2W202    TRUE       FALSE         TRUE</span></span>
 <span></span>
 <span><span class="co">## Check availability and species scope</span></span>
-<span><span class="fu"><a href="../reference/has_taper_model.html">has_taper_model</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/has_taper_model.html">has_taper_model</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span></span>
 <span><span class="co">## Check the assignment</span></span>
-<span><span class="fu"><a href="../reference/check_taper_models.html">check_taper_models</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span>, spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] row     id      code    problem input  </span></span>
+<span><span class="fu"><a href="../reference/check_taper_models.html">check_taper_models</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span>, spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] row     id      status  problem input  </span></span>
 <span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre></div>
 <p><a href="methods-fitting-taper.html">Fitting taper equations</a>
 creates local models for the same stem functions.</p>

@@ -112,7 +112,7 @@ vectors in inches for diameters and feet for heights, none by default.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>One row per input row in input order. All mass columns use metric tonnes:</p><ul><li><p><code>dry_agb_no_foliage</code>: dry aboveground mass excluding foliage.</p></li>
+<p>One row per input row in input order. All mass columns use metric tonnes:</p><ul><li><p><code>dry_aboveground_no_foliage</code>: dry aboveground mass excluding foliage.</p></li>
 <li><p><code>dry_stem_wood</code>, <code>dry_stem_bark</code>: dry stem components.</p></li>
 <li><p><code>dry_stump_wood</code>, <code>dry_stump_bark</code>: dry stump components.</p></li>
 <li><p><code>dry_saw_wood</code>, <code>dry_saw_bark</code>: dry sawlog components.</p></li>
@@ -133,7 +133,7 @@ vectors in inches for diameters and feet for heights, none by default.</p></dd>
 <span class="r-in"><span><span class="fu">biomass</span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">dbh</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>        ht <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">ht</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span></span>
 <span class="r-in"><span>        spcd <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">spcd</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/transmute.html" class="external-link">transmute</a></span><span class="op">(</span>`dry mass excluding foliage (tonnes)` <span class="op">=</span> <span class="va">dry_agb_no_foliage</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/transmute.html" class="external-link">transmute</a></span><span class="op">(</span>`dry mass excluding foliage (tonnes)` <span class="op">=</span> <span class="va">dry_aboveground_no_foliage</span>,</span></span>
 <span class="r-in"><span>            `carbon (tonnes)` <span class="op">=</span> <span class="va">carbon</span>,</span></span>
 <span class="r-in"><span>            `carbon dioxide equivalent (tonnes)` <span class="op">=</span> <span class="va">tco2e</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   dry mass excluding foliage (tonnes) carbon (tonnes)</span>

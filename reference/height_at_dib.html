@@ -86,7 +86,7 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>dbh</dt>
 <dd><p>Diameter at breast height outside bark. Numeric vector,
-inches. Required, with no default.</p></dd>
+inches, greater than zero and at most 400. Required, with no default.</p></dd>
 
 
 <dt>ht</dt>
@@ -96,7 +96,7 @@ Required, with no default.</p></dd>
 
 <dt>dib</dt>
 <dd><p>The target diameter identifies the point to locate on the stem. Numeric vector,
-inches. Required, with no default.</p></dd>
+inches, greater than zero and at most 400. Required, with no default.</p></dd>
 
 
 <dt>spcd</dt>
@@ -106,7 +106,9 @@ vector, species codes. Required, with no default.</p></dd>
 
 <dt>model</dt>
 <dd><p>Registered taper model identifier. Character vector of
-registered model identifiers. Default: <code>NULL</code>.</p></dd>
+registered model identifiers. Default: <code>NULL</code>.
+model NULL selects the shipped default for the species, see <a href="default_taper_models.html">default_taper_models</a>.
+Species without a default return status 404.</p></dd>
 
 
 <dt>...</dt>

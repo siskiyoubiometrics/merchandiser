@@ -77,7 +77,7 @@
 <span>  <span class="va">form</span>,</span>
 <span>  <span class="va">coefficients</span>,</span>
 <span>  spcd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  stump_ht <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  stump_ht <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  bark_ratio <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
 <span>  source <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -86,8 +86,8 @@
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>id</dt>
-<dd><p>The identifier names the taper model in the registry. Character vector of model
-identifiers. Required, with no default.</p></dd>
+<dd><p>The identifier names the taper model in the registry. Character scalar model
+identifier. Required, with no default.</p></dd>
 
 
 <dt>form</dt>
@@ -107,7 +107,7 @@ codes. Default: <code><a href="https://rdrr.io/r/base/integer.html" class="exter
 
 <dt>stump_ht</dt>
 <dd><p>Stump height above ground. Numeric
-vector, feet. Default: <code>0</code>.</p></dd>
+scalar, feet. Default: <code>1</code>.</p></dd>
 
 
 <dt>bark_ratio</dt>
@@ -131,8 +131,15 @@ register_taper_model().</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">## Obtain coefficients from the shipped synthetic stem measurements.</span></span></span>
-<span class="r-in"><span><span class="va">fitted</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_taper.html">fit_taper</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">example_stem_measurements</span>,</span></span>
-<span class="r-in"><span>                    form <span class="op">=</span> <span class="st">'max_burkhart'</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fitted</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_taper.html">fit_taper</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  tree_id <span class="op">=</span> <span class="va">example_stem_measurements</span><span class="op">$</span><span class="va">tree_id</span>,</span></span>
+<span class="r-in"><span>  dbh <span class="op">=</span> <span class="va">example_stem_measurements</span><span class="op">$</span><span class="va">dbh</span>,</span></span>
+<span class="r-in"><span>  ht <span class="op">=</span> <span class="va">example_stem_measurements</span><span class="op">$</span><span class="va">ht</span>,</span></span>
+<span class="r-in"><span>  h <span class="op">=</span> <span class="va">example_stem_measurements</span><span class="op">$</span><span class="va">h</span>,</span></span>
+<span class="r-in"><span>  dib <span class="op">=</span> <span class="va">example_stem_measurements</span><span class="op">$</span><span class="va">dib</span>,</span></span>
+<span class="r-in"><span>  spcd <span class="op">=</span> <span class="va">example_stem_measurements</span><span class="op">$</span><span class="va">spcd</span>,</span></span>
+<span class="r-in"><span>  form <span class="op">=</span> <span class="st">'max_burkhart'</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Create a model from that coefficient set.</span></span></span>
 <span class="r-in"><span><span class="va">local_model</span> <span class="op">&lt;-</span> <span class="fu">taper_model_from_coefficients</span><span class="op">(</span>id <span class="op">=</span> <span class="st">'example.coefficients'</span>,</span></span>
@@ -142,7 +149,7 @@ register_taper_model().</p>
 <span class="r-in"><span><span class="co">## Inspect the local model</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">local_model</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;taper_model example.coefficients&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   family: max_burkhart</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   form: max_burkhart</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   kernel: compiled</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   units: metric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   oracle verified: not applicable</span>

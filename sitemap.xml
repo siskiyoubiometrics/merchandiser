@@ -88,19 +88,19 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/carbon_fraction.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/check_taper_manifest.html</loc>
-  </url>
-  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/check_taper_models.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/complete_heights.html</loc>
   </url>
   <url>
+    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/default_taper_models.html</loc>
+  </url>
+  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/defect.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/defect_pct_from_thirds.html</loc>
+    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/defect_by_thirds.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/defects_from_stoppers.html</loc>
@@ -155,9 +155,6 @@
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/merchandiser-package.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/model_capabilities.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/new_taper_model.html</loc>
@@ -223,19 +220,10 @@
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/threads.html</loc>
   </url>
   <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/tree_cubic_volume.html</loc>
-  </url>
-  <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/unregister_taper_model.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/validate_defects.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/validate_products.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/validate_taper_model.html</loc>
   </url>
   <url>
     <loc>https://siskiyoubiometrics.github.io/merchandiser/reference/with_threads.html</loc>

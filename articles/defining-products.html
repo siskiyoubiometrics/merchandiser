@@ -151,7 +151,7 @@ output.</p>
 <span>                           pulp <span class="op">=</span> <span class="va">pulp</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Cut and scale the trees</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree_id</span>,</span>
 <span>                      dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                      ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                      spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
@@ -274,7 +274,7 @@ its percentage limit.</p>
 <span>                 volume_unit <span class="op">=</span> <span class="st">'cubic'</span><span class="op">)</span>  <span class="co">## cubic feet</span></span>
 <span></span>
 <span><span class="co">## Cut and scale the trees</span></span>
-<span><span class="va">clear_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span><span class="va">clear_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree_id</span>,</span>
 <span>                            dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                            ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                            spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
@@ -370,7 +370,7 @@ for the stacked cord conversion.</p>
 <span>                    cord_solid_fraction <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span>  <span class="co">## solid wood proportion, unitless</span></span>
 <span></span>
 <span><span class="co">## Cut and scale the trees</span></span>
-<span><span class="va">cord_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span><span class="va">cord_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree_id</span>,</span>
 <span>                           dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                           ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                           spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
@@ -478,7 +478,7 @@ log values. <a href="optimal-bucking.html">Prices and bucking</a> shows
 priced specifications.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Check the product table</span></span>
-<span><span class="va">checked</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/validate_products.html">validate_products</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">specifications</span><span class="op">)</span></span>
+<span><span class="va">checked</span> <span class="op">&lt;-</span> <span class="va">specifications</span></span>
 <span></span>
 <span><span class="co">## Count validated products</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">checked</span><span class="op">)</span></span>

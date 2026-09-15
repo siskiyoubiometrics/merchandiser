@@ -153,83 +153,87 @@ only its named product within an interval. Both split the stem and
 restart priority.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Record a cull on an example tree</span></span>
-<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree</span><span class="op">[</span><span class="fl">7</span><span class="op">]</span>,</span>
-<span>       from <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>       to <span class="op">=</span> <span class="fl">8</span>,</span>
+<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree_id</span><span class="op">[</span><span class="fl">7</span><span class="op">]</span>,</span>
+<span>       start_height <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>       end_height <span class="op">=</span> <span class="fl">8</span>,</span>
 <span>       effect <span class="op">=</span> <span class="st">'cull'</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`from (feet)` <span class="op">=</span> <span class="va">from</span>,</span>
-<span>         `to (feet)` <span class="op">=</span> <span class="va">to</span>,</span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`start_height (feet)` <span class="op">=</span> <span class="va">start_height</span>,</span>
+<span>         `end_height (feet)` <span class="op">=</span> <span class="va">end_height</span>,</span>
 <span>         `percent (percent)` <span class="op">=</span> <span class="va">percent</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;merch_defects&gt; 1 records</span></span>
-<span><span class="co">#&gt;  tree_id from (feet) to (feet) effect product percent (percent)</span></span>
-<span><span class="co">#&gt;        7           1         8   cull    &lt;NA&gt;                NA</span></span>
+<span><span class="co">#&gt;  tree_id start_height (feet) end_height (feet) effect product percent (percent)</span></span>
+<span><span class="co">#&gt;        7                   1                 8   cull    &lt;NA&gt;                NA</span></span>
 <span></span>
 <span><span class="co">## Record a product restriction</span></span>
-<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree</span><span class="op">[</span><span class="fl">28</span><span class="op">]</span>,</span>
-<span>       from <span class="op">=</span> <span class="fl">35</span>,</span>
-<span>       to <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree_id</span><span class="op">[</span><span class="fl">28</span><span class="op">]</span>,</span>
+<span>       start_height <span class="op">=</span> <span class="fl">35</span>,</span>
+<span>       end_height <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>       effect <span class="op">=</span> <span class="st">'restrict'</span>,</span>
 <span>       product <span class="op">=</span> <span class="st">'pulp'</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`from (feet)` <span class="op">=</span> <span class="va">from</span>,</span>
-<span>         `to (feet)` <span class="op">=</span> <span class="va">to</span>,</span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`start_height (feet)` <span class="op">=</span> <span class="va">start_height</span>,</span>
+<span>         `end_height (feet)` <span class="op">=</span> <span class="va">end_height</span>,</span>
 <span>         `percent (percent)` <span class="op">=</span> <span class="va">percent</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;merch_defects&gt; 1 records</span></span>
-<span><span class="co">#&gt;  tree_id from (feet) to (feet)   effect product percent (percent)</span></span>
-<span><span class="co">#&gt;       28          35        NA restrict    pulp                NA</span></span></code></pre></div>
-<p><code>end</code> stops cutting at <code>from</code>.
+<span><span class="co">#&gt;  tree_id start_height (feet) end_height (feet)   effect product</span></span>
+<span><span class="co">#&gt;       28                  35                NA restrict    pulp</span></span>
+<span><span class="co">#&gt;  percent (percent)</span></span>
+<span><span class="co">#&gt;                 NA</span></span></code></pre></div>
+<p><code>end</code> stops cutting at <code>start_height</code>.
 <code>sweep</code> rejects overlapping logs only when its percentage
 exceeds the product’s <code>max_sweep</code>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Record an end</span></span>
-<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree</span><span class="op">[</span><span class="fl">21</span><span class="op">]</span>,</span>
-<span>       from <span class="op">=</span> <span class="fl">88</span>,</span>
-<span>       to <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree_id</span><span class="op">[</span><span class="fl">21</span><span class="op">]</span>,</span>
+<span>       start_height <span class="op">=</span> <span class="fl">88</span>,</span>
+<span>       end_height <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>       effect <span class="op">=</span> <span class="st">'end'</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`from (feet)` <span class="op">=</span> <span class="va">from</span>,</span>
-<span>         `to (feet)` <span class="op">=</span> <span class="va">to</span>,</span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`start_height (feet)` <span class="op">=</span> <span class="va">start_height</span>,</span>
+<span>         `end_height (feet)` <span class="op">=</span> <span class="va">end_height</span>,</span>
 <span>         `percent (percent)` <span class="op">=</span> <span class="va">percent</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;merch_defects&gt; 1 records</span></span>
-<span><span class="co">#&gt;  tree_id from (feet) to (feet) effect product percent (percent)</span></span>
-<span><span class="co">#&gt;       21          88        NA    end    &lt;NA&gt;                NA</span></span>
+<span><span class="co">#&gt;  tree_id start_height (feet) end_height (feet) effect product percent (percent)</span></span>
+<span><span class="co">#&gt;       21                  88                NA    end    &lt;NA&gt;                NA</span></span>
 <span></span>
 <span><span class="co">## Record sweep severity</span></span>
-<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree</span><span class="op">[</span><span class="fl">35</span><span class="op">]</span>,</span>
-<span>       from <span class="op">=</span> <span class="fl">28</span>,</span>
-<span>       to <span class="op">=</span> <span class="fl">70</span>,</span>
+<span><span class="fu"><a href="../reference/defect.html">defect</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree_id</span><span class="op">[</span><span class="fl">35</span><span class="op">]</span>,</span>
+<span>       start_height <span class="op">=</span> <span class="fl">28</span>,</span>
+<span>       end_height <span class="op">=</span> <span class="fl">70</span>,</span>
 <span>       effect <span class="op">=</span> <span class="st">'sweep'</span>,</span>
 <span>       percent <span class="op">=</span> <span class="fl">25</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`from (feet)` <span class="op">=</span> <span class="va">from</span>,</span>
-<span>         `to (feet)` <span class="op">=</span> <span class="va">to</span>,</span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`start_height (feet)` <span class="op">=</span> <span class="va">start_height</span>,</span>
+<span>         `end_height (feet)` <span class="op">=</span> <span class="va">end_height</span>,</span>
 <span>         `percent (percent)` <span class="op">=</span> <span class="va">percent</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;merch_defects&gt; 1 records</span></span>
-<span><span class="co">#&gt;  tree_id from (feet) to (feet) effect product percent (percent)</span></span>
-<span><span class="co">#&gt;       35          28        70  sweep    &lt;NA&gt;                25</span></span></code></pre></div>
-<p>Missing <code>to</code> extends the record to the tree top. No defect
-percentage is applied within <code><a href="../reference/merchandise.html">merchandise()</a></code>.</p>
+<span><span class="co">#&gt;  tree_id start_height (feet) end_height (feet) effect product percent (percent)</span></span>
+<span><span class="co">#&gt;       35                  28                70  sweep    &lt;NA&gt;                25</span></span></code></pre></div>
+<p>Missing <code>end_height</code> extends the record to the tree top.
+No defect percentage is applied within <code><a href="../reference/merchandise.html">merchandise()</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="mapped-defects">Mapped defects<a class="anchor" aria-label="anchor" href="#mapped-defects"></a>
 </h2>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Check the shipped defect records</span></span>
-<span><span class="va">checked</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/validate_defects.html">validate_defects</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">example_defects_pnw</span>,</span>
-<span>                            products <span class="op">=</span> <span class="va">specifications</span>,</span>
-<span>                            ht <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                            tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
+<span><span class="va">checked</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/validate_defects.html">validate_defects</a></span><span class="op">(</span></span>
+<span>  defects <span class="op">=</span> <span class="va">example_defects_pnw</span>,</span>
+<span>  products <span class="op">=</span> <span class="va">specifications</span>,</span>
+<span>  ht <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>  tree_id <span class="op">=</span> <span class="va">example_trees_pnw</span><span class="op">$</span><span class="va">tree_id</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<table style="width:100%;" class="table">
 <colgroup>
-<col width="12%">
-<col width="18%">
-<col width="15%">
-<col width="13%">
-<col width="12%">
-<col width="18%">
+<col width="9%">
+<col width="24%">
+<col width="21%">
 <col width="10%">
+<col width="9%">
+<col width="14%">
+<col width="8%">
 </colgroup>
 <thead><tr class="header">
 <th align="right">tree_id</th>
-<th align="right">from (feet)</th>
-<th align="right">to (feet)</th>
+<th align="right">start_height (feet)</th>
+<th align="right">end_height (feet)</th>
 <th align="left">effect</th>
 <th align="left">product</th>
 <th align="right">percent (%)</th>
@@ -295,21 +299,21 @@ percentage is applied within <code><a href="../reference/merchandise.html">merch
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Select the tree with the first shipped cull</span></span>
 <span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">example_trees_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree</span> <span class="op">==</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">first</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">example_defects_pnw</span><span class="op">$</span><span class="va">tree_id</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree_id</span> <span class="op">==</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">first</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">example_defects_pnw</span><span class="op">$</span><span class="va">tree_id</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Select its mapped defects</span></span>
 <span><span class="va">records</span> <span class="op">&lt;-</span> <span class="va">example_defects_pnw</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree_id</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree_id</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">trees</span><span class="op">$</span><span class="va">tree_id</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Cut and scale the trees</span></span>
-<span><span class="va">clean</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span><span class="va">clean</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree_id</span>,</span>
 <span>                     dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                     ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                     spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
 <span>                     products <span class="op">=</span> <span class="va">specifications</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Cut and scale the trees</span></span>
-<span><span class="va">affected</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span><span class="va">affected</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree_id</span>,</span>
 <span>                        dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                        ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                        spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
@@ -1430,11 +1434,18 @@ Drawing measurements
 </tbody>
 </table>
 <table class="table">
+<colgroup>
+<col width="12%">
+<col width="11%">
+<col width="28%">
+<col width="25%">
+<col width="22%">
+</colgroup>
 <thead><tr class="header">
 <th align="left">run</th>
 <th align="right">tree_id</th>
-<th align="right">from (feet)</th>
-<th align="right">to (feet)</th>
+<th align="right">start_height (feet)</th>
+<th align="right">end_height (feet)</th>
 <th align="left">cause</th>
 </tr></thead>
 <tbody>
@@ -1532,10 +1543,18 @@ Drawing measurements
 </tbody>
 </table>
 <table class="table">
+<colgroup>
+<col width="10%">
+<col width="25%">
+<col width="22%">
+<col width="8%">
+<col width="10%">
+<col width="22%">
+</colgroup>
 <thead><tr class="header">
 <th align="right">tree_id</th>
-<th align="right">from (feet)</th>
-<th align="right">to (feet)</th>
+<th align="right">start_height (feet)</th>
+<th align="right">end_height (feet)</th>
 <th align="left">effect</th>
 <th align="left">product</th>
 <th align="right">percent (percent)</th>
@@ -1560,16 +1579,27 @@ saw stops to restrictions, and pulp stops to ends. The <a href="southern.html">s
 the complete list.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Convert the shipped stopper columns</span></span>
-<span><span class="va">stoppers</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/defects_from_stoppers.html">defects_from_stoppers</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">tree</span>,</span>
-<span>                                  ht <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                                  saw_stop <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">saw_stop</span>,</span>
-<span>                                  pulp_stop <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">pulp_stop</span>,</span>
-<span>                                  jump_butt <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">jump_butt</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">stoppers</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/defects_from_stoppers.html">defects_from_stoppers</a></span><span class="op">(</span></span>
+<span>  tree_id <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">tree_id</span>,</span>
+<span>  ht <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>  topwood_product <span class="op">=</span> <span class="st">"pulpwood"</span>,</span>
+<span>  saw_stop <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">saw_stop</span>,</span>
+<span>  pulp_stop <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">pulp_stop</span>,</span>
+<span>  jump_butt <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">jump_butt</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <table class="table">
+<colgroup>
+<col width="10%">
+<col width="26%">
+<col width="23%">
+<col width="11%">
+<col width="11%">
+<col width="15%">
+</colgroup>
 <thead><tr class="header">
 <th align="right">tree_id</th>
-<th align="right">from (feet)</th>
-<th align="right">to (feet)</th>
+<th align="right">start_height (feet)</th>
+<th align="right">end_height (feet)</th>
 <th align="left">effect</th>
 <th align="left">product</th>
 <th align="right">percent (%)</th>
@@ -1621,18 +1651,18 @@ the complete list.</p>
 <div class="section level2">
 <h2 id="stem-thirds">Stem thirds<a class="anchor" aria-label="anchor" href="#stem-thirds"></a>
 </h2>
-<p><code><a href="../reference/defect_pct_from_thirds.html">defect_pct_from_thirds()</a></code> weights percentages by modeled
-inside bark volume in each third of total height. It returns a
-standalone percentage and status. Applying the percentage is a separate
-script calculation.</p>
+<p><code><a href="../reference/defect_by_thirds.html">defect_by_thirds()</a></code> weights percentages by modeled inside
+bark volume in each third of total height. It returns a standalone
+percentage and status. Applying the percentage is a separate script
+calculation.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Combine percentages using species default taper</span></span>
-<span><span class="fu"><a href="../reference/defect_pct_from_thirds.html">defect_pct_from_thirds</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                       ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                       spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
-<span>                       pct_lower <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>                       pct_middle <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>                       pct_upper <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span><span class="fu"><a href="../reference/defect_by_thirds.html">defect_by_thirds</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                 ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                 spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>                 lower <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>                 middle <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>                 upper <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`defect (percent)` <span class="op">=</span> <span class="va">value</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   defect (percent) status</span></span>
 <span><span class="co">#&gt; 1         12.65994      0</span></span></code></pre></div>

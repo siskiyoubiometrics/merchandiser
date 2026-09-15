@@ -122,7 +122,7 @@ summarizing its logs.</p>
 <span><span class="va">specifications</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/products.html">products</a></span><span class="op">(</span>domestic_saw <span class="op">=</span> <span class="va">domestic_saw</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Cut and scale the trees</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">tree_id</span>,</span>
 <span>                      dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                      ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                      spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
@@ -140,12 +140,12 @@ run returns an empty table.</p>
 <span></span>
 <span><span class="co">## Introduce a missing diameter</span></span>
 <span><span class="va">bad_trees</span> <span class="op">&lt;-</span> <span class="va">trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span>condition <span class="op">=</span> <span class="va">tree</span> <span class="op">==</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">first</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">tree</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span>condition <span class="op">=</span> <span class="va">tree_id</span> <span class="op">==</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">first</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">tree_id</span><span class="op">)</span>,</span>
 <span>                       true <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
 <span>                       false <span class="op">=</span> <span class="va">dbh</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Cut and scale the trees</span></span>
-<span><span class="va">bad_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">bad_trees</span><span class="op">$</span><span class="va">tree</span>,</span>
+<span><span class="va">bad_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">bad_trees</span><span class="op">$</span><span class="va">tree_id</span>,</span>
 <span>                          dbh <span class="op">=</span> <span class="va">bad_trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                          ht <span class="op">=</span> <span class="va">bad_trees</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                          spcd <span class="op">=</span> <span class="va">bad_trees</span><span class="op">$</span><span class="va">spcd</span>,</span>
@@ -162,14 +162,14 @@ fields, stop the call.</p>
 <span><span class="va">codes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/status_codes.html">status_codes</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
-<col width="3%">
+<col width="5%">
 <col width="20%">
 <col width="6%">
-<col width="58%">
+<col width="57%">
 <col width="10%">
 </colgroup>
 <thead><tr class="header">
-<th align="right">code</th>
+<th align="right">status</th>
 <th align="left">name</th>
 <th align="left">category</th>
 <th align="left">description</th>
@@ -194,15 +194,16 @@ fields, stop the call.</p>
 <td align="right">2</td>
 <td align="left">invalid_dbh</td>
 <td align="left">input</td>
-<td align="left">Diameter at breast height must be greater than
-zero.</td>
+<td align="left">Diameter at breast height must be greater than zero and
+at most 400 inches.</td>
 <td align="left">stem model</td>
 </tr>
 <tr class="even">
 <td align="right">3</td>
 <td align="left">invalid_height</td>
 <td align="left">input</td>
-<td align="left">Total tree height must be greater than zero.</td>
+<td align="left">Total tree height must be greater than zero and at most
+500 feet.</td>
 <td align="left">stem model</td>
 </tr>
 <tr class="odd">
@@ -282,6 +283,14 @@ measurement.</td>
 <td align="left">stem model</td>
 </tr>
 <tr class="odd">
+<td align="right">55</td>
+<td align="left">auxiliary_out_of_domain</td>
+<td align="left">model</td>
+<td align="left">An auxiliary measurement is outside the model’s
+domain.</td>
+<td align="left">stem model</td>
+</tr>
+<tr class="even">
 <td align="right">100</td>
 <td align="left">diameter_above_tip</td>
 <td align="left">height</td>
@@ -289,7 +298,7 @@ measurement.</td>
 the tree top.</td>
 <td align="left">stem model</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">101</td>
 <td align="left">diameter_below_stump</td>
 <td align="left">height</td>
@@ -297,7 +306,7 @@ the tree top.</td>
 the stump.</td>
 <td align="left">stem model</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="right">102</td>
 <td align="left">multiple_heights</td>
 <td align="left">height</td>
@@ -305,7 +314,7 @@ the stump.</td>
 the highest was returned.</td>
 <td align="left">stem model</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">400</td>
 <td align="left">no_entry_product</td>
 <td align="left">product</td>
@@ -313,21 +322,21 @@ the highest was returned.</td>
 attributes.</td>
 <td align="left">merchandising</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="right">401</td>
 <td align="left">defect_height_out_of_range</td>
 <td align="left">defect</td>
 <td align="left">A defect height lies outside the tree.</td>
 <td align="left">merchandising</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">402</td>
 <td align="left">defect_interval_invalid</td>
 <td align="left">defect</td>
 <td align="left">A defect section has reversed or equal bounds.</td>
 <td align="left">merchandising</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="right">403</td>
 <td align="left">defect_percent_out_of_range</td>
 <td align="left">defect</td>
@@ -335,19 +344,42 @@ attributes.</td>
 zero through 100.</td>
 <td align="left">merchandising</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">404</td>
 <td align="left">model_unresolved</td>
 <td align="left">model</td>
 <td align="left">No taper equation was selected for this species.</td>
 <td align="left">merchandising</td>
 </tr>
-<tr class="odd">
-<td align="right">406</td>
-<td align="left">unknown_defect_effect</td>
+<tr class="even">
+<td align="right">405</td>
+<td align="left">defect_unknown_tree</td>
 <td align="left">defect</td>
-<td align="left">A defect effect is not cull, restrict, end, or
-sweep.</td>
+<td align="left">A defect names a tree that is not in the list.</td>
+<td align="left">merchandising</td>
+</tr>
+<tr class="odd">
+<td align="right">407</td>
+<td align="left">defect_unknown_product</td>
+<td align="left">defect</td>
+<td align="left">A defect restricts to a product that is not in the
+products table.</td>
+<td align="left">merchandising</td>
+</tr>
+<tr class="even">
+<td align="right">408</td>
+<td align="left">invalid_pruned_height</td>
+<td align="left">input</td>
+<td align="left">The pruned height is negative, not finite, or above the
+tree.</td>
+<td align="left">merchandising</td>
+</tr>
+<tr class="odd">
+<td align="right">409</td>
+<td align="left">defect_product_misplaced</td>
+<td align="left">defect</td>
+<td align="left">A product is named on a defect that is not a
+restriction.</td>
 <td align="left">merchandising</td>
 </tr>
 <tr class="even">
@@ -356,6 +388,22 @@ sweep.</td>
 <td align="left">product</td>
 <td align="left">The tree is valid but no log meets the product
 specifications.</td>
+<td align="left">merchandising</td>
+</tr>
+<tr class="odd">
+<td align="right">411</td>
+<td align="left">invalid_stump_height</td>
+<td align="left">input</td>
+<td align="left">Stump height must be at least zero and below the tree
+height.</td>
+<td align="left">merchandising</td>
+</tr>
+<tr class="even">
+<td align="right">412</td>
+<td align="left">optimizer_failed</td>
+<td align="left">product</td>
+<td align="left">The value optimization did not complete for this
+tree.</td>
 <td align="left">merchandising</td>
 </tr>
 </tbody>

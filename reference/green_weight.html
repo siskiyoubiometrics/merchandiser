@@ -76,14 +76,13 @@
 <span>  <span class="va">volume</span>,</span>
 <span>  <span class="va">spcd</span>,</span>
 <span>  inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  component <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'stem'</span>, <span class="st">'wood'</span>, <span class="st">'bark'</span><span class="op">)</span>,</span>
-<span>  moisture <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'green'</span>, <span class="st">'dry'</span><span class="op">)</span>,</span>
+<span>  component <span class="op">=</span> <span class="st">'stem'</span>,</span>
+<span>  moisture <span class="op">=</span> <span class="st">'green'</span>,</span>
 <span>  specific_gravity <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  moisture_pct <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bark_specific_gravity <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bark_moisture_pct <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  bark_volume_pct <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  <span class="va">...</span></span>
+<span>  bark_volume_pct <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -106,12 +105,12 @@ TRUE for volume inside bark and FALSE for volume including bark. Default: <code>
 
 <dt>component</dt>
 <dd><p>The component selects the part of the tree to measure. Character scalar,
-component name. Default: <code>c('stem', 'wood', 'bark')</code>.</p></dd>
+'stem', 'wood', or 'bark'. Default: <code>'stem'</code>.</p></dd>
 
 
 <dt>moisture</dt>
 <dd><p>The moisture choice selects green or dry merchandising weight. Character
-scalar, 'green' or 'dry'. Default: <code>c('green', 'dry')</code>.</p></dd>
+scalar, 'green' or 'dry'. Default: <code>'green'</code>.</p></dd>
 
 
 <dt>specific_gravity</dt>
@@ -138,10 +137,6 @@ percent of dry mass. Default: <code>NULL</code>.</p></dd>
 <dd><p>The bark volume replaces the species table value. Numeric vector,
 percent of inside-bark wood volume. Default: <code>NULL</code>.</p></dd>
 
-
-<dt>...</dt>
-<dd><p>Reserved. Additional arguments are rejected.</p></dd>
-
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -149,6 +144,11 @@ percent of inside-bark wood volume. Default: <code>NULL</code>.</p></dd>
 
 <p>A data frame with value (merchandising weight, short tons) and status
 (integer result code), one row per input row.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Specific gravities must be at most 2. Wood and bark moisture percentages must be at
+most 300. Bark volume percentage must be at most 100.</p>
     </div>
 
     <div class="section level2">

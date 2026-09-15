@@ -73,15 +73,15 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">check_taper_models</span><span class="op">(</span></span>
-<span>  <span class="va">id</span>,</span>
+<span>  <span class="va">model</span>,</span>
 <span>  spcd <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  aux <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
-    <dl><dt>id</dt>
+    <dl><dt>model</dt>
 <dd><p>The identifier names the taper model in the registry. Character vector of model
 identifiers. Required, with no default.</p></dd>
 
@@ -91,16 +91,16 @@ identifiers. Required, with no default.</p></dd>
 vector, species codes. Default: <code>NULL</code>.</p></dd>
 
 
-<dt>aux</dt>
-<dd><p>Extra tree measurements allow the model inputs to be checked. Named list of numeric
-vectors, diameters in inches and heights in feet. Default: <code>NULL</code>.</p></dd>
+<dt>...</dt>
+<dd><p>Extra tree measurements allow the model inputs to be checked. Named numeric
+vectors, diameters in inches and heights in feet. No extra measurements by default.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>A data frame with row (input row number), id (model identifier), code (integer status
+<p>A data frame with row (input row number), id (model identifier), status (integer status
 code), problem (problem name), and input (affected argument name). An empty table means no
 problems were found.</p>
     </div>
@@ -108,8 +108,8 @@ problems were found.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">## Check the example model identifiers.</span></span></span>
-<span class="r-in"><span><span class="fu">check_taper_models</span><span class="op">(</span>id <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] row     id      code    problem input  </span>
+<span class="r-in"><span><span class="fu">check_taper_models</span><span class="op">(</span>model <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] row     id      status  problem input  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;0 rows&gt; (or 0-length row.names)</span>
 </code></pre></div>
     </div>

@@ -205,7 +205,8 @@ This changes scaling sections only and has no effect on other volume measurement
 <dd><p>Choose how to round the scaling diameter before applying the rule.
 Character, unitless, default <code>'default'</code> uses the rule's rounding.
 <code>'down'</code> rounds down to whole inches, <code>'nearest'</code> rounds to the nearest inch with halves
-upward, and <code>'none'</code> supplies the unrounded diameter to the rule.</p></dd>
+upward, and <code>'none'</code> skips product rounding. Scribner and International still round
+to the nearest inch as their rules require. Doyle uses the resulting diameter directly.</p></dd>
 
 
 <dt>cord_solid_fraction</dt>

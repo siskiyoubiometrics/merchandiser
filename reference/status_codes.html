@@ -79,12 +79,12 @@
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>A data frame with these columns:</p><ul><li><p><code>code</code>: stable integer status code, unitless.</p></li>
+<p>A data frame with these columns:</p><ul><li><p><code>status</code>: stable integer status code, unitless.</p></li>
 <li><p><code>name</code>: plain problem name.</p></li>
 <li><p><code>description</code>: result description.</p></li>
 <li><p><code>category</code>: problem group.</p></li>
 <li><p><code>source</code>: stem model or merchandising.</p></li>
-</ul><p>Columns other than <code>code</code> contain text.</p>
+</ul><p>Columns other than <code>status</code> contain text.</p>
     </div>
 
     <div class="section level2">
@@ -94,14 +94,18 @@
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Show input status descriptions</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">codes</span>, n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   code          name category</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    0            ok       ok</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    1 missing_input    input</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    2   invalid_dbh    input</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            description     source</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1              The requested measurement is available. stem model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        A required input is missing or is not finite. stem model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Diameter at breast height must be greater than zero. stem model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   status          name category</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      0            ok       ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      1 missing_input    input</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      2   invalid_dbh    input</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                   description</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                     The requested measurement is available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                               A required input is missing or is not finite.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Diameter at breast height must be greater than zero and at most 400 inches.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       source</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 stem model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 stem model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 stem model</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

@@ -77,8 +77,8 @@ The records change available stem sections and product eligibility.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">defect</span><span class="op">(</span></span>
 <span>  <span class="va">tree_id</span>,</span>
-<span>  <span class="va">from</span>,</span>
-<span>  <span class="va">to</span>,</span>
+<span>  <span class="va">start_height</span>,</span>
+<span>  <span class="va">end_height</span>,</span>
 <span>  <span class="va">effect</span>,</span>
 <span>  product <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  percent <span class="op">=</span> <span class="cn">NULL</span></span>
@@ -93,13 +93,15 @@ This identifier ties every log, residual, and status row back to its tree and is
 link between a log and its tree.</p></dd>
 
 
-<dt>from</dt>
-<dd><p>Set the lower height of the affected section. Numeric, feet above ground, required.</p></dd>
+<dt>start_height</dt>
+<dd><p>Set the lower height of the affected section. Numeric, feet above ground,
+required.</p></dd>
 
 
-<dt>to</dt>
-<dd><p>Set the upper height of the affected section. Numeric, feet above ground, required.
-<code>NA</code> means the tree top. For an end, use <code>NA</code> or the same height as <code>from</code>.</p></dd>
+<dt>end_height</dt>
+<dd><p>Set the upper height of the affected section. Numeric, feet above ground,
+required.
+<code>NA</code> means the tree top. For an end, use <code>NA</code> or the same height as <code>start_height</code>.</p></dd>
 
 
 <dt>effect</dt>
@@ -121,7 +123,8 @@ through 100, default <code>NULL</code>. Required for sweep and unused for other 
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>A <code>merch_defects</code> data frame with <code>tree_id</code> (input identifier), <code>from</code> and <code>to</code></p>
+<p>A <code>merch_defects</code> data frame with <code>tree_id</code> (input identifier), <code>start_height</code> and
+<code>end_height</code></p>
 
 
 <p>(feet above ground), <code>effect</code> and <code>product</code> (text), and <code>percent</code> (percent).</p>
@@ -141,17 +144,17 @@ Sweep rejects overlapping logs above the product's percentage limit.</p>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Record a product restriction</span></span></span>
-<span class="r-in"><span><span class="fu">defect</span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">tree</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span></span>
-<span class="r-in"><span>       from <span class="op">=</span> <span class="fl">40</span>,</span></span>
-<span class="r-in"><span>       to <span class="op">=</span> <span class="cn">NA</span>,</span></span>
+<span class="r-in"><span><span class="fu">defect</span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees</span><span class="op">$</span><span class="va">tree_id</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>       start_height <span class="op">=</span> <span class="fl">40</span>,</span></span>
+<span class="r-in"><span>       end_height <span class="op">=</span> <span class="cn">NA</span>,</span></span>
 <span class="r-in"><span>       effect <span class="op">=</span> <span class="st">'restrict'</span>,</span></span>
 <span class="r-in"><span>       product <span class="op">=</span> <span class="st">'pulp'</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`from (feet)` <span class="op">=</span> <span class="va">from</span>,</span></span>
-<span class="r-in"><span>         `to (feet)` <span class="op">=</span> <span class="va">to</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>`start_height (feet)` <span class="op">=</span> <span class="va">start_height</span>,</span></span>
+<span class="r-in"><span>         `end_height (feet)` <span class="op">=</span> <span class="va">end_height</span>,</span></span>
 <span class="r-in"><span>         `percent (%)` <span class="op">=</span> <span class="va">percent</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;merch_defects&gt; 1 records</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  tree_id from (feet) to (feet)   effect product percent (%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        1          40        NA restrict    pulp          NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  tree_id start_height (feet) end_height (feet)   effect product percent (%)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        1                  40                NA restrict    pulp          NA</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

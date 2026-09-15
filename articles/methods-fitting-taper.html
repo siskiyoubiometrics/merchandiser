@@ -108,21 +108,23 @@ calculations.</p>
 <div class="section level2">
 <h2 id="measurements-and-forms">Measurements and forms<a class="anchor" aria-label="anchor" href="#measurements-and-forms"></a>
 </h2>
-<p>The required columns are <code>tree</code>, <code>dbh</code>,
-<code>ht</code>, <code>h</code>, and <code>dib</code>. Diameter and
-total height stay constant within each tree. The shipped measurements
-are modeled from <code>example_trees</code> and are synthetic.</p>
+<p>The required measurement vectors are <code>tree_id</code>,
+<code>dbh</code>, <code>ht</code>, <code>h</code>, <code>dib</code>, and
+<code>spcd</code>. Diameter and total height stay constant within each
+tree. The shipped measurements are modeled from
+<code>example_trees</code> and are synthetic.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Select the shipped stem measurements</span></span>
 <span><span class="va">measurements</span> <span class="op">&lt;-</span> <span class="va">example_stem_measurements</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">tree</span>, <span class="va">dbh</span>, <span class="va">ht</span>, <span class="va">h</span>, <span class="va">dib</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">tree_id</span>, <span class="va">dbh</span>, <span class="va">ht</span>, <span class="va">h</span>, <span class="va">dib</span>, <span class="va">spcd</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <thead><tr class="header">
-<th align="right">tree</th>
+<th align="right">tree_id</th>
 <th align="right">dbh (inches)</th>
 <th align="right">ht (feet)</th>
 <th align="right">h (feet)</th>
 <th align="right">dib (inches)</th>
+<th align="right">spcd</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -131,6 +133,7 @@ are modeled from <code>example_trees</code> and are synthetic.</p>
 <td align="right">60</td>
 <td align="right">3.000</td>
 <td align="right">11.423</td>
+<td align="right">202</td>
 </tr>
 <tr class="even">
 <td align="right">1</td>
@@ -138,6 +141,7 @@ are modeled from <code>example_trees</code> and are synthetic.</p>
 <td align="right">60</td>
 <td align="right">6.857</td>
 <td align="right">10.472</td>
+<td align="right">202</td>
 </tr>
 <tr class="odd">
 <td align="right">1</td>
@@ -145,6 +149,7 @@ are modeled from <code>example_trees</code> and are synthetic.</p>
 <td align="right">60</td>
 <td align="right">10.714</td>
 <td align="right">9.927</td>
+<td align="right">202</td>
 </tr>
 <tr class="even">
 <td align="right">1</td>
@@ -152,6 +157,7 @@ are modeled from <code>example_trees</code> and are synthetic.</p>
 <td align="right">60</td>
 <td align="right">14.571</td>
 <td align="right">9.381</td>
+<td align="right">202</td>
 </tr>
 <tr class="odd">
 <td align="right">1</td>
@@ -159,6 +165,7 @@ are modeled from <code>example_trees</code> and are synthetic.</p>
 <td align="right">60</td>
 <td align="right">18.429</td>
 <td align="right">8.806</td>
+<td align="right">202</td>
 </tr>
 </tbody>
 </table>
@@ -200,9 +207,15 @@ feet. The package supplies these forms without published coefficient
 vectors.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Fit the segmented taper form</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_taper.html">fit_taper</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">measurements</span>,</span>
-<span>                 form <span class="op">=</span> <span class="st">'max_burkhart'</span>,</span>
-<span>                 spcd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">202</span>, <span class="fl">263</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_taper.html">fit_taper</a></span><span class="op">(</span></span>
+<span>  tree_id <span class="op">=</span> <span class="va">measurements</span><span class="op">$</span><span class="va">tree_id</span>,</span>
+<span>  dbh <span class="op">=</span> <span class="va">measurements</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>  ht <span class="op">=</span> <span class="va">measurements</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>  h <span class="op">=</span> <span class="va">measurements</span><span class="op">$</span><span class="va">h</span>,</span>
+<span>  dib <span class="op">=</span> <span class="va">measurements</span><span class="op">$</span><span class="va">dib</span>,</span>
+<span>  spcd <span class="op">=</span> <span class="va">measurements</span><span class="op">$</span><span class="va">spcd</span>,</span>
+<span>  form <span class="op">=</span> <span class="st">'max_burkhart'</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
 <col width="27%">
@@ -789,19 +802,21 @@ height. Both axes are unitless ratios.</p>
 <span>                              newdata <span class="op">=</span> <span class="va">measurements</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
-<col width="6%">
-<col width="17%">
-<col width="13%">
+<col width="9%">
+<col width="15%">
 <col width="12%">
-<col width="17%">
-<col width="33%">
+<col width="10%">
+<col width="15%">
+<col width="6%">
+<col width="30%">
 </colgroup>
 <thead><tr class="header">
-<th align="right">tree</th>
+<th align="right">tree_id</th>
 <th align="right">dbh (inches)</th>
 <th align="right">ht (feet)</th>
 <th align="right">h (feet)</th>
 <th align="right">dib (inches)</th>
+<th align="right">spcd</th>
 <th align="right">fitted diameter (inches)</th>
 </tr></thead>
 <tbody>
@@ -811,6 +826,7 @@ height. Both axes are unitless ratios.</p>
 <td align="right">60</td>
 <td align="right">3.000</td>
 <td align="right">11.423</td>
+<td align="right">202</td>
 <td align="right">11.155</td>
 </tr>
 <tr class="even">
@@ -819,6 +835,7 @@ height. Both axes are unitless ratios.</p>
 <td align="right">60</td>
 <td align="right">6.857</td>
 <td align="right">10.472</td>
+<td align="right">202</td>
 <td align="right">10.445</td>
 </tr>
 <tr class="odd">
@@ -827,6 +844,7 @@ height. Both axes are unitless ratios.</p>
 <td align="right">60</td>
 <td align="right">10.714</td>
 <td align="right">9.927</td>
+<td align="right">202</td>
 <td align="right">9.934</td>
 </tr>
 <tr class="even">
@@ -835,6 +853,7 @@ height. Both axes are unitless ratios.</p>
 <td align="right">60</td>
 <td align="right">14.571</td>
 <td align="right">9.381</td>
+<td align="right">202</td>
 <td align="right">9.401</td>
 </tr>
 <tr class="odd">
@@ -843,6 +862,7 @@ height. Both axes are unitless ratios.</p>
 <td align="right">60</td>
 <td align="right">18.429</td>
 <td align="right">8.806</td>
+<td align="right">202</td>
 <td align="right">8.842</td>
 </tr>
 </tbody>
@@ -860,12 +880,14 @@ coefficients and retains the fitted species scope. An explicit bark
 ratio enables outside bark calculations.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Create the local model</span></span>
-<span><span class="va">local_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_taper_model.html">as_taper_model</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">fit</span>,</span>
-<span>                              id <span class="op">=</span> <span class="st">'example.segmented'</span>,</span>
-<span>                              bark_ratio <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span>
+<span><span class="va">local_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_taper_model.html">as_taper_model</a></span><span class="op">(</span></span>
+<span>  x <span class="op">=</span> <span class="va">fit</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">'example.segmented'</span>,</span>
+<span>  bark_ratio <span class="op">=</span> <span class="fl">0.9</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Register the model for this session</span></span>
-<span><span class="fu"><a href="../reference/register_taper_model.html">register_taper_model</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">local_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/register_taper_model.html">register_taper_model</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">local_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Inspect its specification</span></span>
 <span><span class="va">local_model</span><span class="op">$</span><span class="va">id</span></span>
@@ -883,38 +905,38 @@ ratio enables outside bark calculations.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">17.352</td>
+<td align="right">16.540</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">27.554</td>
+<td align="right">26.442</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="right">41.131</td>
+<td align="right">39.672</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">58.563</td>
+<td align="right">56.710</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="right">80.334</td>
+<td align="right">78.040</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">138.817</td>
+<td align="right">135.500</td>
 <td align="right">0</td>
 </tr>
 </tbody>
 </table>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Validate and remove the local model</span></span>
-<span><span class="fu"><a href="../reference/validate_taper_model.html">validate_taper_model</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">local_model</span><span class="op">)</span><span class="op">$</span><span class="va">id</span></span>
+<span><span class="va">local_model</span><span class="op">$</span><span class="va">id</span></span>
 <span><span class="co">#&gt; [1] "example.segmented"</span></span>
 <span></span>
 <span><span class="co">## Remove the session registration</span></span>
-<span><span class="fu"><a href="../reference/unregister_taper_model.html">unregister_taper_model</a></span><span class="op">(</span>id <span class="op">=</span> <span class="va">local_model</span><span class="op">$</span><span class="va">id</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/unregister_taper_model.html">unregister_taper_model</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">local_model</span><span class="op">$</span><span class="va">id</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Construct a model directly from the fitted coefficients</span></span>
 <span><span class="fu"><a href="../reference/taper_model_from_coefficients.html">taper_model_from_coefficients</a></span><span class="op">(</span>id <span class="op">=</span> <span class="st">'example.coefficients'</span>,</span>

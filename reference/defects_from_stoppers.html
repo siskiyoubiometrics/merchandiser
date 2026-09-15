@@ -75,12 +75,12 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">defects_from_stoppers</span><span class="op">(</span></span>
 <span>  <span class="va">tree_id</span>,</span>
 <span>  <span class="va">ht</span>,</span>
+<span>  <span class="va">topwood_product</span>,</span>
 <span>  saw_stop <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pulp_stop <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  jump_butt <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  always_pulp <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  stump_ht <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  pulp_product <span class="op">=</span> <span class="st">'pulpwood'</span></span>
+<span>  pulp_tree <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  stump_ht <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -96,8 +96,13 @@ link between a log and its tree.</p></dd>
 <dd><p>Supply each tree's total height. Numeric, feet, required.</p></dd>
 
 
+<dt>topwood_product</dt>
+<dd><p>Name the product allowed above a saw stop or on a whole pulp tree.
+Character scalar, unitless, required.</p></dd>
+
+
 <dt>saw_stop</dt>
-<dd><p>Stop saw products at this height and allow only <code>pulp_product</code> above it.
+<dd><p>Stop saw products at this height and allow only <code>topwood_product</code> above it.
 Numeric, feet, default <code>NULL</code> records no stop. Missing heights also record no stop.</p></dd>
 
 
@@ -111,19 +116,13 @@ no stop. Missing heights also record no stop.</p></dd>
 default <code>NULL</code> records no cull. Missing heights also record no cull.</p></dd>
 
 
-<dt>always_pulp</dt>
-<dd><p>Restrict the whole tree to <code>pulp_product</code>. Logical, unitless,
-default <code>NULL</code> means <code>FALSE</code>.</p></dd>
+<dt>pulp_tree</dt>
+<dd><p>Restrict the whole tree to <code>topwood_product</code>. Logical, unitless,
+default <code>FALSE</code>.</p></dd>
 
 
 <dt>stump_ht</dt>
-<dd><p>Set the lower height of a jump butt cull. Numeric, feet, default <code>NULL</code>
-uses <code>1</code> foot.</p></dd>
-
-
-<dt>pulp_product</dt>
-<dd><p>Name the product allowed above a saw stop or on a whole pulp tree.
-Character, unitless, default <code>'pulpwood'</code>.</p></dd>
+<dd><p>Set the lower height of a jump butt cull. Numeric, feet, default <code>1</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -133,15 +132,23 @@ Character, unitless, default <code>'pulpwood'</code>.</p></dd>
 <p>A <code>merch_defects</code> data frame with the columns and units listed in <code><a href="defect.html">defect()</a></code>.
 A saw stop becomes <code>restrict</code>, a pulp stop becomes <code>end</code>, and a jump butt becomes <code>cull</code>.</p>
     </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Heights must be finite and at most 500 feet. Total height must be positive. Other
+heights must be nonnegative. Optional missing stopping heights record no stop.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">## Convert the shipped stopping heights</span></span></span>
-<span class="r-in"><span><span class="va">records</span> <span class="op">&lt;-</span> <span class="fu">defects_from_stoppers</span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">tree</span>,</span></span>
-<span class="r-in"><span>                                 ht <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">ht</span>,</span></span>
-<span class="r-in"><span>                                 saw_stop <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">saw_stop</span>,</span></span>
-<span class="r-in"><span>                                 pulp_stop <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">pulp_stop</span>,</span></span>
-<span class="r-in"><span>                                 jump_butt <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">jump_butt</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">records</span> <span class="op">&lt;-</span> <span class="fu">defects_from_stoppers</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  tree_id <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">tree_id</span>,</span></span>
+<span class="r-in"><span>  ht <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">ht</span>,</span></span>
+<span class="r-in"><span>  topwood_product <span class="op">=</span> <span class="st">"pulpwood"</span>,</span></span>
+<span class="r-in"><span>  saw_stop <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">saw_stop</span>,</span></span>
+<span class="r-in"><span>  pulp_stop <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">pulp_stop</span>,</span></span>
+<span class="r-in"><span>  jump_butt <span class="op">=</span> <span class="va">example_trees_south</span><span class="op">$</span><span class="va">jump_butt</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Show the converted effects</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">records</span><span class="op">$</span><span class="va">effect</span>, n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>

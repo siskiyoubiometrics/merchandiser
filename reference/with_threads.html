@@ -82,7 +82,8 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>n</dt>
 <dd><p>The worker count controls how many threads may evaluate trees. Numeric scalar, number
-of threads. Required, with no default.</p></dd>
+of threads, a whole number of at least one. Counts above the detected core count
+are clamped with a warning. Required, with no default.</p></dd>
 
 
 <dt>code</dt>

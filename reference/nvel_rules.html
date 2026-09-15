@@ -111,17 +111,20 @@ number code, unitless, default NA selects the library default. Codes 11 through 
 
 
 <dt>maximum_length</dt>
-<dd><p>Set the longest nominal segment allowed by the source rules. Numeric,
+<dd><p>Set the longest nominal segment allowed by the source rules.
+Numeric scalar,
 feet, default NA selects the library default.</p></dd>
 
 
 <dt>minimum_length</dt>
-<dd><p>Set the shortest nominal segment allowed by the source rules. Numeric,
+<dd><p>Set the shortest nominal segment allowed by the source rules.
+Numeric scalar,
 feet, default NA selects the library default.</p></dd>
 
 
 <dt>minimum_top_length</dt>
-<dd><p>Set the shortest top segment allowed by the source rules. Numeric,
+<dd><p>Set the shortest top segment allowed by the source rules.
+Numeric scalar,
 feet, default NA selects the library default.</p></dd>
 
 
@@ -131,22 +134,24 @@ Numeric, feet, default NA selects the library default.</p></dd>
 
 
 <dt>primary_top</dt>
-<dd><p>Set the smallest inside-bark diameter for the primary product. Numeric,
+<dd><p>Set the smallest inside-bark diameter for the primary product. Numeric scalar,
 inches, default NA selects the library default.</p></dd>
 
 
 <dt>secondary_top</dt>
-<dd><p>Set the smallest inside-bark diameter for the secondary product. Numeric,
+<dd><p>Set the smallest inside-bark diameter for the secondary product.
+Numeric scalar,
 inches, default NA selects the library default.</p></dd>
 
 
 <dt>stump</dt>
-<dd><p>Set the height left below the first source-library segment. Numeric, feet,
+<dd><p>Set the height left below the first source-library segment. Numeric scalar, feet,
 default NA selects the library default.</p></dd>
 
 
 <dt>trim</dt>
-<dd><p>Set the extra wood cut above each nominal source-library segment. Numeric, feet,
+<dd><p>Set the extra wood cut above each nominal source-library segment.
+Numeric scalar, feet,
 default NA selects the library default.</p></dd>
 
 
@@ -156,50 +161,51 @@ Numeric scalar, inside diameter divided by outside diameter. Default: <code>NA_r
 
 
 <dt>minimum_board_foot_dbh</dt>
-<dd><p>Set the smallest tree eligible for board foot volume. Numeric
+<dd><p>Set the smallest tree eligible for board foot volume.
+Numeric scalar
 outside-bark diameter at breast height, inches, default NA selects the library default.</p></dd>
 
 
 <dt>scribner</dt>
-<dd><p>Choose how the source library scales Scribner volume. Character vector,
+<dd><p>Choose how the source library scales Scribner volume. Character scalar,
 unitless, default <code>'regional'</code> uses its regional setting. <code>'table'</code> uses the Scribner table
 and <code>'factor'</code> uses regional factors. Missing values and unknown labels are errors.</p></dd>
 
 
 <dt>prod</dt>
-<dd><p>Choose the source product class. Character vector of two-character codes,
+<dd><p>Choose the source product class. Character scalar of two-character codes,
 unitless, default <code>'01'</code> means sawtimber. <code>'08'</code> means a nonsaw product.</p></dd>
 
 
 <dt>ht_type</dt>
-<dd><p>Tell the source library how height is recorded. Character vector, unitless,
+<dd><p>Tell the source library how height is recorded. Character scalar, unitless,
 default <code>''</code> leaves the setting unspecified. <code>'F'</code> means feet and <code>'L'</code> means logs.</p></dd>
 
 
 <dt>live</dt>
-<dd><p>Tell the source library whether the tree is alive. Character vector, unitless,
+<dd><p>Tell the source library whether the tree is alive. Character scalar, unitless,
 default <code>'L'</code> means live. <code>'D'</code> means dead.</p></dd>
 
 
 <dt>ctype</dt>
-<dd><p>Identify the kind of inventory supplying the tree. Character vector, unitless,
+<dd><p>Identify the kind of inventory supplying the tree. Character scalar, unitless,
 default <code>'C'</code> means cruise. <code>'I'</code> selects Forest Inventory and Analysis, <code>'F'</code> selects
 Forest Vegetation Simulator, and <code>'B'</code> selects the alternate National Scale Volume and
 Biomass route. Missing values and unknown labels are errors.</p></dd>
 
 
 <dt>cull</dt>
-<dd><p>Supply the whole-tree cull percentage required by a source equation. Numeric,
+<dd><p>Supply the whole-tree cull percentage required by a source equation. Numeric scalar,
 percent, default 0. This source input does not reduce merchandise log scales.</p></dd>
 
 
 <dt>forest</dt>
-<dd><p>The national forest code selects local source rules. Numeric vector, whole-number
+<dd><p>The national forest code selects local source rules. Numeric scalar, whole-number
 forest codes. Default: <code>0</code>.</p></dd>
 
 
 <dt>district</dt>
-<dd><p>The ranger district code selects local source rules. Numeric vector,
+<dd><p>The ranger district code selects local source rules. Numeric scalar,
 whole-number district codes. Default: <code>0</code>.</p></dd>
 
 </dl></div>
@@ -207,8 +213,7 @@ whole-number district codes. Default: <code>0</code>.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>A validated list with class <code>treevolume_nvel_rules</code>. Input vectors   are preserved for
-common-size recycling by the consuming calculation.</p>
+<p>A validated list of scalar fields with class <code>treevolume_nvel_rules</code>.</p>
     </div>
 
     <div class="section level2">
