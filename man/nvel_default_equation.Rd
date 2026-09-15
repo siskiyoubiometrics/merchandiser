@@ -4,79 +4,43 @@
 \alias{nvel_default_equation}
 \title{Look up a source equation from species and geographic codes}
 \usage{
-## Call signatures
-nvel_default_equation(region, forest, district, spcd, variant = NULL, product = NULL)
+nvel_default_equation(
+  region,
+  forest,
+  district,
+  spcd,
+  variant = NULL
+)
 }
 \arguments{
-\item{region}{Required numeric or numeric-text whole-number region code
-from 1 through 10. Length one or one per input. Unitless.
+\item{region}{The Forest Service region selects the source defaults. Numeric vector,
+whole-number region codes. Required, with no default.}
 
-Missing returns
-a missing identifier, invalid values stop the call.}
+\item{forest}{The national forest code selects local source rules. Numeric vector, whole-number
+forest codes. Required, with no default.}
 
-\item{forest, district}{Required numeric or numeric-text whole-number codes
-from zero through 99, length one or one per input. Blank text becomes
-zero. Missing returns a missing identifier, invalid values are errors.
+\item{district}{The ranger district code selects local source rules. Numeric vector,
+whole-number district codes. Required, with no default.}
 
-Unitless.}
+\item{spcd}{Numeric inventory species code. Numeric
+vector, species codes. Required, with no default.}
 
-\item{spcd}{Required numeric or numeric-text species codes from 1 through
-9999, length one or one per input. Codes identify the Forest Inventory
-and Analysis species. Missing returns a missing identifier.
-
-Invalid values are errors. Unitless.}
-
-\item{variant}{Optional character geographic variant, length one or one
-per input. Default \code{NULL}, missing, and blank values request the source
-geographic mapping. Unitless.
-
-Example: \code{'PN'}. The source uses its
-regional branches rather than validating against one complete choice list.}
-
-\item{product}{Optional character product code, length one or one per
-input. Default \code{NULL} becomes \code{'01'}. Unitless.
-
-This input is retained for compatibility, and current default selection
-does not use it. A missing product does not select another equation.}
+\item{variant}{Select the geographic variant for default equation lookup. Character vector,
+unitless, default \code{NULL}. Missing and blank values request the source geographic mapping.
+The source uses regional branches rather than one complete choice list.}
 }
 \value{
-A character vector of source equation identifiers in input order.
-Identifiers are unitless. A selected source equation can be unsupported
-by the package, so check availability before computing.
+A character vector of source equation identifiers in input order.   Identifiers are
+unitless. A selected source equation can be unsupported   by the package, so check
+availability before computing.
 }
 \description{
-Resolve source equation identifiers from species and Forest Service agency codes.
+Look up a source equation from species and geographic codes
 }
-\details{
-Only length-one inputs repeat. Any zero-length input gives an
-empty result. Region, forest, district, species, and variant select the
-source's regional equation branch.
-
-These codes do not infer a location
-from the tree measurements. Omitted required arguments are errors.
-}
-\section{Status and missing values}{
-
-No tree status codes are returned. Missing required geographic or species
-codes return missing identifiers. Unsupported returned identifiers give
-\code{unknown_model} if later passed to a stem calculation.
-
-Review the assignment.
-}
-
 \examples{
-## Load dplyr
-library(dplyr)
-
-## Resolve source defaults for the shipped input combinations
-example_trees_pnw \%>\%
-  distinct(region, forest, district, spcd) \%>\%
-  mutate(model = nvel_default_equation(region = region,
-                                       forest = forest,
-                                       district = district,
-                                       spcd = spcd))
-}
-\seealso{
-\code{\link[=check_taper_models]{check_taper_models()}} to validate assignments, \code{\link[=nvel_from_fia_code]{nvel_from_fia_code()}}
-for an inventory equation crosswalk, \code{\link[=nvel_source_revision]{nvel_source_revision()}} for source version.
+## Find the source default for the Pacific Northwest example species.
+nvel_default_equation(region = 6,
+                      forest = 12,
+                      district = 0,
+                      spcd = example_trees$spcd[1])
 }

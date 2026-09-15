@@ -4,33 +4,17 @@
 \alias{nvel_source_revision}
 \title{Record the source version used for the shipped equations}
 \usage{
-## Call signatures
 nvel_source_revision()
 }
 \value{
-A single character source revision, unitless. Character attributes
-\code{upstream_url} and \code{fixtures_release_tag} record the source repository
-address and saved reference-test release label. Neither is a tree input.
+A single character source revision, unitless. Character attributes   \code{upstream_url} and
+\code{fixtures_release_tag} record the source repository   address and saved reference-test
+release label. Neither is a tree input.
 }
 \description{
-Return the pinned source revision used to generate the shipped equations. Attributes
-identify the source repository and fixture release.
+Record the source version used for the shipped equations
 }
-\details{
-This identifies the source used to prepare the shipped equations,
-not the current upstream release. It does not include local coefficients.
-}
-\section{Status and missing values}{
-
-No status codes or missing values are produced. A matching revision
-identifies a common source version, not agreement for every possible tree.
-}
-
 \examples{
-## Inspect the source revision used for inventory equations
+## Record the source revision used by this package.
 nvel_source_revision()
-}
-\seealso{
-\code{\link[=taper_manifest]{taper_manifest()}} for registered equations, \code{\link[=assumptions]{assumptions()}} for
-result choices, \code{\link[=products_from_nvel_rules]{products_from_nvel_rules()}} for source-rule translation.
 }

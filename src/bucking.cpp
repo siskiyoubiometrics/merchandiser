@@ -172,35 +172,23 @@ std::vector<double> nvel_segments(int option, int even_or_odd,
 }
 
 struct ProductData {
-  std::vector<int> priority;
-  std::vector<int> length_mode;
-  std::vector<int> length_offsets;
-  std::vector<int> length_ticks;
   std::vector<int> min_tick;
   std::vector<int> max_tick;
-  std::vector<int> step_tick;
-  std::vector<int> parity;
-  std::vector<int> segmentation_policy;
+  std::vector<int> diameter_basis;
+  std::vector<int> max_logs;
+  std::vector<int> requires_pruned;
+  std::vector<int> scale_rule;
+  std::vector<int> measurement_quantity;
+  std::vector<int> scale_basis;
+  std::vector<int> diameter_round;
   std::vector<double> trim;
-  std::vector<double> min_top;
   std::vector<double> min_sed;
   std::vector<double> max_sed;
   std::vector<double> min_led;
   std::vector<double> max_led;
-  std::vector<int> diameter_basis;
-  std::vector<int> max_sweep;
-  std::vector<int> max_crook;
-  std::vector<double> max_defect_pct;
-  std::vector<int> max_logs_per_segment;
-  std::vector<int> allow_lower_products;
-  std::vector<int> pulp_product;
-  std::vector<int> scale_rule;
-  std::vector<int> measurement_quantity;
-  std::vector<int> scale_unit;
-  std::vector<int> scale_basis;
-  std::vector<int> diameter_round;
-  std::vector<int> length_round;
-  std::vector<int> volume_round;
+  std::vector<double> max_sweep;
+  std::vector<double> pruned_ht;
+  std::vector<double> length_round;
   std::vector<double> cord_fraction;
   std::vector<double> price;
   std::vector<double> price_quantity;
@@ -210,69 +198,35 @@ struct ProductData {
   double intl_quadratic;
   double intl_linear;
   double intl_adjustment;
-
-  explicit ProductData(const Rcpp::List& products)
-    : priority(Rcpp::as<std::vector<int>>(products["priority"])),
-      length_mode(Rcpp::as<std::vector<int>>(products["length_mode"])),
-      length_offsets(Rcpp::as<std::vector<int>>(products["length_offsets"])),
-      length_ticks(Rcpp::as<std::vector<int>>(products["length_ticks"])),
-      min_tick(Rcpp::as<std::vector<int>>(products["min_tick"])),
-      max_tick(Rcpp::as<std::vector<int>>(products["max_tick"])),
-      step_tick(Rcpp::as<std::vector<int>>(products["step_tick"])),
-      parity(Rcpp::as<std::vector<int>>(products["parity"])),
-      segmentation_policy(
-        Rcpp::as<std::vector<int>>(products["segmentation_policy"])
-      ),
-      trim(Rcpp::as<std::vector<double>>(products["trim"])),
-      min_top(Rcpp::as<std::vector<double>>(products["min_top"])),
-      min_sed(Rcpp::as<std::vector<double>>(products["min_sed"])),
-      max_sed(Rcpp::as<std::vector<double>>(products["max_sed"])),
-      min_led(Rcpp::as<std::vector<double>>(products["min_led"])),
-      max_led(Rcpp::as<std::vector<double>>(products["max_led"])),
-      diameter_basis(Rcpp::as<std::vector<int>>(products["diameter_basis"])),
-      max_sweep(Rcpp::as<std::vector<int>>(products["max_sweep"])),
-      max_crook(Rcpp::as<std::vector<int>>(products["max_crook"])),
-      max_defect_pct(
-        Rcpp::as<std::vector<double>>(products["max_defect_pct"])
-      ),
-      max_logs_per_segment(Rcpp::as<std::vector<int>>(products["max_logs_per_segment"])),
-      allow_lower_products(
-        Rcpp::as<std::vector<int>>(products["allow_lower_products"])
-      ),
-      pulp_product(Rcpp::as<std::vector<int>>(products["pulp_product"])),
-      scale_rule(Rcpp::as<std::vector<int>>(products["scale_rule"])),
-      measurement_quantity(Rcpp::as<std::vector<int>>(products["measurement_quantity"])),
-      scale_unit(Rcpp::as<std::vector<int>>(products["scale_unit"])),
-      scale_basis(Rcpp::as<std::vector<int>>(products["scale_basis"])),
-      diameter_round(
-        Rcpp::as<std::vector<int>>(products["diameter_round"])
-      ),
-      length_round(Rcpp::as<std::vector<int>>(products["length_round"])),
-      volume_round(Rcpp::as<std::vector<int>>(products["volume_round"])),
-      cord_fraction(Rcpp::as<std::vector<double>>(products["cord_fraction"])),
-      price(Rcpp::as<std::vector<double>>(products["price"])),
-      price_quantity(
-        Rcpp::as<std::vector<double>>(products["price_quantity"])
-      ),
-      intl_quadratic(Rcpp::as<double>(products["intl_quadratic"])),
-      intl_linear(Rcpp::as<double>(products["intl_linear"])),
-      intl_adjustment(Rcpp::as<double>(products["intl_adjustment"])) {
-    const Rcpp::CharacterVector identifiers = products["product"];
-    id.reserve(identifiers.size());
-    for (R_xlen_t i = 0; i < identifiers.size(); ++i) {
-      id.push_back(Rcpp::as<std::string>(identifiers[i]));
-    }
-    scribner_factor = Rcpp::as<std::vector<double>>(
-      products["scribner_factor"]
-    );
-    scribner_exception = Rcpp::as<std::vector<int>>(
-      products["scribner_exception"]
-    );
+  explicit ProductData(const Rcpp::List& products) {
+    min_tick = Rcpp::as<std::vector<int>>(products["min_tick"]);
+    max_tick = Rcpp::as<std::vector<int>>(products["max_tick"]);
+    diameter_basis = Rcpp::as<std::vector<int>>(products["diameter_basis"]);
+    max_logs = Rcpp::as<std::vector<int>>(products["max_logs"]);
+    requires_pruned = Rcpp::as<std::vector<int>>(products["requires_pruned"]);
+    scale_rule = Rcpp::as<std::vector<int>>(products["scale_rule"]);
+    measurement_quantity = Rcpp::as<std::vector<int>>(products["measurement_quantity"]);
+    scale_basis = Rcpp::as<std::vector<int>>(products["scale_basis"]);
+    diameter_round = Rcpp::as<std::vector<int>>(products["diameter_round"]);
+    trim = Rcpp::as<std::vector<double>>(products["trim"]);
+    min_sed = Rcpp::as<std::vector<double>>(products["min_sed"]);
+    max_sed = Rcpp::as<std::vector<double>>(products["max_sed"]);
+    min_led = Rcpp::as<std::vector<double>>(products["min_led"]);
+    max_led = Rcpp::as<std::vector<double>>(products["max_led"]);
+    max_sweep = Rcpp::as<std::vector<double>>(products["max_sweep"]);
+    pruned_ht = Rcpp::as<std::vector<double>>(products["pruned_ht"]);
+    length_round = Rcpp::as<std::vector<double>>(products["length_round"]);
+    cord_fraction = Rcpp::as<std::vector<double>>(products["cord_fraction"]);
+    price = Rcpp::as<std::vector<double>>(products["price"]);
+    price_quantity = Rcpp::as<std::vector<double>>(products["price_quantity"]);
+    id = Rcpp::as<std::vector<std::string>>(products["product"]);
+    scribner_factor = Rcpp::as<std::vector<double>>(products["scribner_factor"]);
+    scribner_exception = Rcpp::as<std::vector<int>>(products["scribner_exception"]);
+    intl_quadratic = Rcpp::as<double>(products["intl_quadratic"]);
+    intl_linear = Rcpp::as<double>(products["intl_linear"]);
+    intl_adjustment = Rcpp::as<double>(products["intl_adjustment"]);
   }
-
-  int size() const {
-    return static_cast<int>(priority.size());
-  }
+  int size() const { return static_cast<int>(id.size()); }
 };
 
 struct ProfileView {
@@ -315,8 +269,6 @@ struct Candidate {
   int kind = 0;
   double length = 0;
   double end = 0;
-  double located = 0;
-  double rot_pct = 0;
   int start_profile = -1;
   int end_profile = -1;
 };
@@ -330,11 +282,9 @@ struct Arc {
   double physical_net = 0;
 };
 
-struct Path {
-  bool valid = true;
-  std::vector<Arc> arcs;
-  double objective = 0;
-  double physical_net = 0;
+struct PathLink {
+  const Arc* arc = nullptr;
+  const PathLink* next = nullptr;
   int residual_cause = 0;
   double residual_from = 0;
 };
@@ -358,8 +308,6 @@ struct PieceRow {
   double sed_ob;
   double gross_ib;
   double gross_ob;
-  double located;
-  double rot_pct;
   double gross_scale;
 };
 
@@ -485,7 +433,7 @@ class BuckingCore {
   const Rcpp::NumericVector defect_to;
   const Rcpp::IntegerVector defect_effect;
   const Rcpp::NumericVector defect_percent;
-  const Rcpp::IntegerVector defect_category_rank;
+  const Rcpp::IntegerVector defect_product;
   const Rcpp::NumericVector weight_factor;
   const int n_product;
 
@@ -508,7 +456,7 @@ class BuckingCore {
       const Rcpp::NumericVector& defect_to_,
       const Rcpp::IntegerVector& defect_effect_,
       const Rcpp::NumericVector& defect_percent_,
-      const Rcpp::IntegerVector& defect_category_rank_,
+      const Rcpp::IntegerVector& defect_product_,
       const Rcpp::NumericVector& weight_factor_)
     : products(products_), quantum(quantum_), units(units_),
       objective(objective_), tree_status(tree_status_),
@@ -520,7 +468,7 @@ class BuckingCore {
       defect_offsets(defect_offsets_), defect_from(defect_from_),
       defect_to(defect_to_), defect_effect(defect_effect_),
       defect_percent(defect_percent_),
-      defect_category_rank(defect_category_rank_),
+      defect_product(defect_product_),
       weight_factor(weight_factor_), n_product(products.size()) {}
 
   FailureReason assess(int tree, int product, double start, double end,
@@ -544,75 +492,20 @@ class BuckingCore {
       return diameter_failure;
     }
 
-    int sweep = -1;
-    int crook = -1;
-    std::vector<double> cells{start, end};
-    for (int defect = defect_offsets[tree];
-         defect < defect_offsets[tree + 1]; ++defect) {
-      if (!overlaps(
-          start, end, defect_from[defect], defect_to[defect]
-      )) continue;
+    if (products.requires_pruned[product] && end > products.pruned_ht[tree]) {
+      return other_failure;
+    }
+    for (int defect = defect_offsets[tree]; defect < defect_offsets[tree + 1]; ++defect) {
+      if (!overlaps(start, end, defect_from[defect], defect_to[defect])) continue;
       const int effect = defect_effect[defect];
-      if ((effect == 2 || effect == 7) &&
-          products.pulp_product[product] == 0) {
+      if (effect == 1 || (effect == 2 && defect_product[defect] != product)) {
         return other_failure;
       }
-      if (effect == 3) return other_failure;
-      if (effect == 5) {
-        sweep = std::max(sweep, defect_category_rank[defect]);
-      }
-      if (effect == 6) {
-        crook = std::max(crook, defect_category_rank[defect]);
-      }
-      if (effect == 4) {
-        if (defect_from[defect] > start && defect_from[defect] < end) {
-          cells.push_back(defect_from[defect]);
-        }
-        if (defect_to[defect] > start && defect_to[defect] < end) {
-          cells.push_back(defect_to[defect]);
-        }
-      }
-    }
-    if ((products.max_sweep[product] >= 0 &&
-         sweep > products.max_sweep[product]) ||
-        (products.max_crook[product] >= 0 &&
-         crook > products.max_crook[product])) {
-      return other_failure;
-    }
-    std::sort(cells.begin(), cells.end());
-    cells.erase(std::unique(cells.begin(), cells.end()), cells.end());
-    double located = 0;
-    for (std::size_t cell = 0; cell + 1 < cells.size(); ++cell) {
-      const double lower = cells[cell];
-      const double upper = cells[cell + 1];
-      const double midpoint = (lower + upper) / 2.0;
-      double rate = 0;
-      for (int defect = defect_offsets[tree];
-           defect < defect_offsets[tree + 1]; ++defect) {
-        if (defect_effect[defect] == 4 &&
-            defect_from[defect] <= midpoint &&
-            defect_to[defect] > midpoint) {
-          rate = std::max(rate, defect_percent[defect]);
-        }
-      }
-      if (rate > 0) {
-        const int lower_at = profile.find(tree, lower);
-        const int upper_at = profile.find(tree, upper);
-        if (lower_at < 0 || upper_at < 0) return other_failure;
-        located += (profile.cum_ib[upper_at] - profile.cum_ib[lower_at]) *
-          rate / 100.0;
-      }
-    }
-    const double gross = profile.cum_ib[end_at] - profile.cum_ib[start_at];
-    const double rot_pct = gross > 0 ? 100.0 * located / gross : 0;
-    if (finite_limit(products.max_defect_pct[product]) &&
-        rot_pct > products.max_defect_pct[product]) {
-      return other_failure;
+      if (effect == 4 && finite_limit(products.max_sweep[product]) &&
+          defect_percent[defect] > products.max_sweep[product]) return other_failure;
     }
     candidate.start_profile = start_at;
     candidate.end_profile = end_at;
-    candidate.located = located;
-    candidate.rot_pct = rot_pct;
     return feasible;
   }
 
@@ -624,7 +517,7 @@ class BuckingCore {
     const double end = std::isfinite(explicit_end)
       ? explicit_end
       : start + length + products.trim[product];
-    if (end > segment_end) return;
+    if (end > segment_end + 1e-9) return;
     if (has_length != nullptr) *has_length = true;
     Candidate candidate;
     candidate.kind = kind;
@@ -640,148 +533,23 @@ class BuckingCore {
     candidates.push_back(candidate);
   }
 
-  double nvel_stage_end(int tree, int product, double start,
-                        double segment_end) const {
-    const int start_at = profile.find(tree, start);
-    if (start_at < 0) return start;
-    const double led = products.diameter_basis[product] == 0
-      ? profile.dib[start_at]
-      : profile.dob[start_at];
-    if (!std::isfinite(led) || led < products.min_led[product] ||
-        (finite_limit(products.max_led[product]) &&
-         led > products.max_led[product])) {
-      return start;
-    }
-    double best = start;
-    const int key = tree * n_product + product;
-    for (int at = boundary_offsets[key]; at < boundary_offsets[key + 1]; ++at) {
-      const double boundary = boundaries[at];
-      if (!(boundary > start) || boundary > segment_end) continue;
-      const int end_at = profile.find(tree, boundary);
-      if (end_at < 0) continue;
-      const double sed = products.diameter_basis[product] == 0
-        ? profile.dib[end_at]
-        : profile.dob[end_at];
-      if (!std::isfinite(sed) || sed < products.min_sed[product] ||
-          (finite_limit(products.max_sed[product]) &&
-           sed > products.max_sed[product])) {
-        continue;
-      }
-      best = std::max(best, boundary);
-    }
-    return best;
-  }
-
   std::vector<Candidate> enumerate(
       int tree, int product, double start, double segment_end,
       int count = 0, double stage_start = NA_REAL,
       bool* has_length = nullptr, bool* non_diameter = nullptr) const {
     std::vector<Candidate> candidates;
-    if (products.segmentation_policy[product] != 0) {
-      if (!std::isfinite(stage_start)) stage_start = start;
-      const double stage_end = nvel_stage_end(
-        tree, product, stage_start, segment_end
-      );
-      const double maximum = products.max_tick[product] * quantum;
-      const double minimum = products.min_tick[product] * quantum;
-      const int even_or_odd = products.parity[product] == 1 ? 2 : 1;
-      const std::vector<double> logs = nvel_segments(
-        products.segmentation_policy[product], even_or_odd,
-        stage_end - stage_start, maximum, minimum, products.trim[product]
-      );
-      if (count >= 0 && count < static_cast<int>(logs.size())) {
-        consider(
-          tree, product, start, logs[static_cast<std::size_t>(count)], 0,
-          NA_REAL, segment_end, candidates, has_length, non_diameter
-        );
-      }
-      return candidates;
+    const int available = static_cast<int>(std::floor(
+      (segment_end - start - products.trim[product] + 1e-9) / quantum));
+    const int largest = std::min(available, products.max_tick[product]);
+    for (int tick = products.min_tick[product]; tick <= largest; ++tick) {
+      consider(tree, product, start, tick * quantum, 0, NA_REAL, segment_end,
+               candidates, has_length, non_diameter);
     }
-    if (products.length_mode[product] == 0) {
-      for (int at = products.length_offsets[product];
-           at < products.length_offsets[product + 1]; ++at) {
-        consider(
-          tree, product, start, products.length_ticks[at] * quantum, 0,
-          NA_REAL, segment_end, candidates, has_length, non_diameter
-        );
-      }
-    } else {
-      const int available = static_cast<int>(std::floor(
-        (segment_end - start - products.trim[product]) / quantum
-      ));
-      int largest = available;
-      if (products.max_tick[product] >= 0) {
-        largest = std::min(largest, products.max_tick[product]);
-      }
-      for (int tick = products.min_tick[product]; tick <= largest;
-           tick += products.step_tick[product]) {
-        const double length = tick * quantum;
-        if (!parity_ok(length, products.parity[product])) continue;
-        consider(
-          tree, product, start, length, 0, NA_REAL, segment_end,
-          candidates, has_length, non_diameter
-        );
-      }
-    }
-    if (finite_limit(products.min_top[product])) {
-      const int key = tree * n_product + product;
-      double upper = std::numeric_limits<double>::infinity();
-      if (products.length_mode[product] == 0 &&
-          products.length_offsets[product] <
-            products.length_offsets[product + 1]) {
-        upper = products.length_ticks[
-          products.length_offsets[product + 1] - 1
-        ] * quantum;
-      } else if (products.max_tick[product] >= 0) {
-        upper = products.max_tick[product] * quantum;
-      }
-      for (int at = boundary_offsets[key]; at < boundary_offsets[key + 1]; ++at) {
-        const double boundary = boundaries[at];
-        if (boundary <= start || boundary > segment_end) continue;
-        const double length = boundary - start - products.trim[product];
-        if (length < products.min_top[product] || length > upper) continue;
-        consider(
-          tree, product, start, length, 1, boundary, segment_end,
-          candidates, has_length, non_diameter
-        );
-      }
-    }
-    std::sort(candidates.begin(), candidates.end(), [](const Candidate& left,
-                                                        const Candidate& right) {
-      if (left.end != right.end) return left.end < right.end;
-      if (left.kind != right.kind) return left.kind < right.kind;
-      return left.length < right.length;
-    });
-    candidates.erase(
-      std::unique(
-        candidates.begin(), candidates.end(),
-        [](const Candidate& left, const Candidate& right) {
-          return left.end == right.end && left.kind == right.kind &&
-            left.length == right.length;
-        }
-      ),
-      candidates.end()
-    );
     return candidates;
   }
 
   double minimum_physical(int product) const {
-    double minimum = std::numeric_limits<double>::infinity();
-    if (products.length_mode[product] == 0 &&
-        products.length_offsets[product] <
-          products.length_offsets[product + 1]) {
-      minimum = products.length_ticks[
-        products.length_offsets[product]
-      ] * quantum + products.trim[product];
-    } else if (products.length_mode[product] == 1) {
-      minimum = products.min_tick[product] * quantum + products.trim[product];
-    }
-    if (finite_limit(products.min_top[product])) {
-      minimum = std::min(
-        minimum, products.min_top[product] + products.trim[product]
-      );
-    }
-    return minimum;
+    return products.min_tick[product] * quantum + products.trim[product];
   }
 
   int remainder_cause(int tree, int chain_begin, int stage,
@@ -799,7 +567,6 @@ class BuckingCore {
         &any_length, &any_non_diameter
       );
       if (!candidates.empty()) any_feasible = true;
-      if (products.allow_lower_products[product] == 0) break;
     }
     if (segment_end - cursor < minimum) return 1;
     if (any_length && !any_feasible && !any_non_diameter) return 2;
@@ -811,6 +578,8 @@ class BuckingCore {
     const double nominal_end = start + candidate.length;
     const int nominal_at = profile.find(tree, nominal_end);
     if (nominal_at < 0) return NA_REAL;
+    const double scaling_length = std::floor(candidate.length / products.length_round[product]) *
+      products.length_round[product];
     const int basis = products.scale_basis[product];
     const double cubic = basis == 0
       ? profile.cum_ib[nominal_at] - profile.cum_ib[candidate.start_profile]
@@ -821,7 +590,7 @@ class BuckingCore {
       gross = cubic;
     } else if (rule == 8) {
       const double length = round_dimension(
-        candidate.length, products.length_round[product], 1, units
+        scaling_length, 0, 1, units
       );
       const double led_raw = basis == 0
         ? profile.dib[candidate.start_profile]
@@ -843,7 +612,7 @@ class BuckingCore {
       gross = length * (led_area + sed_area) / 2.0;
     } else if (rule == 9) {
       const double length = round_dimension(
-        candidate.length, products.length_round[product], 1, units
+        scaling_length, 0, 1, units
       );
       const double midpoint = start + candidate.length / 2.0;
       const int midpoint_at = profile.find(tree, midpoint);
@@ -864,7 +633,7 @@ class BuckingCore {
       );
       const double sed_in = units == 1 ? sed : sed / 2.54;
       const double raw_length = round_dimension(
-        candidate.length, products.length_round[product], 1, units
+        scaling_length, 0, 1, units
       );
       const double length_ft = units == 1 ? raw_length : raw_length / 0.3048;
       gross = std::pow(std::max(sed_in - 4.0, 0.0), 2.0) *
@@ -877,18 +646,18 @@ class BuckingCore {
         (units == 1 ? sed : sed / 2.54) + 0.5
       );
       const double length_ft = units == 1
-        ? candidate.length
-        : candidate.length / 0.3048;
+        ? scaling_length
+        : scaling_length / 0.3048;
       gross = international(products, sed_in, length_ft);
     } else {
       const bool corrected = rule <= 2;
       const int convention = rule % 3;
       const int option = convention == 0 ? 12 : 22;
-      const int even_or_odd = convention == 0 ? 1 : 2;
+      const int even_or_odd = products.length_round[product] == 1.0 ? 1 : 2;
       const double maximum = convention == 2 ? 40.0 : 20.0;
       const double length_ft = units == 1
-        ? candidate.length
-        : candidate.length / 0.3048;
+        ? scaling_length
+        : scaling_length / 0.3048;
       const std::vector<double> segments = nvel_segments(
         option, even_or_odd, length_ft, maximum, 2.0, 0.0
       );
@@ -909,13 +678,12 @@ class BuckingCore {
       }
     }
     gross = round_dimension(
-      gross, products.volume_round[product], 2, units
+      gross, 0, 2, units
     );
     const int quantity = products.measurement_quantity[product];
     if (quantity == 1) {
-      const int target = products.scale_unit[product];
-      if (units == 1 && target == 1) gross *= 0.028316846592;
-      if (units == 2 && target == 0) gross /= 0.028316846592;
+      // Product cubic quantities are cubic feet.
+      if (units == 2) gross /= 0.028316846592;
     } else if (quantity == 2) {
       gross *= weight_factor[tree * n_product + product];
     } else if (quantity == 3) {
@@ -932,14 +700,13 @@ class BuckingCore {
     Arc arc;
     arc.product = product;
     arc.stage = stage;
-    arc.priority = products.priority[product];
+    arc.priority = product;
     arc.candidate = candidate;
-    const double gross = profile.cum_ib[candidate.end_profile] -
-      profile.cum_ib[candidate.start_profile];
-    arc.physical_net = gross - candidate.located;
+    const double start = profile.height[candidate.start_profile];
+    const int nominal_at = profile.find(tree, start + candidate.length);
+    arc.physical_net = profile.cum_ib[nominal_at] - profile.cum_ib[candidate.start_profile];
     if (objective == 1) {
-      const double ratio = gross > 0 ? candidate.located / gross : 0;
-      const double sale = gross_scale(tree, product, candidate) * (1.0 - ratio);
+      const double sale = gross_scale(tree, product, candidate);
       arc.reward = sale * products.price[product] /
         products.price_quantity[product];
     } else {
@@ -952,75 +719,10 @@ class BuckingCore {
     std::ostringstream stream;
     stream << std::hexfloat
            << profile.height[arc.candidate.start_profile] << '|'
-           << arc.stage << '|' << arc.candidate.end << '|'
+           << arc.candidate.end << '|'
            << arc.candidate.kind << '|' << arc.candidate.length << '|'
            << products.id[arc.product];
     return stream.str();
-  }
-
-  void evaluate_path(Path& path) const {
-    path.objective = 0;
-    double located = 0;
-    for (const Arc& arc : path.arcs) {
-      path.objective += arc.reward;
-      located += arc.candidate.located;
-    }
-    path.physical_net = 0;
-    if (!path.arcs.empty()) {
-      const Candidate& first = path.arcs.front().candidate;
-      const Candidate& last = path.arcs.back().candidate;
-      path.physical_net = profile.cum_ib[last.end_profile] -
-        profile.cum_ib[first.start_profile] - located;
-    }
-    if (objective == 0) {
-      path.objective = path.physical_net;
-    }
-    if (!std::isfinite(path.objective) || !std::isfinite(path.physical_net)) {
-      path.valid = false;
-    }
-  }
-
-  Path prepend(const Arc& arc, const Path& suffix) const {
-    Path result = suffix;
-    result.arcs.insert(result.arcs.begin(), arc);
-    evaluate_path(result);
-    return result;
-  }
-
-  bool better(const Path& left, const Path& right) const {
-    if (!left.valid) return false;
-    if (!right.valid) return true;
-    if (left.objective != right.objective) {
-      return left.objective > right.objective;
-    }
-    if (left.physical_net != right.physical_net) {
-      return left.physical_net > right.physical_net;
-    }
-    if (left.arcs.size() != right.arcs.size()) {
-      return left.arcs.size() < right.arcs.size();
-    }
-    for (std::size_t i = 0; i < left.arcs.size(); ++i) {
-      if (left.arcs[i].priority != right.arcs[i].priority) {
-        return left.arcs[i].priority < right.arcs[i].priority;
-      }
-    }
-    for (std::size_t i = 0; i < left.arcs.size(); ++i) {
-      if (left.arcs[i].candidate.length != right.arcs[i].candidate.length) {
-        return left.arcs[i].candidate.length >
-          right.arcs[i].candidate.length;
-      }
-    }
-    for (std::size_t i = 0; i < left.arcs.size(); ++i) {
-      if (left.arcs[i].candidate.end != right.arcs[i].candidate.end) {
-        return left.arcs[i].candidate.end < right.arcs[i].candidate.end;
-      }
-    }
-    for (std::size_t i = 0; i < left.arcs.size(); ++i) {
-      const std::string left_key = serialized_arc(left.arcs[i]);
-      const std::string right_key = serialized_arc(right.arcs[i]);
-      if (left_key != right_key) return left_key < right_key;
-    }
-    return false;
   }
 
   void append_piece(TreeResult& result, int tree, int segment_number,
@@ -1029,15 +731,15 @@ class BuckingCore {
     const int start_at = candidate.start_profile;
     const int end_at = candidate.end_profile;
     const double start = profile.height[start_at];
+    const int nominal_at = profile.find(tree, start + candidate.length);
     result.logs.push_back(PieceRow{
       tree, log_number, segment_number, arc.stage + 1, arc.product,
       candidate.kind, start, start + candidate.length, candidate.end,
       candidate.length, candidate.length + products.trim[arc.product],
       products.trim[arc.product], profile.dib[start_at], profile.dib[end_at],
       profile.dob[start_at], profile.dob[end_at],
-      profile.cum_ib[end_at] - profile.cum_ib[start_at],
-      profile.cum_ob[end_at] - profile.cum_ob[start_at],
-      candidate.located, candidate.rot_pct,
+      profile.cum_ib[nominal_at] - profile.cum_ib[start_at],
+      profile.cum_ob[nominal_at] - profile.cum_ob[start_at],
       gross_scale(tree, arc.product, candidate)
     });
   }
@@ -1056,135 +758,167 @@ class BuckingCore {
   }
 };
 
+// Counts are stored only for capped products. Only reachable states are allocated.
 struct StateKey {
   int node;
-  int stage;
-  int count;
-
+  std::size_t counts;
   bool operator==(const StateKey& other) const {
-    return node == other.node && stage == other.stage && count == other.count;
+    return node == other.node && counts == other.counts;
   }
 };
 
 struct StateHash {
   std::size_t operator()(const StateKey& state) const {
-    std::size_t value = static_cast<std::size_t>(state.node);
-    value ^= static_cast<std::size_t>(state.stage + 0x9e3779b9) +
-      (value << 6) + (value >> 2);
-    value ^= static_cast<std::size_t>(state.count + 0x9e3779b9) +
-      (value << 6) + (value >> 2);
+    const std::size_t value = static_cast<std::size_t>(state.node);
+    return value ^ (state.counts + 0x9e3779b9 + (value << 6) + (value >> 2));
+  }
+};
+
+struct CountsHash {
+  std::size_t operator()(const std::vector<int>& counts) const {
+    std::size_t value = 0;
+    for (int count : counts) {
+      value ^= static_cast<std::size_t>(count) + 0x9e3779b9 +
+        (value << 6) + (value >> 2);
+    }
     return value;
   }
+};
+
+struct NodeChoices {
+  std::vector<Arc> arcs;
+  int residual_cause = 0;
+};
+
+struct PathValue {
+  double objective = 0;
+  double physical_net = 0;
+  std::size_t size = 0;
+  bool valid = true;
 };
 
 class DynamicProgram {
  public:
   const BuckingCore& core;
   const int tree;
-  const int chain_begin;
-  const int chain_size;
   const double segment_end;
-  std::unordered_map<StateKey, Path, StateHash> memo;
+  std::vector<int> allowed;
+  std::vector<int> count_slot;
+  std::vector<int> counts;
+  std::unordered_map<std::vector<int>, std::size_t, CountsHash> count_ids;
+  std::unordered_map<StateKey, PathLink, StateHash> memo;
+  std::unordered_map<int, NodeChoices> nodes;
+  const PathLink terminal;
 
   DynamicProgram(const BuckingCore& core_, int tree_, double segment_end_)
-    : core(core_), tree(tree_), chain_begin(core.chain_offsets[tree_]),
-      chain_size(core.chain_offsets[tree_ + 1] - chain_begin),
-      segment_end(segment_end_) {}
-
-  Path terminal(int node, int stage) const {
-    Path path;
-    const double cursor = core.profile.height[node];
-    if (cursor < segment_end) {
-      path.residual_from = cursor;
-      path.residual_cause = core.remainder_cause(
-        tree, chain_begin, std::min(stage, chain_size - 1),
-        cursor, segment_end
-      );
+    : core(core_), tree(tree_), segment_end(segment_end_),
+      count_slot(core.n_product, -1) {
+    for (int i = core.chain_offsets[tree]; i < core.chain_offsets[tree + 1]; ++i) {
+      allowed.push_back(core.chain_product[i]);
     }
-    return path;
-  }
-
-  Path solve_nvel(int node, int stage) {
-    const int product = core.chain_product[chain_begin + stage];
-    const double stage_start = core.profile.height[node];
-    const int limit = core.products.max_logs_per_segment[product];
-    std::vector<Arc> prefix;
-    int cursor_node = node;
-    int count = 0;
-    while (core.profile.height[cursor_node] < segment_end &&
-           (limit < 0 || count < limit)) {
-      const std::vector<Candidate> candidates = core.enumerate(
-        tree, product, core.profile.height[cursor_node], segment_end,
-        count, stage_start
-      );
-      if (candidates.empty()) break;
-      const Arc arc = core.make_arc(tree, product, stage, candidates.front());
-      if (!std::isfinite(arc.reward) || !std::isfinite(arc.physical_net)) {
-        Path invalid;
-        invalid.valid = false;
-        return invalid;
+    std::sort(allowed.begin(), allowed.end(), [this](int a, int b) {
+      return core.products.id[a] < core.products.id[b];
+    });
+    for (int product : allowed) {
+      if (core.products.max_logs[product] >= 0) {
+        count_slot[product] = static_cast<int>(counts.size());
+        counts.push_back(0);
       }
-      prefix.push_back(arc);
-      cursor_node = arc.candidate.end_profile;
-      ++count;
     }
-    Path suffix;
-    if (core.profile.height[cursor_node] >= segment_end) {
-      suffix = Path();
-    } else if (core.products.allow_lower_products[product] != 0) {
-      suffix = solve(cursor_node, stage + 1, 0);
-    } else {
-      suffix = terminal(cursor_node, stage);
-    }
-    if (!suffix.valid) return suffix;
-    prefix.insert(prefix.end(), suffix.arcs.begin(), suffix.arcs.end());
-    suffix.arcs = std::move(prefix);
-    core.evaluate_path(suffix);
-    return suffix;
   }
 
-  Path solve(int node, int stage, int count) {
-    if (core.profile.height[node] >= segment_end) return Path();
-    if (stage >= chain_size) return terminal(node, chain_size - 1);
-    const int product = core.chain_product[chain_begin + stage];
-    if (core.products.segmentation_policy[product] != 0) {
-      return solve_nvel(node, stage);
+  const NodeChoices& transitions(int node) {
+    const auto known = nodes.find(node);
+    if (known != nodes.end()) return known->second;
+    NodeChoices choices;
+    choices.residual_cause = core.remainder_cause(
+      tree, core.chain_offsets[tree], 0, core.profile.height[node], segment_end);
+    for (int product : allowed) {
+      for (const Candidate& candidate : core.enumerate(
+          tree, product, core.profile.height[node], segment_end)) {
+        const Arc arc = core.make_arc(tree, product, 0, candidate);
+        if (std::isfinite(arc.reward) && std::isfinite(arc.physical_net)) {
+          choices.arcs.push_back(arc);
+        }
+      }
     }
-    const int normalized_count = core.products.max_logs_per_segment[product] < 0
-      ? 0
-      : count;
-    const StateKey key{node, stage, normalized_count};
+    return nodes.emplace(node, std::move(choices)).first->second;
+  }
+
+  PathValue evaluate(const PathLink& path) const {
+    PathValue value;
+    for (const PathLink* link = &path; link->arc != nullptr; link = link->next) {
+      value.objective += link->arc->reward;
+      ++value.size;
+    }
+    for (const PathLink* link = &path; link->arc != nullptr; link = link->next) {
+      value.physical_net += link->arc->physical_net;
+    }
+    if (core.objective == 0) value.objective = value.physical_net;
+    value.valid = std::isfinite(value.objective) && std::isfinite(value.physical_net);
+    return value;
+  }
+
+  bool better(const PathLink& left, const PathLink& right) const {
+    // Re-sum from the first arc. A suffix total changes floating-point grouping.
+    const PathValue lhs = evaluate(left);
+    const PathValue rhs = evaluate(right);
+    if (!lhs.valid) return false;
+    if (!rhs.valid) return true;
+    const double tolerance = 8 * std::numeric_limits<double>::epsilon() *
+      std::max(std::abs(lhs.objective), std::abs(rhs.objective));
+    if (std::abs(lhs.objective - rhs.objective) > tolerance) {
+      return lhs.objective > rhs.objective;
+    }
+    if (lhs.size != rhs.size) return lhs.size < rhs.size;
+    const PathLink* a = &left;
+    const PathLink* b = &right;
+    for (; a->arc != nullptr; a = a->next, b = b->next) {
+      if (a->arc->candidate.length != b->arc->candidate.length) {
+        return a->arc->candidate.length > b->arc->candidate.length;
+      }
+    }
+    a = &left;
+    b = &right;
+    for (; a->arc != nullptr; a = a->next, b = b->next) {
+      if (a->arc->candidate.end != b->arc->candidate.end) {
+        return a->arc->candidate.end < b->arc->candidate.end;
+      }
+    }
+    a = &left;
+    b = &right;
+    for (; a->arc != nullptr; a = a->next, b = b->next) {
+      const std::string left_key = core.serialized_arc(*a->arc);
+      const std::string right_key = core.serialized_arc(*b->arc);
+      if (left_key != right_key) return left_key < right_key;
+    }
+    return false;
+  }
+
+  const PathLink& solve(int node) {
+    if (core.profile.height[node] >= segment_end) return terminal;
+    auto count_id = count_ids.find(counts);
+    if (count_id == count_ids.end()) {
+      const std::size_t id = count_ids.size();
+      count_id = count_ids.emplace(counts, id).first;
+    }
+    const StateKey key{node, count_id->second};
     const auto known = memo.find(key);
     if (known != memo.end()) return known->second;
-    const int limit = core.products.max_logs_per_segment[product];
-    std::vector<Candidate> candidates;
-    if (limit < 0 || normalized_count < limit) {
-      candidates = core.enumerate(
-        tree, product, core.profile.height[node], segment_end
-      );
+    const NodeChoices& choices = transitions(node);
+    PathLink best;
+    best.residual_from = core.profile.height[node];
+    best.residual_cause = choices.residual_cause;
+    for (const Arc& arc : choices.arcs) {
+      const int slot = count_slot[arc.product];
+      if (slot >= 0 && counts[slot] >= core.products.max_logs[arc.product]) continue;
+      if (slot >= 0) ++counts[slot];
+      const PathLink& suffix = solve(arc.candidate.end_profile);
+      if (slot >= 0) --counts[slot];
+      const PathLink path{&arc, &suffix, suffix.residual_cause, suffix.residual_from};
+      if (better(path, best)) best = path;
     }
-    Path best;
-    best.valid = false;
-    if (!candidates.empty()) {
-      for (const Candidate& candidate : candidates) {
-        const Arc arc = core.make_arc(tree, product, stage, candidate);
-        if (!std::isfinite(arc.reward) || !std::isfinite(arc.physical_net)) {
-          continue;
-        }
-        const int next_count = limit < 0 ? 0 : normalized_count + 1;
-        const Path suffix = solve(
-          candidate.end_profile, stage, next_count
-        );
-        const Path path = core.prepend(arc, suffix);
-        if (core.better(path, best)) best = path;
-      }
-    } else if (core.products.allow_lower_products[product] != 0) {
-      best = solve(node, stage + 1, 0);
-    } else {
-      best = terminal(node, stage);
-    }
-    memo.emplace(key, best);
-    return best;
+    return memo.emplace(key, best).first->second;
   }
 };
 
@@ -1215,7 +949,7 @@ class BuckingWorker : public RcppParallel::Worker {
       double stage_start = cursor;
       while (cursor < segment_end && stage < chain_size) {
         const int product = core.chain_product[chain_begin + stage];
-        const int limit = core.products.max_logs_per_segment[product];
+        const int limit = core.products.max_logs[product];
         std::vector<Candidate> candidates;
         if (limit < 0 || count < limit) {
           candidates = core.enumerate(
@@ -1241,12 +975,10 @@ class BuckingWorker : public RcppParallel::Worker {
           );
           cursor = best->end;
           ++count;
-        } else if (core.products.allow_lower_products[product] != 0) {
+        } else {
           ++stage;
           count = 0;
           stage_start = cursor;
-        } else {
-          break;
         }
       }
       if (cursor < segment_end) {
@@ -1277,12 +1009,13 @@ class BuckingWorker : public RcppParallel::Worker {
         continue;
       }
       DynamicProgram solver(core, static_cast<int>(tree), segment_end);
-      const Path path = solver.solve(start_at, 0, 0);
-      if (!path.valid) {
+      const PathLink& path = solver.solve(start_at);
+      if (!solver.evaluate(path).valid) {
         result.status = 412;
         continue;
       }
-      for (const Arc& arc : path.arcs) {
+      for (const PathLink* link = &path; link->arc != nullptr; link = link->next) {
+        const Arc& arc = *link->arc;
         ++log_number;
         core.append_piece(
           result, static_cast<int>(tree), segment_number, log_number, arc
@@ -1306,294 +1039,7 @@ class BuckingWorker : public RcppParallel::Worker {
   }
 };
 
-struct SimplePlanTree {
-  std::vector<double> heights;
-  int status = 0;
-};
-
-class SimplePlanWorker : public RcppParallel::Worker {
- public:
-  const ProductData& products;
-  const double quantum;
-  const Rcpp::IntegerVector tree_status;
-  const Rcpp::IntegerVector chain_offsets;
-  const Rcpp::IntegerVector chain_product;
-  const Rcpp::NumericVector stump;
-  const Rcpp::NumericVector top;
-  const Rcpp::NumericVector ht;
-  const std::vector<std::size_t>& representative;
-  std::vector<SimplePlanTree>& results;
-
-  SimplePlanWorker(
-      const ProductData& products_, double quantum_,
-      const Rcpp::IntegerVector& tree_status_,
-      const Rcpp::IntegerVector& chain_offsets_,
-      const Rcpp::IntegerVector& chain_product_,
-      const Rcpp::NumericVector& stump_, const Rcpp::NumericVector& top_,
-      const Rcpp::NumericVector& ht_,
-      const std::vector<std::size_t>& representative_,
-      std::vector<SimplePlanTree>& results_)
-    : products(products_), quantum(quantum_), tree_status(tree_status_),
-      chain_offsets(chain_offsets_), chain_product(chain_product_),
-      stump(stump_), top(top_), ht(ht_), representative(representative_),
-      results(results_) {}
-
-  void add_ordinary(int product, double start, double segment_end,
-                    std::vector<double>* additions,
-                    std::vector<double>* scale_points) const {
-    const double trim = products.trim[product];
-    if (products.length_mode[product] == 0) {
-      for (int at = products.length_offsets[product];
-           at < products.length_offsets[product + 1]; ++at) {
-        const double length = products.length_ticks[at] * quantum;
-        const double nominal_end = start + length;
-        const double end = nominal_end + trim;
-        if (end <= segment_end && end > start) {
-          additions->push_back(end);
-          scale_points->push_back(start);
-          scale_points->push_back(nominal_end);
-          scale_points->push_back(end);
-        }
-      }
-      return;
-    }
-    int largest = static_cast<int>(std::floor(
-      (segment_end - start - trim) / quantum
-    ));
-    if (products.max_tick[product] >= 0) {
-      largest = std::min(largest, products.max_tick[product]);
-    }
-    for (int tick = products.min_tick[product]; tick <= largest;
-         tick += products.step_tick[product]) {
-      const double length = tick * quantum;
-      if (!parity_ok(length, products.parity[product])) continue;
-      const double nominal_end = start + length;
-      const double end = nominal_end + trim;
-      if (end <= segment_end && end > start) {
-        additions->push_back(end);
-        scale_points->push_back(start);
-        scale_points->push_back(nominal_end);
-        scale_points->push_back(end);
-      }
-    }
-  }
-
-  void add_boundary(int product, double start, double segment_end,
-                    std::vector<double>* additions,
-                    std::vector<double>* scale_points) const {
-    if (!finite_limit(products.min_top[product])) return;
-    const double length = segment_end - start - products.trim[product];
-    double upper = std::numeric_limits<double>::infinity();
-    if (products.length_mode[product] == 0 &&
-        products.length_offsets[product] < products.length_offsets[product + 1]) {
-      upper = products.length_ticks[
-        products.length_offsets[product + 1] - 1
-      ] * quantum;
-    } else if (products.max_tick[product] >= 0) {
-      upper = products.max_tick[product] * quantum;
-    }
-    if (!(length > 0.0) || length < products.min_top[product] ||
-        length > upper) return;
-    additions->push_back(segment_end);
-    scale_points->push_back(start);
-    scale_points->push_back(start + length);
-    scale_points->push_back(segment_end);
-  }
-
-  void operator()(std::size_t begin, std::size_t end) {
-    for (std::size_t tree = begin; tree < end; ++tree) {
-      if (representative[tree] != tree) continue;
-      SimplePlanTree& result = results[tree];
-      result.status = tree_status[tree];
-      std::vector<double>& heights = result.heights;
-      heights.push_back(0.0);
-      if (std::isfinite(stump[tree])) heights.push_back(stump[tree]);
-      if (std::isfinite(top[tree])) heights.push_back(top[tree]);
-      if (std::isfinite(ht[tree])) heights.push_back(ht[tree]);
-      if (result.status != 0 || !(top[tree] > stump[tree])) {
-        std::sort(heights.begin(), heights.end());
-        heights.erase(std::unique(heights.begin(), heights.end()), heights.end());
-        continue;
-      }
-      std::vector<double> nodes{stump[tree]};
-      std::vector<double> scale_points;
-      std::size_t cursor = 0;
-      while (cursor < nodes.size()) {
-        const double start = nodes[cursor];
-        std::vector<double> additions;
-        for (int at = chain_offsets[tree]; at < chain_offsets[tree + 1]; ++at) {
-          const int product = chain_product[at];
-          add_ordinary(product, start, top[tree], &additions, &scale_points);
-          add_boundary(product, start, top[tree], &additions, &scale_points);
-        }
-        additions.erase(
-          std::remove_if(
-            additions.begin(), additions.end(),
-            [start, this, tree](double value) {
-              return !(value > start) || value > top[tree];
-            }
-          ),
-          additions.end()
-        );
-        if (!additions.empty()) {
-          nodes.insert(nodes.end(), additions.begin(), additions.end());
-          std::sort(nodes.begin(), nodes.end());
-          nodes.erase(std::unique(nodes.begin(), nodes.end()), nodes.end());
-          if (nodes.size() > 50000) {
-            result.status = 412;
-            break;
-          }
-        }
-        ++cursor;
-      }
-      heights.insert(heights.end(), nodes.begin(), nodes.end());
-      heights.insert(heights.end(), scale_points.begin(), scale_points.end());
-      heights.erase(
-        std::remove_if(
-          heights.begin(), heights.end(),
-          [this, tree](double value) {
-            return !std::isfinite(value) || value < 0.0 || value > ht[tree];
-          }
-        ),
-        heights.end()
-      );
-      std::sort(heights.begin(), heights.end());
-      heights.erase(std::unique(heights.begin(), heights.end()), heights.end());
-    }
-  }
-};
-
 }  // namespace
-
-// [[Rcpp::export]]
-Rcpp::List mc_simple_plan_cpp(
-    Rcpp::List products, double quantum, Rcpp::IntegerVector tree_status,
-    Rcpp::IntegerVector chain_offsets, Rcpp::IntegerVector chain_product,
-    Rcpp::NumericVector stump, Rcpp::NumericVector top,
-    Rcpp::NumericVector ht, int threads) {
-  const std::size_t n_tree = tree_status.size();
-  if (stump.size() != static_cast<R_xlen_t>(n_tree) ||
-      top.size() != static_cast<R_xlen_t>(n_tree) ||
-      ht.size() != static_cast<R_xlen_t>(n_tree) ||
-      chain_offsets.size() != static_cast<R_xlen_t>(n_tree + 1)) {
-    Rcpp::stop("Simple-plan columns have inconsistent sizes.");
-  }
-  const ProductData product_data(products);
-  auto bits = [](double value) {
-    std::uint64_t output = 0;
-    std::memcpy(&output, &value, sizeof(output));
-    return output;
-  };
-  auto hash_mix = [](std::uint64_t hash, std::uint64_t value) {
-    return hash ^ (value + UINT64_C(0x9e3779b97f4a7c15) +
-      (hash << 6) + (hash >> 2));
-  };
-  auto equal_geometry = [&](std::size_t left, std::size_t right) {
-    if (tree_status[left] != tree_status[right] ||
-        stump[left] != stump[right] || top[left] != top[right] ||
-        ht[left] != ht[right] ||
-        chain_offsets[left + 1] - chain_offsets[left] !=
-          chain_offsets[right + 1] - chain_offsets[right]) return false;
-    const int count = chain_offsets[left + 1] - chain_offsets[left];
-    for (int offset = 0; offset < count; ++offset) {
-      if (chain_product[chain_offsets[left] + offset] !=
-          chain_product[chain_offsets[right] + offset]) return false;
-    }
-    return true;
-  };
-  std::vector<std::size_t> representative(n_tree);
-  std::unordered_map<std::uint64_t, std::vector<std::size_t>> geometry;
-  for (std::size_t tree = 0; tree < n_tree; ++tree) {
-    std::uint64_t hash = UINT64_C(0xcbf29ce484222325);
-    hash = hash_mix(hash, static_cast<std::uint64_t>(tree_status[tree]));
-    hash = hash_mix(hash, bits(stump[tree]));
-    hash = hash_mix(hash, bits(top[tree]));
-    hash = hash_mix(hash, bits(ht[tree]));
-    for (int at = chain_offsets[tree]; at < chain_offsets[tree + 1]; ++at) {
-      hash = hash_mix(hash, static_cast<std::uint64_t>(chain_product[at] + 1));
-    }
-    std::vector<std::size_t>& candidates = geometry[hash];
-    representative[tree] = tree;
-    for (std::size_t candidate : candidates) {
-      if (equal_geometry(tree, candidate)) {
-        representative[tree] = candidate;
-        break;
-      }
-    }
-    if (representative[tree] == tree) candidates.push_back(tree);
-  }
-  std::vector<SimplePlanTree> results(n_tree);
-  SimplePlanWorker worker(
-    product_data, quantum, tree_status, chain_offsets, chain_product,
-    stump, top, ht, representative, results
-  );
-  RcppParallel::parallelFor(0, n_tree, worker, 1, threads);
-
-  Rcpp::IntegerVector output_status(n_tree), segment_offsets(n_tree + 1),
-    profile_offsets(n_tree + 1);
-  std::size_t segment_count = 0;
-  std::size_t profile_count = 0;
-  for (std::size_t tree = 0; tree < n_tree; ++tree) {
-    const SimplePlanTree& plan = results[representative[tree]];
-    output_status[tree] = plan.status;
-    if (plan.status == 0 && top[tree] > stump[tree]) ++segment_count;
-    segment_offsets[tree + 1] = static_cast<int>(segment_count);
-    profile_count += plan.heights.size();
-    profile_offsets[tree + 1] = static_cast<int>(profile_count);
-  }
-  Rcpp::NumericVector segment_lo(segment_count), segment_hi(segment_count),
-    profile_height(profile_count);
-  std::size_t segment_at = 0;
-  std::size_t profile_at = 0;
-  for (std::size_t tree = 0; tree < n_tree; ++tree) {
-    const SimplePlanTree& plan = results[representative[tree]];
-    if (plan.status == 0 && top[tree] > stump[tree]) {
-      segment_lo[segment_at] = stump[tree];
-      segment_hi[segment_at] = top[tree];
-      ++segment_at;
-    }
-    for (double value : plan.heights) {
-      profile_height[profile_at++] = value;
-    }
-  }
-  const std::size_t n_product = static_cast<std::size_t>(product_data.size());
-  Rcpp::IntegerVector boundary_offsets(n_tree * n_product + 1);
-  std::size_t boundary_count = 0;
-  for (std::size_t tree = 0; tree < n_tree; ++tree) {
-    for (std::size_t product = 0; product < n_product; ++product) {
-      bool active = false;
-      for (int at = chain_offsets[tree]; at < chain_offsets[tree + 1]; ++at) {
-        if (chain_product[at] == static_cast<int>(product)) {
-          active = true;
-          break;
-        }
-      }
-      if (active && output_status[tree] == 0) ++boundary_count;
-      boundary_offsets[tree * n_product + product + 1] =
-        static_cast<int>(boundary_count);
-    }
-  }
-  Rcpp::NumericVector boundaries(boundary_count);
-  std::size_t boundary_at = 0;
-  for (std::size_t tree = 0; tree < n_tree; ++tree) {
-    for (std::size_t product = 0; product < n_product; ++product) {
-      const int key = static_cast<int>(tree * n_product + product);
-      if (boundary_offsets[key + 1] > boundary_offsets[key]) {
-        boundaries[boundary_at++] = top[tree];
-      }
-    }
-  }
-  return Rcpp::List::create(
-    Rcpp::_["status"] = output_status,
-    Rcpp::_["segment_offsets"] = segment_offsets,
-    Rcpp::_["segment_lo"] = segment_lo,
-    Rcpp::_["segment_hi"] = segment_hi,
-    Rcpp::_["boundary_offsets"] = boundary_offsets,
-    Rcpp::_["boundaries"] = boundaries,
-    Rcpp::_["profile_offsets"] = profile_offsets,
-    Rcpp::_["profile_height"] = profile_height
-  );
-}
 
 // [[Rcpp::export]]
 Rcpp::NumericVector mc_profile_lookup_cpp(
@@ -1636,7 +1082,7 @@ Rcpp::List mc_buck_cpp(
     Rcpp::NumericVector cum_ob, Rcpp::IntegerVector defect_offsets,
     Rcpp::NumericVector defect_from, Rcpp::NumericVector defect_to,
     Rcpp::IntegerVector defect_effect, Rcpp::NumericVector defect_percent,
-    Rcpp::IntegerVector defect_category_rank,
+    Rcpp::IntegerVector defect_product,
     Rcpp::NumericVector weight_factor, int threads) {
   const ProfileClock::time_point begin = ProfileClock::now();
   const std::size_t n_tree = tree_status.size();
@@ -1646,7 +1092,7 @@ Rcpp::List mc_buck_cpp(
     chain_product, segment_offsets, segment_lo, segment_hi, boundary_offsets,
     boundaries, profile_offsets, profile_height, dib, dob, cum_ib, cum_ob,
     defect_offsets, defect_from, defect_to, defect_effect, defect_percent,
-    defect_category_rank, weight_factor
+    defect_product, weight_factor
   );
   const ProfileClock::time_point decoded = ProfileClock::now();
   BuckingWorker worker(core, algorithm, results);
@@ -1667,7 +1113,7 @@ Rcpp::List mc_buck_cpp(
   Rcpp::NumericVector start(n_piece), nominal_end(n_piece), cut_end(n_piece),
     nominal_length(n_piece), physical_length(n_piece), trim(n_piece),
     led_ib(n_piece), sed_ib(n_piece), led_ob(n_piece), sed_ob(n_piece),
-    gross_ib(n_piece), gross_ob(n_piece), located(n_piece), rot_pct(n_piece),
+    gross_ib(n_piece), gross_ob(n_piece),
     gross_scale(n_piece);
   std::size_t at = 0;
   for (const TreeResult& result : results) {
@@ -1690,8 +1136,6 @@ Rcpp::List mc_buck_cpp(
       sed_ob[at] = row.sed_ob;
       gross_ib[at] = row.gross_ib;
       gross_ob[at] = row.gross_ob;
-      located[at] = row.located;
-      rot_pct[at] = row.rot_pct;
       gross_scale[at] = row.gross_scale;
       ++at;
     }
@@ -1726,9 +1170,7 @@ Rcpp::List mc_buck_cpp(
     Rcpp::_["led_ib"] = led_ib, Rcpp::_["sed_ib"] = sed_ib,
     Rcpp::_["led_ob"] = led_ob, Rcpp::_["sed_ob"] = sed_ob,
     Rcpp::_["log_gross_cubic_ib"] = gross_ib,
-    Rcpp::_["log_gross_cubic_ob"] = gross_ob,
-    Rcpp::_["located_deduction_cubic_ib"] = located,
-    Rcpp::_["rot_pct"] = rot_pct
+    Rcpp::_["log_gross_cubic_ob"] = gross_ob
   );
   const ProfileClock::time_point assembled = ProfileClock::now();
   return Rcpp::List::create(

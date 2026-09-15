@@ -2,128 +2,65 @@
 % Please edit documentation in R/defects.R
 \name{defects_from_stoppers}
 \alias{defects_from_stoppers}
-\title{Convert product stopping heights to located defect records}
+\title{Convert southern stopping heights to defect records}
 \usage{
-## Call signatures
-defects_from_stoppers(id, ht, saw_stop = NULL, pulp_stop = NULL, jump_butt = NULL, always_pulp
-  = NULL, stump_ht = NULL, units = 'imperial')
+defects_from_stoppers(
+  tree_id,
+  ht,
+  topwood_product,
+  saw_stop = NULL,
+  pulp_stop = NULL,
+  jump_butt = NULL,
+  pulp_tree = FALSE,
+  stump_ht = 1
+)
 }
 \arguments{
-\item{id}{Required nonmissing atomic tree identifiers, one per tree or one
-repeated value. Unitless.}
+\item{tree_id}{Identify the tree each record belongs to. Atomic vector, unitless, required.
+This identifier ties every log, residual, and status row back to its tree and is the only
+link between a log and its tree.}
 
-\item{ht}{Required finite positive numeric total heights, one per tree or
-one repeated value. Feet in imperial units or meters in metric units.
-Missing values are errors.}
+\item{ht}{Supply each tree's total height. Numeric, feet, required.}
 
-\item{saw_stop, pulp_stop, jump_butt}{Numeric heights above ground, one per
-tree or one repeated value. Default \code{NULL} and explicit \code{NA_real_} both
-mean no recorded stop. Present heights must follow stump, jump butt,
-saw stop, then pulp stop in strictly increasing order and cannot exceed
-total height.
+\item{topwood_product}{Name the product allowed above a saw stop or on a whole pulp tree.
+Character scalar, unitless, required.}
 
-Units match \code{ht}.}
+\item{saw_stop}{Stop saw products at this height and allow only \code{topwood_product} above it.
+Numeric, feet, default \code{NULL} records no stop. Missing heights also record no stop.}
 
-\item{always_pulp}{Logical or numeric 0/1, one per tree or one repeated
-value. Default \code{NULL} means \code{FALSE}. Missing values are errors.
+\item{pulp_stop}{End the usable stem at this height. Numeric, feet, default \code{NULL} records
+no stop. Missing heights also record no stop.}
 
-\code{TRUE}
-restricts volume above stump to pulp and cannot accompany a jump-butt
-or saw-stop height. Unitless. Example: \code{always_pulp = TRUE}.}
+\item{jump_butt}{Remove the wood between the stump and this height. Numeric, feet,
+default \code{NULL} records no cull. Missing heights also record no cull.}
 
-\item{stump_ht}{Numeric height above ground, one per tree or one repeated
-value. Default \code{NULL} selects 1 foot or 0.3 meter. Must be finite,
-nonmissing, at least zero, and below \code{ht}.}
+\item{pulp_tree}{Restrict the whole tree to \code{topwood_product}. Logical, unitless,
+default \code{FALSE}.}
 
-\item{units}{One character value, \code{'imperial'} (default) or \code{'metric'}.
-Missing or unknown values are errors. Example: \code{units = 'metric'}.}
+\item{stump_ht}{Set the lower height of a jump butt cull. Numeric, feet, default \code{1}.}
 }
 \value{
-A \code{merch_defects} table with the fields, ordered by tree and
-interval. No status column is added. \code{defect_id} records the stopping
-convention as \code{.stopper.jump_butt}, \code{.stopper.pulp}, or \code{.stopper.cull}.
+A \code{merch_defects} data frame with the columns and units listed in \code{\link[=defect]{defect()}}.
+A saw stop becomes \code{restrict}, a pulp stop becomes \code{end}, and a jump butt becomes \code{cull}.
 }
 \description{
-Translate stopping heights into located cull and pulp restrictions.
+Translate a saw stop, pulp stop, jump butt, or whole pulp tree into located records.
 }
 \details{
-A jump butt removes the interval from stump to its height. A saw
-stop restricts the interval from its height to the pulp stop, or total
-height when the pulp stop is absent, to pulp. A pulp stop removes the
-interval above it.
-
-Empty intervals are omitted. Only length-one inputs
-repeat, and other lengths must match.
+Heights must be finite and at most 500 feet. Total height must be positive. Other
+heights must be nonnegative. Optional missing stopping heights record no stop.
 }
-\section{Defect table fields}{
-
-A defect table has one row per recorded condition. Heights are measured
-above ground in feet for imperial calculations or meters for metric
-calculations. Construction does not convert units.
-
-Each field has one
-value per row. Required columns must be present even in an empty table. \describe{
-\item{\code{id}}{Required atomic tree identifier, such as \code{'example-1'}.
-Missing identifiers are errors. Identifiers repeat for several records on
-the same tree and must match the inventory. Unitless.}
-\item{\code{from}}{Required numeric lower height, such as \code{10}. It must be
-finite and between zero and total height when checked against a tree.
-Missing values prevent a reliable interval check.}
-\item{\code{to}}{Required numeric upper height, such as \code{20}. For intervals,
-it must exceed \code{from} and not exceed total height. For \code{'fork'} or
-\code{'break'}, supply \code{NA_real_} or the same height as \code{from}. Validation
-retains these as single-height records.}
-\item{\code{effect}}{Required character treatment, with no default. Choose
-\code{'cull'}, \code{'pulp'}, \code{'exclude'}, \code{'rot'}, \code{'sweep'}, \code{'crook'},
-\code{'fork'}, or \code{'break'}, for example \code{'sweep'}. Missing or unknown
-values receive \code{unknown_defect_effect} when validated. Unitless.}
-\item{\code{defect_id}}{Character record label, unitless. Omission or \code{NA}
-requests an identifier during validation, such as \code{'auto:000001'}.
-Supplied identifiers must be unique within each tree. Exact duplicate
-records with missing identifiers are errors.}
-\item{\code{percent}}{Numeric percentage from zero through 100, such as \code{15}.
-Default \code{NA_real_}. Required for rot and must be missing for other effects.
-Invalid percentages receive \code{defect_percent_out_of_range} during validation.}
-\item{\code{category}}{Character sweep or crook category, such as \code{'moderate'}. Default
-\code{NA_character_}. It must be nonempty for sweep or crook and
-missing for other effects.
-
-The later merchandising call checks it against
-its ordered curvature categories. Unitless.}
-\item{\code{pathology}}{Character field note, such as \code{'conk'}. Default
-\code{NA_character_}, meaning no note. It changes no treatment. Unitless.}
-\item{\code{source_record_id}}{Character field-record reference, such as
-\code{'sheet-1'}. Default \code{NA_character_}, meaning no reference. Unitless.}
-}
-There are no list columns.
-
-Factor labels are accepted for text fields. Numeric measurements may be integers or doubles.
-}
-
-\section{Status and missing values}{
-
-Invalid tree heights, unordered stops, missing always-pulp flags, or
-incompatible lengths stop the call. Omitted stops produce no restriction. A table with no
-records is valid.
-
-It does not indicate that volume is
-zero. Later \code{no_feasible_log} denotes a valid result with no logs under the products.
-}
-
 \examples{
-## Load dplyr
-library(dplyr)
+## Convert the shipped stopping heights
+records <- defects_from_stoppers(
+  tree_id = example_trees_south$tree_id,
+  ht = example_trees_south$ht,
+  topwood_product = "pulpwood",
+  saw_stop = example_trees_south$saw_stop,
+  pulp_stop = example_trees_south$pulp_stop,
+  jump_butt = example_trees_south$jump_butt
+)
 
-## Translate stopping heights in the shipped inventory
-defects_from_stoppers(id = example_trees_south$tree,
-                      ht = example_trees_south$ht_simulated,
-                      saw_stop = example_trees_south$saw_stop,
-                      pulp_stop = example_trees_south$pulp_stop,
-                      jump_butt = example_trees_south$jump_butt) \%>\%
-  select(id, from, to, effect) \%>\%
-  slice_head(n = 3)
-}
-\seealso{
-\code{\link[=defect]{defect()}} to record other conditions, \code{\link[=validate_defects]{validate_defects()}} to
-check the result, \code{\link[=merchandise]{merchandise()}} to select logs.
+## Show the converted effects
+head(records$effect, n = 3)
 }

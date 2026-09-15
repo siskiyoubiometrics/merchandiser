@@ -1,0 +1,300 @@
+---
+title: 'Optimal bucking'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Optimal bucking}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 120)
+library(merchandiser)
+library(dplyr)
+```
+
+`merchandise()` can follow product order or maximize log value. These illustrative prices compare both strategies on the Pacific Northwest trees.
+
+```{r}
+## Retain the complete example list
+trees <- example_trees_pnw
+```
+
+```{r}
+## Define domestic saw specifications
+domestic_saw <- product(product = 'domestic_saw',  ## product name, unitless
+                        min_length = 16,  ## feet
+                        max_length = 40,  ## feet
+                        trim = 1,  ## feet
+                        min_sed = 6,  ## inches
+                        volume_unit = 'scribner',  ## Scribner board feet
+                        price = 700,  ## dollars
+                        price_per = 1000)  ## board feet
+```
+
+```{r}
+## Define pulp specifications
+pulp <- product(product = 'pulp',  ## product name, unitless
+                min_length = 8,  ## feet
+                max_length = 40,  ## feet
+                trim = 0.5,  ## feet
+                min_sed = 3,  ## inches
+                volume_unit = 'green_ton',  ## green short tons
+                price = 30,  ## dollars
+                price_per = 1)  ## green short tons
+```
+
+```{r}
+## Combine products in cutting priority order
+specifications <- products(domestic_saw = domestic_saw,
+                           pulp = pulp)
+```
+
+```{r}
+## Cut and scale the trees
+cascade <- merchandise(tree_id = trees$tree_id,
+                       dbh = trees$dbh,
+                       ht = trees$ht,
+                       spcd = trees$spcd,
+                       products = specifications,
+                       age = trees$age,
+                       strategy = 'cascade')
+```
+
+```{r}
+## Cut and scale the trees
+optimized <- merchandise(tree_id = trees$tree_id,
+                         dbh = trees$dbh,
+                         ht = trees$ht,
+                         spcd = trees$spcd,
+                         products = specifications,
+                         age = trees$age,
+                         strategy = 'optimize')
+```
+
+```{r, echo = FALSE}
+bind_rows(cascade = cascade$logs, optimized = optimized$logs, .id = 'strategy') %>%
+  filter(tree_id %in% c(7, 14, 28)) %>%
+  select(strategy, tree_id, log, product, start_height, length, value) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The left drawings show cascade cuts. The right drawings show optimized cuts on the same stems.
+
+```{r, echo = FALSE, fig.width = 16, fig.height = 9}
+par(mfrow = c(3, 2), mar = c(4, 4, 1, 1))
+for (id in c(7, 14, 28)) {
+  plot(cascade, tree_id = id, main = '', ylab = 'Stem radius (inches)')
+  plot(optimized, tree_id = id, main = '', ylab = 'Stem radius (inches)')
+}
+```
+
+```{r}
+## Sum cascade log values by tree
+cascade_values <- cascade$logs %>%
+  group_by(tree_id) %>%
+  summarize(cascade_dollars = sum(value))
+
+## Sum optimized log values by tree
+optimized_values <- optimized$logs %>%
+  group_by(tree_id) %>%
+  summarize(optimized_dollars = sum(value))
+
+## Calculate each tree's value gain
+gain <- trees %>%
+  select(tree_id = tree_id) %>%
+  left_join(y = cascade_values,
+            by = 'tree_id') %>%
+  left_join(y = optimized_values,
+            by = 'tree_id') %>%
+  mutate(cascade_dollars = coalesce(cascade_dollars, 0),
+         optimized_dollars = coalesce(optimized_dollars, 0),
+         gain_dollars = optimized_dollars - cascade_dollars)
+```
+
+```{r, echo = FALSE}
+gain %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Sum values and gains across the list
+total <- gain %>%
+  summarize(cascade_dollars = sum(cascade_dollars),
+            optimized_dollars = sum(optimized_dollars),
+            gain_dollars = sum(gain_dollars))
+```
+
+```{r, echo = FALSE}
+total %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+## Mapped defects
+
+The same trees now carry `example_defects_pnw`. Restrictions, culls, sweep, and broken tops change the available cuts.
+
+```{r}
+## Cut and scale the trees
+cascade_defect <- merchandise(tree_id = trees$tree_id,
+                              dbh = trees$dbh,
+                              ht = trees$ht,
+                              spcd = trees$spcd,
+                              products = specifications,
+                              age = trees$age,
+                              defects = example_defects_pnw,
+                              strategy = 'cascade')
+```
+
+```{r}
+## Cut and scale the trees
+optimized_defect <- merchandise(tree_id = trees$tree_id,
+                                dbh = trees$dbh,
+                                ht = trees$ht,
+                                spcd = trees$spcd,
+                                products = specifications,
+                                age = trees$age,
+                                defects = example_defects_pnw,
+                                strategy = 'optimize')
+```
+
+```{r, echo = FALSE}
+bind_rows(cascade = cascade_defect$logs, optimized = optimized_defect$logs, .id = 'strategy') %>%
+  filter(tree_id %in% c(7, 14, 28)) %>%
+  select(strategy, tree_id, log, product, start_height, length, value) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The left drawings show cascade cuts. The right drawings show optimized cuts on the same stems.
+
+```{r, echo = FALSE, fig.width = 16, fig.height = 9}
+par(mfrow = c(3, 2), mar = c(4, 4, 1, 1))
+for (id in c(7, 14, 28)) {
+  plot(cascade_defect, tree_id = id, main = '', ylab = 'Stem radius (inches)')
+  plot(optimized_defect, tree_id = id, main = '', ylab = 'Stem radius (inches)')
+}
+```
+
+```{r}
+## Sum cascade log values by tree
+cascade_values_defect <- cascade_defect$logs %>%
+  group_by(tree_id) %>%
+  summarize(cascade_dollars = sum(value))
+
+## Sum optimized log values by tree
+optimized_values_defect <- optimized_defect$logs %>%
+  group_by(tree_id) %>%
+  summarize(optimized_dollars = sum(value))
+
+## Calculate each tree's value gain
+gain_defect <- trees %>%
+  select(tree_id = tree_id) %>%
+  left_join(y = cascade_values_defect,
+            by = 'tree_id') %>%
+  left_join(y = optimized_values_defect,
+            by = 'tree_id') %>%
+  mutate(cascade_dollars = coalesce(cascade_dollars, 0),
+         optimized_dollars = coalesce(optimized_dollars, 0),
+         gain_dollars = optimized_dollars - cascade_dollars)
+```
+
+```{r, echo = FALSE}
+gain_defect %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Sum values and gains across the list
+total_defect <- gain_defect %>%
+  summarize(cascade_dollars = sum(cascade_dollars),
+            optimized_dollars = sum(optimized_dollars),
+            gain_dollars = sum(gain_dollars))
+```
+
+```{r, echo = FALSE}
+total_defect %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+## Another price list
+
+The alternative list raises the illustrative pulp price. A second `merchandise()` call recuts the same trees and defects under the new list.
+
+```{r}
+## Define a second complete price list
+higher_pulp <- specifications %>%
+  mutate(price = replace(x = price,
+                         list = product == 'pulp',
+                         values = 60))
+
+## Cut and scale the trees again under the higher pulp price
+optimized_higher <- merchandise(tree_id = trees$tree_id,
+                                dbh = trees$dbh,
+                                ht = trees$ht,
+                                spcd = trees$spcd,
+                                products = higher_pulp,
+                                age = trees$age,
+                                defects = example_defects_pnw,
+                                strategy = 'optimize')
+
+## Sum value across each price list
+price_totals <- bind_rows(base = optimized_defect$logs,
+                          higher_pulp = optimized_higher$logs,
+                          .id = 'price_list') %>%
+  group_by(price_list) %>%
+  summarize(value_dollars = sum(value))
+```
+
+```{r, echo = FALSE}
+price_totals %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The bars compare total log value after recutting under each price list.
+
+```{r, echo = FALSE}
+barplot(price_totals$value_dollars, names.arg = price_totals$price_list,
+        col = '#0072B2', border = NA, xlab = 'Price list', ylab = 'Value (dollars)')
+```
+
+## Computation
+
+The state records the cut position and counts for products with log limits. Counts restart at every cull and restriction boundary.
+Each transition tries an eligible product and length. The objective is total log value.
+Equal values favor fewer logs, then longer logs lower on the stem. Remaining ties use lower physical ends, then product names in byte order.
+Values within the documented rounding tolerance are treated as ties.
+
+Without log limits, work grows with positions times products times candidate lengths. Storing chosen paths also costs time and memory proportional to their log counts.
+Log limits multiply the possible states by their count combinations. Each capped count ranges from zero through its limit, and only reached states are stored.
+This remains exponential in the number of independently capped products. Trees run through the existing parallel engine.
+
+The benchmark reports its machine and workload before timing each strategy.
+
+```text
+CPU: AMD Ryzen 9 3900X 12-Core Processor
+Threads: 8
+R: R version 4.3.3 (2024-02-29)
+Workload: synthetic Douglas-fir, dbh 18 to 22 inches, height 76 to 84 feet.
+Profiles repeat in a 45-tree cycle. Public caching is included.
+Each timed call processes up to 1000 trees. No max_logs limits or defects.
+```
+
+| Products | Strategy | Stems | Threads | Seconds | Stems per second | Million stems, extrapolated seconds |
+| ---: | :--- | ---: | ---: | ---: | ---: | ---: |
+| 3 | cascade | 100000 | 8 | 337.284 | 296.486 | 3372.84 |
+| 3 | optimize | 100000 | 8 | 315.510 | 316.947 | 3155.10 |
+| 10 | cascade | 100000 | 8 | 290.461 | 344.280 | 2904.61 |
+| 10 | optimize | 100000 | 8 | 336.459 | 297.213 | 3364.59 |
+
+Smaller runs with distinct diameters expose the cost without repeated profiles. These runs also use eight threads.
+
+| Products | Strategy | Distinct stems | Seconds | Stems per second | Million stems, extrapolated seconds |
+| ---: | :--- | ---: | ---: | ---: | ---: |
+| 3 | cascade | 1000 | 25.399 | 39.372 | 25399.00 |
+| 3 | optimize | 1000 | 24.519 | 40.785 | 24519.00 |
+| 10 | cascade | 1000 | 24.995 | 40.008 | 24995.00 |
+| 10 | optimize | 1000 | 25.440 | 39.308 | 25440.00 |
+
+Other validation tasks ran during these measurements.
+The million-stem figures extrapolate these measured runs. They do not measure a million distinct stems or workloads with many independently capped products.

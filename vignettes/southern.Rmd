@@ -1,0 +1,228 @@
+---
+title: 'Southern stands'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Southern stands}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 120)
+library(merchandiser)
+library(dplyr)
+```
+
+Product order in `products()` sets cutting priority. `merchandise()` produces green short ton yield by product and stand from the southern tree list.
+
+## Products
+
+The products match `data-raw/example-products.R`.
+
+```{r}
+## Define sawtimber specifications
+sawtimber <- product(product = 'sawtimber',  ## product name, unitless
+                     spcd = 131,  ## species code, unitless
+                     min_dbh = 12,  ## inches
+                     min_length = 16,  ## feet
+                     max_length = 40,  ## feet
+                     trim = 0.5,  ## feet
+                     min_sed = 8,  ## inches
+                     inside_bark = FALSE,  ## logical, unitless
+                     max_logs = 1,  ## logs per segment
+                     volume_unit = 'green_ton')  ## green short tons
+
+## Define chip n saw specifications
+chip_n_saw <- product(product = 'chip_n_saw',  ## product name, unitless
+                      spcd = 131,  ## species code, unitless
+                      min_dbh = 8,  ## inches
+                      max_dbh = 12,  ## inches
+                      min_length = 16,  ## feet
+                      max_length = 40,  ## feet
+                      trim = 0.5,  ## feet
+                      min_sed = 6,  ## inches
+                      inside_bark = FALSE,  ## logical, unitless
+                      max_logs = 1,  ## logs per segment
+                      volume_unit = 'green_ton')  ## green short tons
+
+## Define pulpwood specifications
+pulpwood <- product(product = 'pulpwood',  ## product name, unitless
+                    spcd = 131,  ## species code, unitless
+                    min_dbh = 5,  ## inches
+                    max_dbh = 8,  ## inches
+                    min_length = 8,  ## feet
+                    max_length = 40,  ## feet
+                    trim = 0.5,  ## feet
+                    min_sed = 3,  ## inches
+                    inside_bark = FALSE,  ## logical, unitless
+                    max_logs = 1,  ## logs per segment
+                    volume_unit = 'green_ton')  ## green short tons
+
+## Combine products in cutting priority order
+specifications <- products(sawtimber = sawtimber,
+                           chip_n_saw = chip_n_saw,
+                           pulpwood = pulpwood)
+
+## Retain the complete southern list
+trees <- example_trees_south
+```
+
+## Stopper records
+
+```{r}
+## Convert the stopper columns
+records <- defects_from_stoppers(
+  tree_id = trees$tree_id,
+  ht = trees$ht,
+  topwood_product = "pulpwood",
+  saw_stop = trees$saw_stop,
+  pulp_stop = trees$pulp_stop,
+  jump_butt = trees$jump_butt
+)
+```
+
+```{r, echo = FALSE}
+records %>%
+  slice_head(n = 6) %>%
+  rename(`start_height (feet)` = start_height, `end_height (feet)` = end_height,
+         `percent (%)` = percent) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+## Cut and scale the trees
+result <- merchandise(tree_id = trees$tree_id,
+                      dbh = trees$dbh,
+                      ht = trees$ht,
+                      spcd = trees$spcd,
+                      products = specifications,
+                      age = trees$age,
+                      defects = records)
+
+## Join logs to stand and diameter
+logs <- result$logs %>%
+  left_join(y = trees,
+            by = c('tree_id' = 'tree_id'))
+```
+
+## Product yield
+
+The bars show scale by diameter class within each stand. Totals represent the listed trees, without expansion.
+
+```{r, echo = FALSE, fig.width = 9, fig.height = 7}
+product_names <- specifications$product
+product_colors <- setNames(vapply(product_names, function(name) {
+  code <- utf8ToInt(enc2utf8(name))
+  grDevices::hcl(sum(code * seq_along(code)) %% 360, c = 65, l = 55)
+}, character(1)), product_names)
+yield <- logs %>%
+  mutate(diameter_class = floor(dbh / 2) * 2) %>%
+  group_by(stand, age, product, diameter_class) %>%
+  summarize(scale = sum(scale), .groups = 'drop')
+yield %>%
+  rename(`age (years)` = age,
+         `diameter class lower bound (inches)` = diameter_class,
+         `scale (green short tons)` = scale) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r, echo = FALSE, fig.width = 9, fig.height = 7}
+par(mfrow = c(2, 2), mar = c(4, 4, 1, 1))
+for (stand_id in unique(yield$stand)) {
+  z <- yield %>% filter(stand == stand_id)
+  amounts <- xtabs(scale ~ product + diameter_class, data = z)
+  barplot(amounts, col = product_colors[rownames(amounts)], border = NA,
+          xlab = 'Diameter class lower bound (inches)', ylab = 'Scale (green short tons)')
+  legend('topleft', legend = c(paste('Age', unique(z$age), 'years'), rownames(amounts)),
+         fill = c(NA, product_colors[rownames(amounts)]), bty = 'n', cex = 0.75)
+}
+```
+
+```{r, echo = FALSE}
+logs %>%
+  group_by(stand, age, product) %>%
+  summarize(`scale (green short tons)` = sum(scale), .groups = 'drop') %>%
+  rename(`age (years)` = age) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+## Age limits
+
+The source products have no age limits. Explicit age limits further restrict product eligibility.
+
+```{r}
+## Define sawtimber specifications
+sawtimber <- product(product = 'sawtimber',  ## product name, unitless
+                     min_dbh = 12,  ## inches
+                     min_age = 35,  ## years
+                     min_length = 16,  ## feet
+                     max_length = 40,  ## feet
+                     trim = 0.5,  ## feet
+                     min_sed = 8,  ## inches
+                     inside_bark = FALSE,  ## logical, unitless
+                     max_logs = 1,  ## logs per segment
+                     volume_unit = 'green_ton')  ## green short tons
+
+## Define chip n saw specifications
+chip_n_saw <- product(product = 'chip_n_saw',  ## product name, unitless
+                      min_dbh = 8,  ## inches
+                      min_age = 20,  ## years
+                      max_dbh = 12,  ## inches
+                      min_length = 16,  ## feet
+                      max_length = 40,  ## feet
+                      trim = 0.5,  ## feet
+                      min_sed = 6,  ## inches
+                      inside_bark = FALSE,  ## logical, unitless
+                      max_logs = 1,  ## logs per segment
+                      volume_unit = 'green_ton')  ## green short tons
+
+## Define pulpwood specifications
+pulpwood <- product(product = 'pulpwood',  ## product name, unitless
+                    min_dbh = 5,  ## inches
+                    max_age = 20,  ## years
+                    max_dbh = 8,  ## inches
+                    min_length = 8,  ## feet
+                    max_length = 40,  ## feet
+                    trim = 0.5,  ## feet
+                    min_sed = 3,  ## inches
+                    inside_bark = FALSE,  ## logical, unitless
+                    max_logs = 1,  ## logs per segment
+                    volume_unit = 'green_ton')  ## green short tons
+
+## Combine products in cutting priority order
+specifications <- products(sawtimber = sawtimber,
+                           chip_n_saw = chip_n_saw,
+                           pulpwood = pulpwood)
+
+## Cut and scale the trees
+age_result <- merchandise(tree_id = trees$tree_id,
+                          dbh = trees$dbh,
+                          ht = trees$ht,
+                          spcd = trees$spcd,
+                          products = specifications,
+                          age = trees$age,
+                          defects = records)
+```
+
+```{r, echo = FALSE}
+age_result$logs %>%
+  left_join(y = trees,
+            by = c('tree_id' = 'tree_id')) %>%
+  group_by(stand, age, product) %>%
+  summarize(`scale (green short tons)` = sum(scale), .groups = 'drop') %>%
+  rename(`age (years)` = age) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Age limits change which products qualify. Diameter limits and stopper restrictions still apply.
+
+## Status
+
+Trees without an eligible product remain in the status table.
+
+```{r, echo = FALSE}
+age_result$status %>%
+  count(name, name = 'trees (count)') %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```

@@ -4,156 +4,27 @@
 \alias{status_codes}
 \title{Interpret tree calculation and volume codes}
 \usage{
-## Call signatures
 status_codes()
 }
 \value{
-A data frame with integer \code{code}, character \code{name}, character
-\code{category}, character \code{description}, and character \code{source}. All fields
-are unitless. Code identifies the diagnosis, name gives its stable label,
-category groups related problems, description explains the code, and
-source identifies the calculation group.
+A data frame with these columns:
+\itemize{
+\item \code{status}: stable integer status code, unitless.
+\item \code{name}: plain problem name.
+\item \code{description}: result description.
+\item \code{category}: problem group.
+\item \code{source}: stem model or merchandising.
+}
 
-No values are user defaults.
+Columns other than \code{status} contain text.
 }
 \description{
-Return calculation codes, names, meanings, and sources for stem and merchandising results.
+Interpret tree calculation and volume codes
 }
-\details{
-Row codes describe individual calculations. Invalid argument
-structure can stop a call before row codes are assigned. The literal
-descriptions returned by this lookup retain some development wording.
-}
-\section{Coordinate and source codes}{
-
-\code{outside_divisions}, \code{outside_divisions}, means the coordinate lookup found no shipped
-ecological
-division. Its value is missing. Check coordinates and coverage.
-
-\code{library_error_base} is the offset added to positive source error numbers. The calculated
-quantity is unavailable.
-
-Correct the equation's required measurements and geographic selection before repeating the
-calculation.
-}
-
-\section{Status and missing values}{
-
-Structural errors stop the call. Row failures return missing values unless
-a retained-value case is explicitly identified below. \code{na_input} is silent
-with \code{status = FALSE}, while other nonzero codes produce warnings.
-\describe{
-\item{\code{ok}}{Calculation completed. The value is usable within the selected equation's scope.}
-\item{\code{na_input}}{A required value is missing or nonfinite. Supply the measurement
-before using this row.}
-\item{\code{dbh_nonpositive}}{Tree diameter is not positive. Correct the diameter and rerun.}
-\item{\code{ht_nonpositive}}{Total height is not positive. Correct the height and rerun.}
-\item{\code{unknown_species}}{The supplied species code is invalid or unrecognized for this
-operation. Correct it.}
-\item{\code{unknown_model}}{No equation was found. Check the identifier or register the
-local equation.}
-\item{\code{missing_input}}{An equation requires an omitted input or complete measurement
-pair. Supply it and rerun.}
-\item{\code{species_out_of_scope}}{A value is retained for a species outside the declared
-scope. Review equation suitability before reporting.}
-\item{\code{capability_missing}}{The requested calculation is unavailable, often because
-outside-bark information is absent. Supply a supported bark ratio or choose another
-equation.}
-\item{\code{kernel_error}}{The equation calculation failed to
-evaluate. The result is missing. Check the
-tree and equation separately.}
-\item{\code{h_out_of_range}}{A height is below ground or above total height. Check height
-units and bounds.}
-\item{\code{diameter_nonpositive}}{The target diameter is not positive. Supply a positive
-target or use the tip bound for volume.}
-\item{\code{empty_bounds}}{The lower height is not below the upper height. Correct the
-interval. The missing result is not a measured zero volume.}
-\item{\code{above_tip}}{The requested diameter is smaller than the modeled tip diameter.
-Revise the target.}
-\item{\code{below_stump}}{The requested diameter exceeds the modeled diameter at stump.
-Revise the target or stump convention.}
-\item{\code{not_unique}}{The profile has another diameter crossing below the returned
-height. The highest crossing is retained. Review whether it matches the intended
-utilization limit.}
-\item{\code{no_convergence}}{The numerical search did not converge. Review the target and
-profile before using the tree.}
-}
-Source equation errors retain their library diagnosis. Those values are
-unavailable.
-
-Check the selected equation and its inputs. Zero volume or diameter can be a modeled boundary
-value. These functions
-do not select logs, so a zero is not evidence of merchantable zero volume.
-
-
-With \code{status = TRUE}, \code{trees$status} and \code{logs$status} are integer columns. \code{ok} means
-the calculation completed. \code{no_feasible_log} means a valid tree produced no feasible log.
-
-Other failures require review before summarizing. A failed tree can retain partial output,
-so its presence in a log table does not establish a complete result.
-
-The merchandising codes are:
-\describe{
-\item{\code{no_entry_product}}{No product passed tree eligibility. Review species, diameter
-classes, age, and pruning requirements.}
-\item{\code{defect_height_out_of_range}}{A defect height is outside
-the tree. Check its units and reference to ground.}
-\item{\code{defect_interval_invalid}}{Defect bounds are invalid.
-
-Check the interval and point-record conventions.}
-\item{\code{defect_percent_out_of_range}}{A percentage is outside
-zero through 100. Correct the recorded percentage.}
-\item{\code{model_unresolved}}{No equation was resolved for the
-species. Check the species and equation map.}
-\item{\code{unknown_defect_effect}}{The effect is unsupported.
-
-Use one of the documented operational treatments.}
-\item{\code{unknown_curvature_category}}{A category is absent from
-the ordered scale. Reconcile category labels.}
-\item{\code{missing_product_attribute}}{A product needs a missing
-tree attribute. Supply it or revise the product requirement.}
-\item{\code{utilization_top_invalid}}{The requested top cannot be
-resolved.
-
-Check the diameter, bark basis, and equation.}
-\item{\code{no_feasible_log}}{Valid zero volume under these
-specifications. Retain the tree in inventory counts.}
-\item{\code{scale_input_unavailable}}{A scaling measurement cannot be
-calculated. Check species, bark information, and measurement inputs.
-
-Missing scaled quantity and dependent value remain \code{NA}.
-}
-\item{\code{profile_adapter_failure}}{Profile evaluation or the
-calculation plan failed. Inspect diagnostics and reproduce the tree
-separately before treating the result as usable.}
-\item{\code{reconciliation_failure}}{The volume accounting did not
-close. Investigate the tree and model before reporting totals.}
-}
-
-Some invalid defect and
-product inputs are caught earlier and stop the call instead of becoming
-tree codes. Equation failures retain the input, model, capability, and evaluation diagnoses
-returned by \code{\link[=status_codes]{status_codes()}}.
-
-Before calculating totals, count statuses across the complete tree table. Do not silently drop
-failed trees or interpret missing quantities as
-zero. \code{\link[=product_summary]{product_summary()}} defaults to excluding missing quantities from
-sums.
-
-Use \code{na_action = 'propagate'} when an incomplete sum should remain
-missing. A log-table summary alone cannot count trees having no logs.
-}
-
 \examples{
-## Load dplyr
-library(dplyr)
+## Inspect calculation status codes
+codes <- status_codes()
 
-## Inspect merchandising diagnoses
-status_codes() \%>\%
-  filter(source == 'merchandising') \%>\%
-  slice_head(n = 3)
-}
-\seealso{
-\code{\link[=merchandise]{merchandise()}} for tree and log diagnoses, \code{\link[=dib]{dib()}} for diameter
-diagnoses, \code{\link[=stand_table]{stand_table()}} for separating failed trees in expanded totals.
+## Show input status descriptions
+head(codes, n = 3)
 }

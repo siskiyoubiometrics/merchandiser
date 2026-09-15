@@ -7,123 +7,122 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE,
-                      comment = '#>',
-                      message = FALSE,
-                      fig.width = 7,
-                      fig.height = 4)
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 120)
 library(merchandiser)
 library(dplyr)
 ```
 
-Stem functions accept measurement vectors and equation identifiers.
-Default diameters use inches, heights use feet, and volumes use cubic feet.
-`units = 'metric'` requires centimeters and meters and returns cubic meters.
-
-`step` uses diameter units: inches for imperial calls and centimeters for metric calls.
-
-## Materialize a profile
+Stem functions return diameters, heights, and cumulative volumes for checking the modeled stem.
+Inputs use inches and feet, and volumes use cubic feet.
 
 ```{r}
-## Select a shipped tree
+## Select a tree for the profile
 tree <- example_trees %>%
-  filter(tree == 5)
+  filter(tree_id == 5)
+
+## Measure the stem profile
+profile <- stem_profile(
+  tree_id = tree$tree_id,
+  dbh = tree$dbh,
+  ht = tree$ht,
+  spcd = tree$spcd,
+  model = tree$model,
+  step = 1
+)
 ```
 
-```{r, echo = FALSE}
-tree %>%
-  knitr::kable(digits = 3, row.names = FALSE)
-```
+`step` is spacing in feet along the stem. Cumulative volume starts at the lower bound.
 
-```{r}
-## Calculate a stem profile
-profile <- stem_profile(dbh = tree$dbh,
-                        ht = tree$ht,
-                        model = tree$model,
-                        id = tree$tree,
-                        step = 10,
-                        status = TRUE)
-```
+<details>
+<summary>Stem profile measurements</summary>
 
 ```{r, echo = FALSE}
 profile %>%
-  slice_head(n = 6) %>%
+  rename(`h (feet)` = h, `dib (inches)` = dib, `dob (inches)` = dob,
+         `cum_volume_ib (cubic feet)` = cum_volume_ib,
+         `cum_volume_ob (cubic feet)` = cum_volume_ob) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-```{r}
-## Draw the modeled profile
-plot(profile)
-```
+</details>
 
-The profile contains inside- and outside-bark diameters and cumulative volumes from its lower bound.
-`status` is always present. `status = TRUE` suppresses row warnings. Unsupported outside-bark quantities remain missing.
+The solid and dashed lines show inside and outside bark diameters.
+
+```{r, echo = FALSE}
+plot(profile, xlim = range(c(profile$dib, profile$dob), na.rm = TRUE))
+```
 
 ## Diameters and heights
 
 ```{r}
-## Estimate diameter on both bark bases
-diameters <- example_trees %>%
-  transmute(tree,
-            inside = dib(dbh = dbh, ht = ht, h = 20, model = model),
-            outside = dob(dbh = dbh, ht = ht, h = 20, model = model))
+## Calculate dib
+dib(dbh = tree$dbh,
+    ht = tree$ht,
+    h = 20,
+    spcd = tree$spcd,
+    model = tree$model) %>%
+  rename(`diameter inside bark (inches)` = value)
+
+## Calculate dob
+dob(dbh = tree$dbh,
+    ht = tree$ht,
+    h = 20,
+    spcd = tree$spcd,
+    model = tree$model) %>%
+  rename(`diameter outside bark (inches)` = value)
+
+## Calculate height at dib
+height_at_dib(dbh = tree$dbh,
+              ht = tree$ht,
+              dib = 6,
+              spcd = tree$spcd,
+              model = tree$model) %>%
+  rename(`height (feet)` = value)
+
+## Calculate height at dob
+height_at_dob(dbh = tree$dbh,
+              ht = tree$ht,
+              dob = 6,
+              spcd = tree$spcd,
+              model = tree$model) %>%
+  rename(`height (feet)` = value)
 ```
 
-```{r, echo = FALSE}
-diameters %>%
-  knitr::kable(digits = 3, row.names = FALSE)
-```
+Diameter results use inches. Inverse results use feet and retain the highest crossing when several exist.
+Status identifies unavailable measurements and multiple crossings.
+
+## Taper registry
+
+`has_inverse` records a model-provided inverse. Numeric inversion remains available for the selected model when this flag is false.
 
 ```{r}
-## Find heights at the specified diameters
-heights <- example_trees %>%
-  transmute(tree,
-            inside = height_at_dib(dbh = dbh, ht = ht, dib = 6, model = model),
-            outside = height_at_dob(dbh = dbh, ht = ht, dob = 6, model = model))
-```
-
-```{r, echo = FALSE}
-heights %>%
-  knitr::kable(digits = 3, row.names = FALSE)
-```
-
-The inverse functions return the highest crossing. Additional crossings produce a diagnosis with the retained height.
-
-## Equations and registry
-
-```{r}
-## List equations for the example species
-models <- taper_models(species = tree$spcd)
+## List models for the selected species
+models <- taper_models(spcd = tree$spcd)
 ```
 
 ```{r, echo = FALSE}
 models %>%
-  select(id, family, has_dob, has_inverse, has_integral) %>%
+  select(id, form, has_dob, has_inverse, has_integral) %>%
   slice_head(n = 6) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
 ```{r}
-## Inspect the selected equation and its capabilities
-get_taper_model(id = tree$model)
+## Inspect the selected model
+get_taper_model(model = tree$model)$id
 
-## Check the equation's available operations
-capabilities <- model_capabilities(id = tree$model)
+## Check model capabilities
+taper_models() %>%
+  filter(id == tree$model) %>%
+  select(id, has_dob, has_inverse, has_integral)
+
+## Check availability and species scope
+has_taper_model(model = tree$model)
+
+## Check the assignment
+check_taper_models(model = tree$model, spcd = tree$spcd)
 ```
 
-```{r, echo = FALSE}
-capabilities %>%
-  knitr::kable(digits = 3, row.names = FALSE)
-```
-
-```{r}
-## Check availability and the species assignment
-has_taper_model(id = tree$model)
-
-## Validate the equation mapping
-check_taper_models(id = tree$model, spcd = tree$spcd)
-```
-
-[Source equations](methods-taper-equations.html) support package and source compatibility modes.
-[fit_taper()](methods-fitting-taper.html) estimates coefficients for session registration.
+[Fitting taper equations](methods-fitting-taper.html) creates local models for the same stem functions.

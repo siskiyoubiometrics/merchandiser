@@ -3,70 +3,26 @@
 \docType{data}
 \name{example_trees_pnw}
 \alias{example_trees_pnw}
-\title{Example trees from the Pacific Northwest}
+\title{Example Pacific Northwest trees}
 \format{
-A data frame. No values are missing
-except unmeasured \code{ht_observed} values.
+A data frame with the following columns:
 \describe{
-\item{stand}{Character stand label, unitless.}
-\item{plot}{Character synthetic plot label, unitless.}
-\item{tree}{Integer tree number, unique within this example set.}
-\item{spcd}{Integer Forest Inventory and Analysis species code, unitless.}
-\item{species}{Character common species name, unitless.}
-\item{dbh}{Numeric diameter at breast height outside bark, inches.}
-\item{ht_observed}{Numeric retained synthetic total height above ground, feet. Missing values
-mark withheld heights.}
-\item{ht_simulated}{Numeric generated total height above ground, feet.}
-\item{age}{Integer assumed age in years.}
-\item{pruned}{Logical synthetic pruning indicator.}
-\item{region}{Integer Forest Service region code, unitless.}
-\item{forest}{Integer Forest Service forest code, unitless.}
-\item{district}{Integer Forest Service district code, unitless.}
-\item{longitude}{Numeric assumed longitude, decimal degrees east.}
-\item{latitude}{Numeric assumed latitude, decimal degrees north.}
-\item{expansion_factor}{Numeric example expansion factors in trees per acre.}
+\item{stand}{Stand identifier, text.}
+\item{plot}{Plot identifier, text.}
+\item{tree_id}{Tree identifier, unique within the example table.}
+\item{spcd}{Numeric inventory species code.}
+\item{dbh}{Diameter at breast height outside bark, inches.}
+\item{ht}{Total tree height above ground, feet.}
+\item{ht_status}{Height origin, measured or predicted.}
+\item{age}{Tree age, years.}
+\item{longitude}{Longitude, decimal degrees.}
+\item{latitude}{Latitude, decimal degrees.}
 }
-}
-\source{
-\code{data-raw/example-trees.R} contains the height coefficients and source references.
 }
 \usage{
-## Call signatures
 example_trees_pnw
 }
 \description{
-Synthetic tree measurements for \code{\link[=complete_heights]{complete_heights()}}, \code{\link[=biomass]{biomass()}}, and \code{\link[=merchandise]{merchandise()}}.
-\code{ht_observed} retains a subset of \code{ht_simulated} for height fitting.
-}
-\details{
-The generator is \code{data-raw/example-trees.R}. Locations, ages, pruning flags,
-and expansion factors are synthetic inputs.
-}
-\section{Status and missing values}{
-
-The data carry no calculation statuses. Missing heights in \code{ht_observed} are withheld from
-fitting. Missing stopping heights produce no corresponding restriction in
-\code{\link[=defects_from_stoppers]{defects_from_stoppers()}}.
-}
-
-\section{Using the supplied measurements}{
-
-The measurements use imperial units. \code{units = 'metric'} declares input units without converting
-these data.
-}
-
-\examples{
-## Load dplyr
-library(dplyr)
-
-## Inspect the shipped measurements
-example_trees_pnw \%>\%
-  select(tree, species, dbh, ht_observed) \%>\%
-  slice_head(n = 3)
-}
-\seealso{
-\link{example_trees} for a smaller complete inventory,
-\link{example_trees_south} for stopping-height examples,
-\code{\link[=fit_height]{fit_height()}} to estimate missing heights from measured trees.
+The trees are synthetic and illustrate package calculations.
 }
 \keyword{datasets}

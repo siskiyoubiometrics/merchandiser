@@ -9,7 +9,8 @@
 
 .mc_provider_aux <- function(call) {
   aux <- call$aux
-  if (!is.null(call$spcd)) aux <- c(list(spcd = call$spcd), aux)
+  if (!is.null(call$spcd))
+    aux <- c(list(spcd = call$spcd), aux)
   aux
 }
 
@@ -20,12 +21,13 @@
 .mc_first_bad_status <- function(status) {
   accepted <- status %in% c(0L, 52L, 102L)
   bad <- status[!accepted]
-  if (length(bad)) bad[[1L]] else 0L
+  if (length(bad))
+    bad[[1L]] else 0L
 }
 
 .mc_r_crossing_basis <- function(arguments, target, lower, upper, basis) {
   count <- length(target)
-  step <- if (identical(arguments$units, "imperial")) 1 / 192 else 0.0254 / 16
+  step <- 1 / 192
   intervals <- pmax(1L, as.integer(ceiling(pmax(upper - lower, 0) / step)))
   grid_count <- intervals + 1L
   request <- rep(seq_len(count), grid_count)
@@ -35,7 +37,7 @@
   starts <- c(1L, utils::head(ends, -1L) + 1L)
   height[ends] <- upper
   args <- arguments
-  for (name in setdiff(names(args), c("units", "status"))) {
+  for (name in setdiff(names(args), c("measurement_system", "status"))) {
     args[[name]] <- args[[name]][request]
   }
   args$h <- height
@@ -46,8 +48,10 @@
   }
   roots <- rep(list(numeric()), count)
   status <- integer(count)
-  bracket_request <- bracket_lower <- bracket_upper <- bracket_difference <-
-    vector("list", count)
+  bracket_request <- bracket_lower <- bracket_upper <- bracket_difference <- vector(
+    "list",
+    count
+  )
   for (i in seq_len(count)) {
     positions <- seq.int(starts[i], ends[i])
     current_status <- diameter$status[positions]
@@ -66,9 +70,7 @@
         exact_positions <- positions[run_start[run]:run_end[run]]
         roots[[i]] <- c(roots[[i]], height[exact_positions[1L]])
         if (length(exact_positions) > 1L) {
-          roots[[i]] <- c(
-            roots[[i]], height[utils::tail(exact_positions, 1L)]
-          )
+          roots[[i]] <- c(roots[[i]], height[utils::tail(exact_positions, 1L)])
         }
       }
     }
@@ -101,11 +103,12 @@
     active <- rep(TRUE, length(active_request))
     for (iteration in seq_len(200L)) {
       work <- which(active)
-      if (!length(work)) break
+      if (!length(work))
+        break
       midpoint <- (bracket_lower[work] + bracket_upper[work]) / 2
       mapped <- active_request[work]
       args <- arguments
-      for (name in setdiff(names(args), c("units", "status"))) {
+      for (name in setdiff(names(args), c("measurement_system", "status"))) {
         args[[name]] <- args[[name]][mapped]
       }
       args$h <- midpoint
@@ -134,7 +137,7 @@
           bracket_lower[nonexact[!left]] <- midpoint[!bad][!exact][!left]
           lower_difference[nonexact[!left]] <- nonexact_value[!left]
         }
-        converged <- bracket_upper[good] - bracket_lower[good] <= 1e-4
+        converged <- bracket_upper[good] - bracket_lower[good] <= 1e-04
         active[good[converged]] <- FALSE
       }
     }
@@ -142,10 +145,8 @@
     for (at in which(!active)) {
       request_at <- active_request[at]
       if (status[request_at] %in% c(0L, 52L)) {
-        roots[[request_at]] <- c(
-          roots[[request_at]],
-          (bracket_lower[at] + bracket_upper[at]) / 2
-        )
+        roots[[request_at]] <- c(roots[[request_at]], (bracket_lower[at] +
+                                                         bracket_upper[at]) / 2)
       }
     }
   }
@@ -157,7 +158,8 @@
 
 .mc_all_crossings <- function(session, call, tree, target, basis, lower, upper) {
   n <- length(tree)
-  if (!n) return(list())
+  if (!n)
+    return(list())
   result <- vector("list", n)
   compiled <- session$kernel_type[session$model_index[tree]] == 1L
   if (any(compiled)) {
@@ -166,14 +168,16 @@
     aux <- .mc_subset_aux(.mc_provider_aux(call), original)
     answer <- mc_provider_crossings(
       session$pointer, call$dbh[original], call$ht[original],
-      session$model_index[original], aux, target[rows],
-      ifelse(basis[rows] == "ob", 1L, 0L), lower[rows], upper[rows],
-      if (call$units == "imperial") 1L else 2L
+      session$model_index[original], aux, target[rows], ifelse(basis[rows] == "ob", 1L,
+        0L
+      ), lower[rows], upper[rows], if (call$measurement_system == "imperial")
+        1L else 2L
     )
     for (j in seq_along(rows)) {
       begin <- answer$offsets[j] + 1
       end <- answer$offsets[j + 1L]
-      roots <- if (end >= begin) answer$roots[begin:end] else numeric()
+      roots <- if (end >= begin)
+        answer$roots[begin:end] else numeric()
       result[[rows[j]]] <- structure(roots, status = answer$status[j])
     }
   }
@@ -181,13 +185,14 @@
     rows <- which(!compiled)
     original <- tree[rows]
     aux <- .mc_subset_aux(.mc_provider_aux(call), original)
-    arguments <- c(list(
-      dbh = call$dbh[original], ht = call$ht[original],
-      model = call$model[original], units = call$units, status = TRUE
-    ), aux)
+    arguments <- c(
+      list(dbh = call$dbh[original], ht = call$ht[original], model = call$model[original]),
+      aux
+    )
     for (current_basis in c("ib", "ob")) {
       selected_rows <- rows[basis[rows] == current_basis]
-      if (!length(selected_rows)) next
+      if (!length(selected_rows))
+        next
       selected <- match(selected_rows, rows)
       args <- arguments
       args$dbh <- args$dbh[selected]
@@ -212,23 +217,28 @@
 
 .mc_query_points <- function(session, call, tree, height) {
   n_query <- length(tree)
-  output <- data.frame(
-    tree = as.integer(tree), height = as.double(height), dib = rep(NA_real_, n_query),
-    dob = rep(NA_real_, n_query), cum_ib = rep(NA_real_, n_query),
-    cum_ob = rep(NA_real_, n_query), status = rep(0L, n_query)
-  )
-  if (!n_query) return(output)
+  output <- data.frame(tree = as.integer(tree), height = as.double(height), dib = rep(
+    NA_real_,
+    n_query
+  ), dob = rep(NA_real_, n_query), cum_ib = rep(NA_real_, n_query), cum_ob = rep(
+    NA_real_,
+    n_query
+  ), status = rep(0L, n_query))
+  if (!n_query)
+    return(output)
   behavior_needs_ob <- isTRUE(call$ob_required)
-  query_ob <- behavior_needs_ob |
-    session$has_dob[session$model_index[tree]] != 0L
+  query_ob <- behavior_needs_ob | session$has_dob[session$model_index[tree]] != 0L
   compiled <- session$kernel_type[session$model_index[tree]] == 1L
   for (need_ob in c(FALSE, TRUE)) {
     rows <- which(compiled & query_ob == need_ob)
-    if (!length(rows)) next
+    if (!length(rows))
+      next
     answer <- mc_provider_query(
       session$pointer, call$dbh, call$ht, session$model_index,
-      .mc_provider_aux(call), tree[rows], height[rows],
-      if (call$units == "imperial") 1L else 2L, need_ob, need_ob
+      .mc_provider_aux(
+        call
+      ), tree[rows], height[rows], if (call$measurement_system == "imperial")
+        1L else 2L, need_ob, need_ob
     )
     output$dib[rows] <- answer$dib
     output$dob[rows] <- answer$dob
@@ -242,7 +252,7 @@
     aux <- .mc_subset_aux(.mc_provider_aux(call), original)
     common <- c(list(
       dbh = call$dbh[original], ht = call$ht[original], h = height[rows],
-      model = call$model[original], units = call$units, status = TRUE
+      model = call$model[original]
     ), aux)
     inside <- do.call(dib, common)
     output$dib[rows] <- inside$value
@@ -252,17 +262,17 @@
       outside_original <- original[outside_rows]
       outside_common <- c(list(
         dbh = call$dbh[outside_original], ht = call$ht[outside_original],
-        h = height[rows[outside_rows]], model = call$model[outside_original],
-        units = call$units, status = TRUE
-      ), .mc_subset_aux(.mc_provider_aux(call), outside_original))
+        h = height[rows[outside_rows]], model = call$model[outside_original]
+      ), .mc_subset_aux(
+        .mc_provider_aux(call),
+        outside_original
+      ))
       outside <- do.call(dob, outside_common)
       output$dob[rows[outside_rows]] <- outside$value
-      output$status[rows[outside_rows]] <- vapply(
-        seq_along(outside_rows), function(j) {
-          i <- outside_rows[j]
-          .mc_first_bad_status(c(inside$status[i], outside$status[j]))
-        }, integer(1L)
-      )
+      output$status[rows[outside_rows]] <- vapply(seq_along(outside_rows), function(j) {
+        i <- outside_rows[j]
+        .mc_first_bad_status(c(inside$status[i], outside$status[j]))
+      }, integer(1L))
     }
     below_stump <- height[rows] < call$stump[original]
     output$status[rows[below_stump]] <- 0L
@@ -272,27 +282,26 @@
     if (any(positive)) {
       selected <- which(positive)
       volume_common <- c(list(
-        dbh = call$dbh[original[selected]], ht = call$ht[original[selected]],
-        model = call$model[original[selected]], lower = 0,
-        lower_type = "height", upper = height[rows[selected]],
-        upper_type = "height", units = call$units, status = TRUE
+        dbh = call$dbh[original[selected]],
+        ht = call$ht[original[selected]],
+        model = call$model[original[selected]],
+        from = 0,
+        to = height[rows[selected]]
       ), .mc_subset_aux(.mc_provider_aux(call), original[selected]))
-      ib <- do.call(stem_volume, c(volume_common, list(bark = "inside")))
+      ib <- do.call(stem_volume, c(volume_common, list(inside_bark = TRUE)))
       output$cum_ib[rows[selected]] <- ib$value
       ob_rows <- which(query_ob[rows[selected]])
       ob_status <- rep(0L, length(selected))
       if (length(ob_rows)) {
         ob_original <- original[selected[ob_rows]]
         ob_common <- c(list(
-          dbh = call$dbh[ob_original], ht = call$ht[ob_original],
-          model = call$model[ob_original], lower = 0,
-          lower_type = "height", upper = height[rows[selected[ob_rows]]],
-          upper_type = "height", units = call$units, status = TRUE
+          dbh = call$dbh[ob_original],
+          ht = call$ht[ob_original],
+          model = call$model[ob_original],
+          from = 0,
+          to = height[rows[selected[ob_rows]]]
         ), .mc_subset_aux(.mc_provider_aux(call), ob_original))
-        ob <- do.call(
-          stem_volume,
-          c(ob_common, list(bark = "outside"))
-        )
+        ob <- do.call(stem_volume, c(ob_common, list(inside_bark = FALSE)))
         output$cum_ob[rows[selected[ob_rows]]] <- ob$value
         ob_status[ob_rows] <- ob$status
       }
@@ -300,9 +309,11 @@
         at <- rows[selected[j]]
         current <- output$status[at]
         statuses <- ib$status[j]
-        if (query_ob[at]) statuses <- c(statuses, ob_status[j])
+        if (query_ob[at])
+          statuses <- c(statuses, ob_status[j])
         volume_status <- .mc_first_bad_status(statuses)
-        if (current == 0L && volume_status != 0L) output$status[at] <- volume_status
+        if (current == 0L && volume_status != 0L)
+          output$status[at] <- volume_status
       }
     }
   }

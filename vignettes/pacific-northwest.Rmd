@@ -1,0 +1,209 @@
+---
+title: 'Pacific Northwest tree list'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Pacific Northwest tree list}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 120)
+library(merchandiser)
+library(dplyr)
+```
+
+Product order in `products()` sets cutting priority. `merchandise()` produces product yield and residual sections from the complete Pacific Northwest tree list.
+
+## Products and defects
+
+The products reproduce `data-raw/example-products.R`. The trees and mapped defects are synthetic package examples.
+
+```{r}
+## Define export specifications
+export <- product(product = 'export',  ## product name, unitless
+                  spcd = c(202, 263),  ## species codes, unitless
+                  min_dbh = 12,  ## inches
+                  min_length = 32,  ## feet
+                  max_length = 40,  ## feet
+                  trim = 1,  ## feet
+                  min_sed = 12,  ## inches
+                  inside_bark = TRUE,  ## logical, unitless
+                  volume_unit = 'scribner',  ## board feet
+                  split_scale = FALSE)  ## logical, unitless
+
+## Define domestic saw specifications
+domestic_saw <- product(product = 'domestic_saw',  ## product name, unitless
+                        spcd = c(202, 263),  ## species codes, unitless
+                        min_dbh = 10,  ## inches
+                        min_length = 16,  ## feet
+                        max_length = 40,  ## feet
+                        trim = 1,  ## feet
+                        min_sed = 6,  ## inches
+                        inside_bark = TRUE,  ## logical, unitless
+                        volume_unit = 'scribner',  ## board feet
+                        split_scale = FALSE)  ## logical, unitless
+
+## Define pulp specifications
+pulp <- product(product = 'pulp',  ## product name, unitless
+                spcd = c(202, 263),  ## species codes, unitless
+                min_dbh = 5,  ## inches
+                min_length = 8,  ## feet
+                max_length = 40,  ## feet
+                trim = 0.5,  ## feet
+                min_sed = 3,  ## inches
+                inside_bark = TRUE,  ## logical, unitless
+                volume_unit = 'green_ton')  ## green short tons
+
+## Combine products in cutting priority order
+specifications <- products(export = export,
+                           domestic_saw = domestic_saw,
+                           pulp = pulp)
+
+## Retain the complete example list
+trees <- example_trees_pnw
+
+## Cut and scale the trees
+result <- merchandise(tree_id = trees$tree_id,
+                      dbh = trees$dbh,
+                      ht = trees$ht,
+                      spcd = trees$spcd,
+                      products = specifications,
+                      defects = example_defects_pnw,
+                      age = trees$age)
+
+## Join log rows to tree measurements
+logs <- result$logs %>%
+  left_join(y = trees,
+            by = c('tree_id' = 'tree_id'))
+```
+
+## Product yield
+
+Scale is summed across the listed trees. No expansion factors are supplied with this list.
+
+```{r, echo = FALSE}
+logs %>%
+  filter(volume_unit == 'scribner') %>%
+  group_by(product) %>%
+  summarize(`logs (count)` = n(), `scale (Scribner board feet)` = sum(scale)) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r, echo = FALSE}
+logs %>%
+  filter(volume_unit == 'green_ton') %>%
+  group_by(product) %>%
+  summarize(`logs (count)` = n(), `scale (green short tons)` = sum(scale)) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The stacked bars show which diameter classes contribute each product. Separate panels keep the scale units distinct.
+
+```{r, echo = FALSE, fig.width = 9, fig.height = 7}
+product_names <- specifications$product
+product_colors <- setNames(vapply(product_names, function(name) {
+  code <- utf8ToInt(enc2utf8(name))
+  grDevices::hcl(sum(code * seq_along(code)) %% 360, c = 65, l = 55)
+}, character(1)), product_names)
+yield <- logs %>%
+  mutate(diameter_class = floor(dbh / 4) * 4) %>%
+  group_by(product, volume_unit, diameter_class) %>%
+  summarize(scale = sum(scale), .groups = 'drop')
+yield %>%
+  filter(volume_unit == 'scribner') %>%
+  transmute(product, `diameter class lower bound (inches)` = diameter_class,
+            `scale (Scribner board feet)` = scale) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+yield %>%
+  filter(volume_unit == 'green_ton') %>%
+  transmute(product, `diameter class lower bound (inches)` = diameter_class,
+            `scale (green short tons)` = scale) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r, echo = FALSE, fig.width = 9, fig.height = 7}
+par(mfrow = c(2, 1), mar = c(4, 5, 1, 1))
+for (unit in c('scribner', 'green_ton')) {
+  z <- yield %>% filter(volume_unit == unit)
+  amounts <- xtabs(scale ~ product + diameter_class, data = z)
+  label <- if (unit == 'scribner') 'Scale (Scribner board feet)' else 'Scale (green short tons)'
+  barplot(amounts, col = product_colors[rownames(amounts)], border = NA,
+          xlab = 'Diameter class lower bound (inches)', ylab = label)
+  legend('topleft', legend = rownames(amounts), fill = product_colors[rownames(amounts)],
+         bty = 'n', cex = 0.8)
+}
+```
+
+## Selected stems
+
+<details>
+<summary>Drawing measurements</summary>
+
+```{r, echo = FALSE}
+drawing_trees <- trees %>%
+  filter(tree_id %in% c(7, 14, 28))
+drawing_rows <- match(drawing_trees$tree_id, result$call$tree_id)
+drawing_models <- result$call$model[drawing_rows]
+drawing_profiles <- stem_profile(
+  tree_id = drawing_trees$tree_id,
+  dbh = drawing_trees$dbh,
+  ht = drawing_trees$ht,
+  spcd = drawing_trees$spcd,
+  model = drawing_models,
+  step = 0.5,
+  from = 0
+)
+drawing_profiles %>%
+  transmute(tree_id, `height (feet)` = h, `radius inside bark (inches)` = dib / 2) %>%
+  knitr::kable(digits = 4, row.names = FALSE)
+result$residuals %>%
+  filter(tree_id %in% drawing_trees$tree_id) %>%
+  rename(`start_height (feet)` = start_height, `end_height (feet)` = end_height) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+result$logs %>%
+  filter(tree_id %in% drawing_trees$tree_id, volume_unit == 'scribner') %>%
+  transmute(tree_id, log, product,
+            `start height (feet)` = start_height, `end height (feet)` = end_height,
+            `length (feet)` = length, `small end diameter (inches)` = sed,
+            `scale (Scribner board feet)` = scale) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+result$logs %>%
+  filter(tree_id %in% drawing_trees$tree_id, volume_unit == 'green_ton') %>%
+  transmute(tree_id, log, product,
+            `start height (feet)` = start_height, `end height (feet)` = end_height,
+            `length (feet)` = length, `small end diameter (inches)` = sed,
+            `scale (green short tons)` = scale) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+example_defects_pnw %>%
+  filter(tree_id %in% drawing_trees$tree_id) %>%
+  rename(`start_height (feet)` = start_height, `end_height (feet)` = end_height,
+         `percent (percent)` = percent) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+</details>
+
+The stacked drawings locate products and mapped defects on selected trees from the run.
+
+```{r, echo = FALSE, fig.width = 10, fig.height = 9}
+par(mfrow = c(3, 1), mar = c(4, 4, 1, 1))
+plot(result, tree_id = c(7, 14, 28), ylab = 'Stem radius (inches)')
+```
+
+## Checks
+
+```{r, echo = FALSE}
+result$status %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r, echo = FALSE}
+result$residuals %>%
+  group_by(cause) %>%
+  summarize(`sections (count)` = n(), `total length (feet)` = sum(end_height - start_height)) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+[Completing heights](fill-missing-heights.html) reproduces the predicted heights already stored in this list.

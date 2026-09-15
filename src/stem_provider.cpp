@@ -186,7 +186,7 @@ std::shared_ptr<ModelInfo> copy_model(const Rcpp::List& model) {
   copied->has_dob = Rcpp::as<bool>(kernel["has_dob"]);
   copied->has_inverse = Rcpp::as<bool>(kernel["has_inverse"]);
   copied->has_integral = Rcpp::as<bool>(kernel["has_integral"]);
-  copied->units = Rcpp::as<std::string>(model["units"]) == "metric"
+  copied->units = Rcpp::as<std::string>(model["measurement_system"]) == "metric"
       ? api::units_metric : api::units_imperial;
   copied->stump_height = Rcpp::as<double>(model["stump_ht"]);
   copied->bark_ratio = Rcpp::as<double>(model["bark_ratio"]);
@@ -200,7 +200,7 @@ std::shared_ptr<ModelInfo> copy_model(const Rcpp::List& model) {
     }
   }
 
-  const Rcpp::IntegerVector species = model["species"];
+  const Rcpp::IntegerVector species = model["spcd"];
   copied->species.assign(species.begin(), species.end());
   const Rcpp::List inputs = model["inputs"];
   const Rcpp::CharacterVector required = inputs["required"];

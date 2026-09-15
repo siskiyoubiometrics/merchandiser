@@ -1,0 +1,76 @@
+---
+title: 'Scaling rules'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Scaling rules}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 120)
+library(merchandiser)
+library(dplyr)
+```
+
+Product scaling fields select the quantity and the measurements used to calculate it.
+The returned log columns retain the bark basis, scaling diameter, and scaling length.
+
+```{r}
+## Select example trees
+trees <- example_trees %>%
+  slice_head(n = 3)
+```
+
+## `volume_unit`
+
+Choices are `scribner`, `international`, `doyle`, `cubic`, `green_ton`, and `cord`.
+Board foot rules use inside bark diameters. Green ton scale includes wood and attached bark.
+
+## `inside_bark`
+
+This field selects the bark basis for diameter limits. Cubic and cord scales use that same basis.
+
+## `split_scale`
+
+This field selects shorter scaling sections for Scribner. It does not add physical cuts or affect other scale units.
+
+## `round`
+
+Choices are `default`, `down`, `nearest`, and `none`. They control diameter preprocessing before the rule's own rounding.
+`none` therefore does not disable rounding inside a source rule.
+
+## `length_round`
+
+Nominal length rounds down to this scaling increment. Source board foot rules accept whole or even feet.
+Cubic, green ton, and cord scales use the nominal body and report scaling length for the measurement record.
+
+```{r}
+## Define saw specifications
+saw <- product(product = 'domestic_saw',  ## product name, unitless
+               min_length = 31.5,  ## feet
+               max_length = 31.5,  ## feet
+               min_sed = 6,  ## inches
+               volume_unit = 'scribner',  ## Scribner board feet
+               inside_bark = TRUE,  ## logical, unitless
+               split_scale = TRUE,  ## logical, unitless
+               round = 'down',  ## rounding choice, unitless
+               length_round = 2)  ## feet
+
+## Cut and scale the trees
+result <- merchandise(tree_id = trees$tree_id,
+                      dbh = trees$dbh,
+                      ht = trees$ht,
+                      spcd = trees$spcd,
+                      products = saw)
+```
+
+```{r, echo = FALSE}
+result$logs %>%
+  transmute(tree_id, log, `length (feet)` = length,
+            `scaling_length (feet)` = scaling_length, `sed (inches)` = sed,
+            `scaling_diameter (inches)` = scaling_diameter, inside_bark,
+            `scale (Scribner board feet)` = scale) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```

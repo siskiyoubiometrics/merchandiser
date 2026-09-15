@@ -2,32 +2,25 @@
 output: github_document
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE,
-                      comment = '#>',
-                      message = FALSE,
-                      fig.path = 'man/figures/README-',
-                      fig.width = 7,
-                      fig.height = 4)
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.path = 'man/figures/README-', fig.width = 8, fig.height = 4.5, dpi = 120)
 library(merchandiser)
 library(dplyr)
 ```
 
 # merchandiser <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
-merchandiser calculates log dimensions, product volumes, and values from tree measurements, taper equations, product tables, and recorded defects.
-It also fits heights and taper, estimates biomass and carbon, converts volume to green weight, and compiles expanded inventory summaries.
-Results retain calculation statuses and assumptions.
+merchandiser turns tree measurements, product specifications, and located defects into logs, scale, and residual stem sections.
+It also fits heights and taper equations, measures stems, and estimates dry biomass and carbon.
 
 ## Install
 
-Install from the package repository with `remotes`.
-
 ```r
-## Load the installer
+## Install from the package repository
 library(remotes)
 
-## Install merchandiser from its source repository
+## Install the package
 install_github(repo = 'siskiyoubiometrics/merchandiser')
 ```
 
@@ -35,7 +28,7 @@ install_github(repo = 'siskiyoubiometrics/merchandiser')
 
 The shipped tree is a synthetic example. The four products below are three
 Scribner sawlogs and green-ton pulp, with illustrative prices in United States
-dollars (`USD`).
+dollars. Product order in `products()` sets cutting priority.
 
 ```{r}
 ## Load the packages
@@ -44,12 +37,12 @@ library(dplyr)
 
 ## Select the example tree
 tree <- example_trees %>%
-  filter(tree == 5)
+  filter(tree_id == 5)
 
 ## Define each product: lengths, small end limit, trim, unit, and price
 large <- product(product = 'Large sawlog',
-                 priority = 1,  ## 1 is offered the stem first
-                 lengths = 32,  ## feet
+                 min_length = 32,  ## feet
+                 max_length = 32,  ## feet
                  min_sed = 12,  ## inches, small end diameter
                  inside_bark = TRUE,  ## diameter limit is inside bark
                  trim = 0.5,  ## feet added to each log
@@ -58,8 +51,8 @@ large <- product(product = 'Large sawlog',
                  price_per = 1000)  ## per thousand board feet
 
 medium <- product(product = 'Medium sawlog',
-                  priority = 2,  ## 1 is offered the stem first
-                  lengths = 16,  ## feet
+                  min_length = 16,  ## feet
+                  max_length = 16,  ## feet
                   min_sed = 10,  ## inches, small end diameter
                   inside_bark = TRUE,  ## diameter limit is inside bark
                   trim = 0.5,  ## feet added to each log
@@ -68,8 +61,8 @@ medium <- product(product = 'Medium sawlog',
                   price_per = 1000)  ## per thousand board feet
 
 small <- product(product = 'Small sawlog',
-                 priority = 3,  ## 1 is offered the stem first
-                 lengths = 16,  ## feet
+                 min_length = 16,  ## feet
+                 max_length = 16,  ## feet
                  min_sed = 6,  ## inches, small end diameter
                  inside_bark = TRUE,  ## diameter limit is inside bark
                  trim = 0.5,  ## feet added to each log
@@ -78,43 +71,38 @@ small <- product(product = 'Small sawlog',
                  price_per = 1000)  ## per thousand board feet
 
 pulp <- product(product = 'Pulp',
-                priority = 4,  ## 1 is offered the stem first
                 min_length = 8,  ## feet
                 max_length = 20,  ## feet
-                length_step = 1,  ## feet
                 min_sed = 3,  ## inches, small end diameter
                 inside_bark = TRUE,  ## diameter limit is inside bark
                 trim = 0.5,  ## feet added to each log
                 volume_unit = 'green_ton',  ## green short tons
                 price = 30,  ## dollars
-                price_per = 1,  ## per ton
-                accepts_pulp_restriction = TRUE)  ## takes stem a cruiser called pulp only
+                price_per = 1)  ## per ton
 
-## Combine the products into one specification table
+## Combine the products in cutting priority order
 specifications <- products(large, medium, small, pulp)
 ```
 
 ```{r}
 ## Select logs from the tree
-result <- merchandise(dbh = tree$dbh,
+result <- merchandise(tree_id = tree$tree_id,
+                      dbh = tree$dbh,
                       ht = tree$ht,
-                      model = tree$model,
-                      species = tree$species,
-                      id = tree$tree,
+                      spcd = tree$spcd,
                       products = specifications,
-                      currency = 'USD',
-                      status = TRUE)
+                      model = tree$model)
 ```
 
 ```{r, echo = FALSE}
 result$logs %>%
   transmute(Log = log,
             Product = product,
-            `Length (ft)` = nominal_length,
-            `Small end inside bark (in)` = sed_ib,
-            `Net scale` = net_scale,
+            `Length (ft)` = length,
+            `Small end inside bark (in)` = sed,
+            Scale = scale,
             Unit = ifelse(volume_unit == 'scribner', 'board feet', 'green short tons'),
-            `Value (USD)` = net_value) %>%
+            `Value (USD)` = value) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
@@ -123,38 +111,33 @@ result$logs %>%
 plot(result)
 ```
 
-`net_scale` uses the unit shown in `scale_unit`. The result also contains tree totals, residual intervals, deductions, and values.
+`scale` uses the unit shown in `volume_unit`. The result also contains residual intervals, tree status, and assumptions.
 
 ## Biomass and carbon
 
-`biomass()` returns component masses and aboveground carbon from tree measurements.
+`biomass()` returns dry mass and carbon in metric tonnes from diameters in inches and heights in feet.
+The default uses national coefficients.
 
 ```{r}
 ## Select three example trees
-trees <- example_trees_pnw %>%
+trees <- example_trees %>%
   slice_head(n = 3)
 
-## Estimate dry biomass and carbon in pounds
+## Estimate dry biomass and carbon in metric tonnes
 mass <- biomass(dbh = trees$dbh,
-                ht = trees$ht_simulated,
-                spcd = trees$spcd,
-                division = 0,  ## national coefficients
-                id = trees$tree,
-                status = TRUE)
+                ht = trees$ht,
+                spcd = trees$spcd)
 ```
 
 ```{r, echo = FALSE}
 mass %>%
-  transmute(Tree = id,
-            `Stem wood (lb)` = dry_stem_wood,
-            `Stem bark (lb)` = dry_stem_bark,
-            `Branches (lb)` = dry_branches,
-            `Carbon (lb)` = carbon) %>%
-  knitr::kable(digits = 0, row.names = FALSE)
+  transmute(Tree = trees$tree_id,
+            `Stem wood (tonnes)` = dry_stem_wood,
+            `Stem bark (tonnes)` = dry_stem_bark,
+            `Branches (tonnes)` = dry_branches,
+            `Carbon (tonnes)` = carbon) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
 ```
-
-`biomass_component()` returns a selected component. `co2e()` returns metric tons of carbon dioxide equivalent.
-`green_weight()` converts supplied cubic volume using species wood and bark properties.
 
 ## Package site
 
@@ -163,10 +146,12 @@ mass %>%
 - [Recording defect](https://siskiyoubiometrics.github.io/merchandiser/articles/defect-recording-conventions.html).
 - [Fitting and completing heights](https://siskiyoubiometrics.github.io/merchandiser/articles/fill-missing-heights.html).
 - [Taper and stem profiles](https://siskiyoubiometrics.github.io/merchandiser/articles/taper-profiles.html).
-- [Volumes and scaling](https://siskiyoubiometrics.github.io/merchandiser/articles/volumes-scaling.html).
-- [Biomass, carbon, and green weight](https://siskiyoubiometrics.github.io/merchandiser/articles/biomass-carbon.html).
-- [Compiling an inventory](https://siskiyoubiometrics.github.io/merchandiser/articles/compiling-inventory.html).
-- [Bucking choices and prices](https://siskiyoubiometrics.github.io/merchandiser/articles/bucking-prices.html).
+- [Volumes and green weight](https://siskiyoubiometrics.github.io/merchandiser/articles/volumes-scaling.html).
+- [Scaling rules](https://siskiyoubiometrics.github.io/merchandiser/articles/scaling-rules.html).
+- [Biomass and carbon](https://siskiyoubiometrics.github.io/merchandiser/articles/biomass-carbon.html).
+- [Pacific Northwest tree list](https://siskiyoubiometrics.github.io/merchandiser/articles/pacific-northwest.html).
+- [Southern stands](https://siskiyoubiometrics.github.io/merchandiser/articles/southern.html).
+- [Optimal bucking](https://siskiyoubiometrics.github.io/merchandiser/articles/optimal-bucking.html).
 - [Assumptions and status](https://siskiyoubiometrics.github.io/merchandiser/articles/assumptions-status.html).
 - [Taper equation methods](https://siskiyoubiometrics.github.io/merchandiser/articles/methods-taper-equations.html).
 - [Fitting taper equations](https://siskiyoubiometrics.github.io/merchandiser/articles/methods-fitting-taper.html).

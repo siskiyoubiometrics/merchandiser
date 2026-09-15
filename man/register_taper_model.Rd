@@ -4,109 +4,30 @@
 \alias{register_taper_model}
 \title{Make a local taper equation available for this analysis}
 \usage{
-## Call signatures
-register_taper_model(model)
+register_taper_model(
+  x
+)
 }
 \arguments{
-\item{model}{Required \code{taper_model} list with the fields. No default. Missing and
-other objects are errors.}
+\item{x}{The taper specification supplies the equation to register. A taper_model object.
+Required, with no default.}
 }
 \value{
-The validated model, invisibly. Registration changes equation availability for
-this session.
+The validated taper_model object, invisibly, after registration.
 }
 \description{
-Register a local taper model for the current session. Package registrations are protected.
+Make a local taper equation available for this analysis
 }
-\details{
-A local name must begin with a letter, contain a dot, and use letters, digits,
-underscores, periods, or hyphens in the permitted parts. For example, \code{client.name} is
-valid. Existing names cannot be replaced.
-
-Save the model separately and register it
-again in a new session. Registration is prohibited during an active equation
-calculation.
-}
-\section{Status and missing values}{
-
-No tree status codes are returned. Invalid inputs stop the call. Repair
-the model or identifier before continuing.
-
-A successful check or lookup
-does not establish tree volume.
-}
-
-\section{Taper model fields}{
-
-A \code{taper_model} is a named list. Fields are supplied by the defining function,
-not columns of an inventory. \code{id} is its nonempty character equation name,
-\code{family} is its nonempty character equation family, and \code{units} is either
-\code{'imperial'} or \code{'metric'}.
-
-These labels are unitless. \code{species} is a
-vector of positive whole-number inventory species codes, with \code{integer()}
-meaning unrestricted. Missing codes are errors.
-
-\code{stump_ht} is one finite
-nonnegative height in the equation's feet or meters. \code{bark_ratio} is one
-numeric inside-bark to outside-bark diameter ratio greater than zero and
-at most one, or \code{NA} when no default is supplied.
-
-\code{dib}, \code{dob}, \code{height_at_dib}, and \code{volume} contain equation functions or \code{NULL} when that
-function is absent. For an equation written in R, \code{dib} is required.
-
-\code{inputs} is a list with character vectors \code{required} and \code{optional}, then a list \code{pairs}, in
-that order. For example, \code{list(required = character(), optional = 'bark_ratio', pairs = list())} declares an optional bark ratio. All declared input names must come from the
-equation inputs described on \code{\link[=dib]{dib()}}.
-
-Names cannot be duplicated. A pair is a character vector such as \code{c('upper_ht1', 'upper_d1')}.
-
-\code{source} and \code{notes} are single character strings, default \code{''} when made by
-\code{\link[=new_taper_model]{new_taper_model()}}. Empty text is allowed and missing text is an error. \code{data} holds
-equation coefficients or other fixed equation data.
-
-It cannot be an environment, function, or external pointer. \code{class_version} is the character
-representation version, currently \code{'0.3'}, and must match.
-
-The literal field \code{kernel} describes which equation functions are present. Its \code{type} is
-\code{'r'} or \code{'compiled'}, \code{key} identifies a built-in equation or is \code{NA} for an R function,
-and logical \code{has_dob}, \code{has_inverse}, and \code{has_integral} identify direct calculations. These
-flags are not missing.
-
-The logical \code{oracle_verified} attribute records source-test coverage: \code{TRUE} means checked
-against source-library test cases, \code{FALSE} means not exercised, and \code{NA} means that
-comparison does not apply. It does not rate prediction accuracy for a stand. There are no
-data-frame list columns.
-}
-
-\section{Equation function inputs and returns}{
-
-Diameter callbacks take \code{dbh}, \code{ht}, \code{h}, and \code{aux}, in that order. Height callbacks replace \code{h}
-with \code{dib}. Volume callbacks take \code{dbh}, \code{ht}, \code{lower}, \code{upper}, and \code{aux}.
-
-Measurements arrive as equal-length vectors in the equation's declared units. \code{aux} is a
-named list of declared extra input vectors. A function must return a double vector of the
-same length in diameter, height, or cubic units, respectively.
-
-Missing or invalid outputs fail evaluation. An optional integer \code{status} attribute can
-retain per-row diagnoses. The functions must not change global objects, options, or random
-state.
-}
-
 \examples{
-## Fit a model to the shipped stem measurements
-fit <- fit_taper(data = example_stem_measurements, form = 'max_burkhart', units = 'imperial')
+## Copy an example tree's model
+local_model <- get_taper_model(model = example_trees$model[1])
 
-## Register fitted coefficients for the session
-register_taper_model(model = as_taper_model(x = fit, id = 'example.registered'))
+## Name the local copy
+local_model$id <- 'example.register'
 
-## Check the session registration
-has_taper_model(id = 'example.registered')
+## Register the copy
+register_taper_model(x = local_model)
 
-## Remove the session registration
-unregister_taper_model(id = 'example.registered')
-}
-\seealso{
-\code{\link[=new_taper_model]{new_taper_model()}} to define an equation, \code{\link[=has_taper_model]{has_taper_model()}} to
-check availability, \code{\link[=dib]{dib()}} to calculate diameter.
+## Remove and report the local registration
+print(unregister_taper_model(model = local_model$id))
 }

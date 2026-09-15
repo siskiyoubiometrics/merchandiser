@@ -3,37 +3,22 @@
 \docType{data}
 \name{example_stem_measurements}
 \alias{example_stem_measurements}
-\title{Modeled upper-stem measurements for taper fitting}
+\title{Example stem measurements}
 \format{
-A data frame with these columns:
+A data frame with the following columns:
 \describe{
-\item{tree}{Integer tree number matching \link{example_trees}, repeated by measurement.}
-\item{species}{Character common species name.}
-\item{dbh}{Numeric outside-bark breast height diameter, inches.}
-\item{ht}{Numeric total height above ground, feet.}
-\item{h}{Numeric measurement height above ground, feet.}
-\item{dib}{Numeric modeled diameter inside bark at the measurement height, inches.}
+\item{tree_id}{Tree identifier, repeated for measurements on the same tree.}
+\item{spcd}{Numeric inventory species code.}
+\item{dbh}{Diameter at breast height outside bark, inches.}
+\item{ht}{Total tree height above ground, feet.}
+\item{h}{Measurement height above ground, feet.}
+\item{dib}{Diameter inside bark, inches.}
 }
 }
 \usage{
-## Call signatures
 example_stem_measurements
 }
 \description{
-Inside-bark diameters calculated from the complete synthetic example inventory.
-These are modeled measurements for demonstrating fitting, not field observations
-or independent validation data. The generator is \code{data-raw/example-trees.R}.
-}
-\examples{
-## Load dplyr
-library(dplyr)
-
-## Inspect the shipped measurements
-example_stem_measurements \%>\%
-  select(tree, dbh, ht, h, dib) \%>\%
-  slice_head(n = 3)
-}
-\seealso{
-\code{\link[=fit_taper]{fit_taper()}} for fitting and \link{example_trees} for the complete inventory.
+The trees are synthetic and illustrate package calculations.
 }
 \keyword{datasets}

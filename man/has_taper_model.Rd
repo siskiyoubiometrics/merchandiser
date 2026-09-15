@@ -4,38 +4,21 @@
 \alias{has_taper_model}
 \title{Check whether taper equations are available}
 \usage{
-## Call signatures
-has_taper_model(id)
+has_taper_model(
+  model
+)
 }
 \arguments{
-\item{id}{Required character vector of any length, including zero. Unitless, with no default.
-Omission or a noncharacter value is an error.
-
-Example: \code{example_trees$model}. Missing identifiers return \code{FALSE}.}
+\item{model}{The identifier names the taper model in the registry. Character vector of model
+identifiers. Required, with no default.}
 }
 \value{
-A logical vector in input order, without names added. \code{TRUE}
-indicates a supported equation can be found. All values are unitless.
+A logical vector, TRUE where a registered taper model is available.
 }
 \description{
-Return a logical vector indicating whether each equation identifier resolves.
+Check whether taper equations are available
 }
-\details{
-Some supported source identifiers are resolved when requested
-and need not occur in the list returned by \code{\link[=taper_models]{taper_models()}}.
-}
-\section{Status and missing values}{
-
-No codes or warnings are generated for unknown identifiers. \code{FALSE}
-means unavailable, not zero volume. Check the spelling or register a
-local equation before calculation.
-}
-
 \examples{
-## Check availability of the inventory equations
-has_taper_model(id = example_trees$model)
-}
-\seealso{
-\code{\link[=check_taper_models]{check_taper_models()}} to diagnose input problems,
-\code{\link[=get_taper_model]{get_taper_model()}} to inspect an available equation.
+## Check availability of the example trees' models.
+has_taper_model(model = example_trees$model)
 }

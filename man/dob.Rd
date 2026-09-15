@@ -2,168 +2,53 @@
 % Please edit documentation in R/stem-compute.R
 \name{dob}
 \alias{dob}
-\title{Calculate stem diameter outside bark at a height}
+\title{Diameter outside bark at a height}
 \usage{
-## Call signatures
-dob(dbh, ht, h, model, ..., units = 'imperial', status = FALSE)
+dob(
+  dbh,
+  ht,
+  h,
+  spcd,
+  model = NULL,
+  ...
+)
 }
 \arguments{
-\item{dbh}{Required positive finite numeric diameter at breast height
-outside bark, in inches for imperial units or centimeters for metric
-units. Length one repeats, otherwise supply one value per tree. Omission
-is an error.
+\item{dbh}{Diameter at breast height outside bark. Numeric vector,
+inches, greater than zero and at most 400. Required, with no default.}
 
-Missing or nonfinite values give \code{na_input} and a missing result. Example: \code{example_trees$dbh}.}
+\item{ht}{Total height above ground. Numeric vector, feet.
+Required, with no default.}
 
-\item{ht}{Required positive finite numeric total height above ground, in
-feet for imperial units or meters for metric units. Length one repeats,
-otherwise supply one value per tree. Omission is an error.
+\item{h}{The measurement height is the distance above the ground. Numeric vector, feet.
+Required, with no default. Heights must be greater than zero and at most 500 feet.}
 
-Missing or
-nonfinite values give \code{na_input}. Example: \code{example_trees$ht}.}
+\item{spcd}{Numeric inventory species code. Numeric
+vector, species codes. Required, with no default.}
 
-\item{h}{Required finite numeric height above ground, from zero through
-\code{ht}, inclusive. Feet in imperial units or meters in metric units. Length one repeats,
-otherwise it must match the tree inputs.
+\item{model}{Registered taper model identifier. Character vector of
+registered model identifiers. Default: \code{NULL}.
+model NULL selects the shipped default for the species, see \link{default_taper_models}.
+Species without a default return status 404.}
 
-Omission
-is an error. Missing or nonfinite values give \code{na_input}.}
-
-\item{model}{Required character vector or factor of equation identifiers,
-length one or one per tree. Unitless. Omission is an error, missing values
-give \code{na_input}, and unknown identifiers give \code{unknown_model}.
-
-Example:
-\code{example_trees$model}. No replacement equation is chosen here.}
-
-\item{...}{Uniquely named equation inputs listed in the corresponding section. Each has length
-one or one per tree.
-
-Omit optional inputs to use the selected equation's
-defaults. Unknown names, invalid types, and invalid finite values stop
-the call. Missing supplied inputs give \code{na_input}, and an omitted required
-input gives \code{missing_input}.}
-
-\item{units}{One character value, \code{'imperial'} (default) or \code{'metric'}. Omission selects inches,
-feet, and cubic feet. Metric selects centimeters,
-meters, and cubic meters.
-
-Missing and unknown values are errors. Example: \code{units = 'metric'}.}
-
-\item{status}{One nonmissing logical value, default \code{FALSE}. \code{TRUE} returns
-numeric \code{value} and integer \code{status} columns and suppresses row warnings. Both columns have
-one row per tree.
-
-The code is unitless. Invalid types
-or missing flags stop the call. Example: \code{status = TRUE}.}
+\item{...}{Additional named inputs supply measurements required by the selected model. Named
+vectors in inches for diameters and feet for heights, none by default.}
 }
 \value{
-Numeric diameter in inches or centimeters, one per input tree.
-With \code{status = TRUE}, a data frame has numeric \code{value} in those units
-and integer unitless \code{status}. Failed values are \code{NA}.
+A data frame with value (diameter outside bark, inches) and status (integer result
+code), one row per input row.
 }
 \description{
-Return outside-bark diameter at each supplied stem height. The model must provide outside-
-bark diameter or an applicable bark ratio.
+Diameter outside bark at a height
 }
-\details{
-The equation is evaluated without log-scaling rounding. For
-outside-bark diameter, a direct outside-bark equation takes precedence.
-Otherwise inside-bark diameter is divided by an available bark ratio,
-the constant ratio of inside-bark to outside-bark diameter.
-}
-\section{Equation inputs through dots}{
-
-Inputs are used only where declared by the selected equation. Numeric
-inputs accept integers and doubles. Each input has length one or the common
-number of trees, with units following the call. For a particular model,
-\code{get_taper_model(model)$inputs} lists required, optional, and paired inputs.
-
-\describe{
-\item{\code{bark_ratio}}{Numeric ratio of inside-bark to outside-bark diameter,
-strictly greater than zero and at most one. Unitless.
-Omission uses a model ratio where supplied.
-An explicit missing ratio gives \code{na_input}, not the default.}
-\item{\code{upper_ht1}, \code{upper_ht2}}{Positive finite numeric upper measurement
-heights above ground, in feet or meters.
-Omission supplies no measurement. A required missing height gives \code{missing_input}
-when omitted or \code{na_input} when supplied as missing.}
-\item{\code{upper_d1}, \code{upper_d2}}{Positive finite numeric diameters at the
-corresponding upper heights, in inches or centimeters.  Supply each diameter with its paired
-height where the model requires
-a pair. An incomplete pair gives \code{missing_input}.}
-\item{\code{upper_bark}}{Character \code{'ib'} or \code{'ob'} for the upper
-measurements, unitless. Example: \code{'ib'}. Omission uses the model
-convention, which is inside bark for Flewelling upper measurements.
-A missing supplied label gives \code{na_input}.}
-\item{\code{form_class}}{Positive numeric equation form class, unitless.
-Its definition follows the selected equation. Omission
-uses its default only when optional. Missing supplied values give \code{na_input}.}
-\item{\code{site_index}}{Positive numeric site-index height, in feet or meters.
-The equation determines species and reference age.
-Omission uses its defaults only when optional. Missing gives \code{na_input}.}
-\item{\code{basal_area}}{Positive numeric stand basal area, in square feet per
-acre or square meters per hectare.  Omission uses the
-model's defaults only when optional. Missing gives \code{na_input}.}
-\item{\code{decay_class}}{Whole-number class from 1 through 5, unitless.
-This is an equation input only where declared, with no
-universal default. Missing gives \code{na_input}. The separate biomass function
-also accepts zero for a live tree.}
-\item{\code{cull}}{Numeric percentage from zero through 100.
-Omission supplies no override. Missing gives \code{na_input} where declared.
-This does not create located defect records.}
-\item{\code{spcd}}{Positive whole-number Forest Inventory and Analysis tree
-inventory species code within R's integer range, unitless.
-Omission skips the species-scope check. Supplied codes can return \code{na_input}, \code{unknown_species},
-or \code{species_out_of_scope}.}
-}
-}
-
-\section{Status and missing values}{
-
-Structural errors stop the call. Row failures return missing values unless
-a retained-value case is explicitly identified below. \code{na_input} is silent
-with \code{status = FALSE}, while other nonzero codes produce warnings.
-\describe{
-\item{\code{ok}}{Calculation completed. The value is usable within the selected equation's scope.}
-\item{\code{na_input}}{A required value is missing or nonfinite. Supply the measurement
-before using this row.}
-\item{\code{dbh_nonpositive}}{Tree diameter is not positive. Correct the diameter and rerun.}
-\item{\code{ht_nonpositive}}{Total height is not positive. Correct the height and rerun.}
-\item{\code{h_out_of_range}}{A height is below ground or above total height. Check height
-units and bounds.}
-\item{\code{unknown_species}}{The supplied species code is invalid or unrecognized for this
-operation. Correct it.}
-\item{\code{unknown_model}}{No equation was found. Check the identifier or register the
-local equation.}
-\item{\code{missing_input}}{An equation requires an omitted input or complete measurement
-pair. Supply it and rerun.}
-\item{\code{species_out_of_scope}}{A value is retained for a species outside the declared
-scope. Review equation suitability before reporting.}
-\item{\code{capability_missing}}{The requested calculation is unavailable, often because
-outside-bark information is absent. Supply a supported bark ratio or choose another
-equation.}
-\item{\code{kernel_error}}{The equation calculation failed to
-evaluate. The result is missing. Check the
-tree and equation separately.}
-}
-Source equation errors retain their library diagnosis.
-
-Those values are unavailable. Check the selected equation and its inputs. Zero volume or
-diameter can be a modeled boundary value.
-
-These functions
-do not select logs, so a zero is not evidence of merchantable zero volume.
-}
-
 \examples{
-## Estimate diameters at the supplied height
-dob(dbh = example_trees$dbh,
-    ht = example_trees$ht,
-    h = 20,
-    model = example_trees$model)
-}
-\seealso{
-\code{\link[=height_at_dob]{height_at_dob()}} to find height from diameter, \code{\link[=stem_volume]{stem_volume()}}
-for volume between heights, \code{\link[=get_taper_model]{get_taper_model()}} for the equation inputs.
+## Load data verbs
+library(dplyr)
+
+## Measure diameter outside bark at breast height.
+dob(dbh = example_trees$dbh[1],
+    ht = example_trees$ht[1],
+    h = 4.5,
+    spcd = example_trees$spcd[1]) \%>\%
+  rename(`diameter outside bark (inches)` = value)
 }

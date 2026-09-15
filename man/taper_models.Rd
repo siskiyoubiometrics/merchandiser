@@ -2,80 +2,41 @@
 % Please edit documentation in R/stem-registry.R
 \name{taper_models}
 \alias{taper_models}
-\title{Find available taper equations by family or species}
+\title{Find available taper equations by form or species}
 \usage{
-## Call signatures
-taper_models(family = NULL, species = NULL)
+taper_models(
+  form = NULL,
+  spcd = NULL
+)
 }
 \arguments{
-\item{family}{Optional character vector of family names. Default \code{NULL}
-includes all families. Missing names are errors.
+\item{form}{Equation forms used by the taper models. Character vector. Default: \code{NULL}.}
 
-Unknown names match no
-family. Unitless. Example: \code{family = 'demo'}.}
-
-\item{species}{Optional numeric vector of positive whole-number inventory
-species codes within R's integer range. Default \code{NULL} includes all
-species. Missing or invalid codes are errors.
-
-Unitless.}
+\item{spcd}{The species codes limit the trees this model covers. Numeric vector of species
+codes. Default: \code{NULL}.}
 }
 \value{
-A data frame with one row per matching registered equation, sorted
-by \code{id}, and the columns. No matches return zero rows.
+A data frame describing registered models:
+\itemize{
+\item Identification: \code{id}, \code{form}, \code{kernel}, \code{spcd_scope}.
+\item Logical capabilities: \code{has_dob}, \code{has_inverse}, \code{has_integral}.
+\item Verification: \code{oracle_verified}, logical.
+\item Internal units: \code{measurement_system} and \code{stump_ht} in that system's height unit.
+\item Registration: \code{owner_package}, \code{source}, \code{generation} (revision number).
+}
 }
 \description{
-List registered taper models, optionally filtered by family or species.
+Find available taper equations by form or species
 }
-\details{
-Family and species filters are both applied.
-
-This list does not enumerate every supported source identifier that can be resolved on
-demand.
-}
-\section{Equation list fields}{
-
-All fields have one value per model and are supplied by the package. \code{id}, \code{family}, \code{kernel},
-\code{species_scope}, \code{units}, \code{owner_package}, and
-\code{source} are character. They give the equation name, family, R or compiled
-calculation, comma-separated species codes or \code{'unrestricted'}, declared
-units, registering package, and source text, respectively.
-
-Labels are
-unitless. An empty source means no citation was supplied.
-
-Logical \code{has_dob} says a direct outside-bark equation or default bark ratio is available.
-Logical \code{has_inverse} and \code{has_integral} indicate direct height and volume functions.
-\code{FALSE} for these does not rule out numerical search or integration.
-
-\code{oracle_verified} is logical: \code{TRUE} means checked against source-library test cases,
-\code{FALSE} means not exercised, and \code{NA} means that comparison does not apply. It does not rate
-forestry accuracy. \code{stump_ht} is numeric height in the model's feet or meters.
-
-Integer \code{generation} records the session registration sequence, not a model revision.
-Example equation \code{F00FW2W202} uses imperial units. There are no list columns.
-}
-
-\section{Status and missing values}{
-
-No tree calculation codes are returned. A zero-
-row result means no listed model matched the filters. It does not establish whether an
-unlisted source identifier is supported.
-
-Use \code{\link[=has_taper_model]{has_taper_model()}} to check that name.
-}
-
 \examples{
-## Load dplyr
+## Load data verbs
 library(dplyr)
 
-## Find equations for species in the shipped tree list
-taper_models(species = example_trees$spcd) \%>\%
-  select(id, family, has_dob, has_integral) \%>\%
-  slice_head(n = 3)
-}
-\seealso{
-\code{\link[=get_taper_model]{get_taper_model()}} to review inputs,
-\code{\link[=check_taper_models]{check_taper_models()}} to check a tree-to-equation assignment, \code{\link[=taper_manifest]{taper_manifest()}} to save a
-record.
+## List models covering an example species
+models <- taper_models(spcd = example_trees$spcd[1])
+
+## Show model identifiers and capabilities
+models \%>\%
+  select(id, form, has_dob, has_inverse, has_integral) \%>\%
+  head(n = 3)
 }

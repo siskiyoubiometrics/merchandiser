@@ -7,78 +7,100 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE,
-                      comment = '#>',
-                      message = FALSE,
-                      fig.width = 7,
-                      fig.height = 4)
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 120)
 library(merchandiser)
 library(dplyr)
 ```
 
-`fit_height()` fits height from diameter by species. A `group` vector adds supported group effects.
-`complete_heights()` retains finite heights and fills missing or nonfinite values.
-
-## Fit measured heights
+`fit_height()` fits height by species, with optional plot adjustments.
+`complete_heights()` fills missing heights for subsequent stem calculations.
 
 ```{r}
-## Select retained height measurements
-measured <- example_trees_pnw %>%
-  filter(!is.na(ht_observed))
-```
+## Blank heights whose shipped origin is predicted
+trees <- example_trees_pnw %>%
+  mutate(ht = if_else(condition = ht_status == 'predicted',
+                      true = NA_real_,
+                      false = ht))
 
-```{r}
-## Fit height by species with plot effects
+## Retain measured heights for fitting
+measured <- trees %>%
+  filter(ht_status == 'measured')
+
+## Fit height with plot adjustments
 fit <- fit_height(dbh = measured$dbh,
-                  ht = measured$ht_observed,
+                  ht = measured$ht,
                   spcd = measured$spcd,
                   group = measured$plot)
 ```
 
+<details>
+<summary>Measured heights and fitted curves</summary>
+
 ```{r, echo = FALSE}
-fit$fixed_effects %>%
+fit$data %>%
+  rename(`diameter (inches)` = dbh, `measured height (feet)` = ht) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+curves <- fit$data %>%
+  group_by(spcd) %>%
+  reframe(dbh = seq(min(dbh), max(dbh), length.out = 100)) %>%
+  mutate(height = predict_height(fit = fit, dbh = dbh, spcd = spcd,
+                                 re_form = 'population'))
+curves %>%
+  rename(`diameter (inches)` = dbh, `predicted height (feet)` = height) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-`pooled` identifies species using the pooled relationship. Species with too few measurements or unsuccessful separate fits use that relationship.
-Available forms are `chapman_richards`, `curtis`, `wykoff`, `naslund`, and `schumacher`.
+</details>
 
-```{r}
-## Draw measured heights and fitted curves
+The curves show population predictions against measured heights, separately by species.
+
+```{r, echo = FALSE, fig.width = 9}
+par(mfrow = c(1, 2), mar = c(4, 4, 1, 1))
 plot(fit)
 ```
 
-## Complete inventory heights
+Available forms are `chapman_richards`, `curtis`, `wykoff`, `naslund`, and `schumacher`.
+Species below `min_n`, or with unsuccessful separate fits, use the pooled relationship.
 
 ```{r}
-## Retain observed heights and fill the missing values
-trees <- example_trees_pnw %>%
+## Refill the blanked heights
+completed <- trees %>%
   mutate(ht = complete_heights(dbh = dbh,
-                               ht = ht_observed,
+                               ht = ht,
                                spcd = spcd,
                                group = plot,
                                fit = fit))
+
+## Compare refilled heights with the shipped values
+comparison <- completed %>%
+  mutate(shipped_ht = example_trees_pnw$ht,
+         difference = ht - shipped_ht) %>%
+  filter(ht_status == 'predicted')
 ```
 
 ```{r, echo = FALSE}
-trees %>%
-  filter(is.na(ht_observed)) %>%
-  select(tree, species, dbh, ht_observed, ht) %>%
-  slice_head(n = 5) %>%
+comparison %>%
+  slice_head(n = 6) %>%
+  transmute(tree_id = tree_id, `refilled height (feet)` = ht,
+            `shipped height (feet)` = shipped_ht, `difference (feet)` = difference) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-Pass a fitted object to reuse the same model across data groups.
-With `fit = NULL`, completion fits from the supplied observations.
+```{r}
+## Check agreement across every refilled height
+comparison %>%
+  summarize(maximum_difference_feet = max(abs(difference)))
+```
 
 ## Predict heights
 
-`predict_height()` predicts every supplied tree. `re_form = 'population'` omits fitted group effects.
-Groups absent from the fit use its population relationship. Species absent from the fit receive missing predictions.
+`predict_height()` predicts all supplied rows. Population predictions omit plot adjustments.
+Unseen groups use population predictions. Unseen species return missing heights.
 
 ```{r}
-## Predict heights for the complete shipped tree list
+## Predict heights and intervals for the small tree list
 predictions <- predict_height(fit = fit,
                               dbh = example_trees$dbh,
                               spcd = example_trees$spcd,
@@ -89,9 +111,8 @@ predictions <- predict_height(fit = fit,
 
 ```{r, echo = FALSE}
 predictions %>%
+  rename(`height (feet)` = fit, `lower (feet)` = lower, `upper (feet)` = upper) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-With `interval = TRUE`, the result contains `fit`, `lower`, and `upper`.
-Simulated limits include group variation and residual error with coefficients held fixed.
-They exclude coefficient uncertainty and inventory sampling uncertainty.
+Intervals include group variation and residual error with fixed coefficients. They exclude coefficient and inventory sampling uncertainty.

@@ -4,52 +4,35 @@
 \alias{with_threads}
 \title{Evaluate code with a temporary merchandiser thread count}
 \usage{
-## Call signatures
-with_threads(n, code)
+with_threads(
+  n,
+  code
+)
 }
 \arguments{
-\item{n}{Required positive whole-number worker count of length one.
-Missing is an error. Unitless.}
+\item{n}{The worker count controls how many threads may evaluate trees. Numeric scalar, number
+of threads, a whole number of at least one. Counts above the detected core count
+are clamped with a warning. Required, with no default.}
 
-\item{code}{Required R expression evaluated with \code{n} workers. Its return
-type, length, units, and missing values depend on the expression.
-Example: \code{sum(example_trees$dbh)}. Omission is an error.}
+\item{code}{The expression runs with the requested worker count and then restores the previous
+count. Unevaluated R expression. Required, with no default.}
 }
 \value{
-The value of \code{code}.
+The value of code, with the previous worker count restored afterward.
 }
 \description{
-Evaluate an expression with a temporary worker count and restore the previous count on exit.
+Evaluate code with a temporary merchandiser thread count
 }
-\section{Worker count and missing values}{
-
-The count is one positive whole number no greater than R's integer limit, unitless. Missing,
-infinite, fractional, or zero values are errors. Built-in calculations can use this many
-workers.
-
-Equations written in R run on the main R process. A worker count does not change product
-rules.
-}
-
-\section{Status and missing values}{
-
-These functions produce no tree status codes.
-Invalid counts stop the call.
-
-\code{with_threads()} restores the previous count even when the evaluated code fails. Missing
-values returned by that code are passed through unchanged.
-}
-
 \examples{
-## Evaluate inventory diameters with a temporary worker count
-with_threads(n = 1,
-             code = dib(dbh = example_trees$dbh,
-                        ht = example_trees$ht,
+## Load data verbs
+library(dplyr)
+
+## Measure an example stem with temporary workers
+with_threads(n = 4,
+             code = dib(dbh = example_trees$dbh[1],
+                        ht = example_trees$ht[1],
                         h = 20,
-                        model = example_trees$model))
-}
-\seealso{
-\code{\link[=threads]{threads()}} to inspect
-or set the session count, \code{\link[=with_threads]{with_threads()}} for a temporary count, \code{\link[=merchandise]{merchandise()}} for tree
-calculations.
+                        spcd = example_trees$spcd[1],
+                        model = example_trees$model[1])) \%>\%
+  rename(`diameter inside bark (inches)` = value)
 }

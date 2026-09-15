@@ -1,21 +1,18 @@
 
 # merchandiser <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
-merchandiser calculates log dimensions, product volumes, and values from
-tree measurements, taper equations, product tables, and recorded
-defects. It also fits heights and taper, estimates biomass and carbon,
-converts volume to green weight, and compiles expanded inventory
-summaries. Results retain calculation statuses and assumptions.
+merchandiser turns tree measurements, product specifications, and
+located defects into logs, scale, and residual stem sections. It also
+fits heights and taper equations, measures stems, and estimates dry
+biomass and carbon.
 
 ## Install
 
-Install from the package repository with `remotes`.
-
 ``` r
-## Load the installer
+## Install from the package repository
 library(remotes)
 
-## Install merchandiser from its source repository
+## Install the package
 install_github(repo = 'siskiyoubiometrics/merchandiser')
 ```
 
@@ -23,7 +20,8 @@ install_github(repo = 'siskiyoubiometrics/merchandiser')
 
 The shipped tree is a synthetic example. The four products below are
 three Scribner sawlogs and green-ton pulp, with illustrative prices in
-United States dollars (`USD`).
+United States dollars. Product order in `products()` sets cutting
+priority.
 
 ``` r
 ## Load the packages
@@ -32,12 +30,12 @@ library(dplyr)
 
 ## Select the example tree
 tree <- example_trees %>%
-  filter(tree == 5)
+  filter(tree_id == 5)
 
 ## Define each product: lengths, small end limit, trim, unit, and price
 large <- product(product = 'Large sawlog',
-                 priority = 1,  ## 1 is offered the stem first
-                 lengths = 32,  ## feet
+                 min_length = 32,  ## feet
+                 max_length = 32,  ## feet
                  min_sed = 12,  ## inches, small end diameter
                  inside_bark = TRUE,  ## diameter limit is inside bark
                  trim = 0.5,  ## feet added to each log
@@ -46,8 +44,8 @@ large <- product(product = 'Large sawlog',
                  price_per = 1000)  ## per thousand board feet
 
 medium <- product(product = 'Medium sawlog',
-                  priority = 2,  ## 1 is offered the stem first
-                  lengths = 16,  ## feet
+                  min_length = 16,  ## feet
+                  max_length = 16,  ## feet
                   min_sed = 10,  ## inches, small end diameter
                   inside_bark = TRUE,  ## diameter limit is inside bark
                   trim = 0.5,  ## feet added to each log
@@ -56,8 +54,8 @@ medium <- product(product = 'Medium sawlog',
                   price_per = 1000)  ## per thousand board feet
 
 small <- product(product = 'Small sawlog',
-                 priority = 3,  ## 1 is offered the stem first
-                 lengths = 16,  ## feet
+                 min_length = 16,  ## feet
+                 max_length = 16,  ## feet
                  min_sed = 6,  ## inches, small end diameter
                  inside_bark = TRUE,  ## diameter limit is inside bark
                  trim = 0.5,  ## feet added to each log
@@ -66,40 +64,35 @@ small <- product(product = 'Small sawlog',
                  price_per = 1000)  ## per thousand board feet
 
 pulp <- product(product = 'Pulp',
-                priority = 4,  ## 1 is offered the stem first
                 min_length = 8,  ## feet
                 max_length = 20,  ## feet
-                length_step = 1,  ## feet
                 min_sed = 3,  ## inches, small end diameter
                 inside_bark = TRUE,  ## diameter limit is inside bark
                 trim = 0.5,  ## feet added to each log
                 volume_unit = 'green_ton',  ## green short tons
                 price = 30,  ## dollars
-                price_per = 1,  ## per ton
-                accepts_pulp_restriction = TRUE)  ## takes stem a cruiser called pulp only
+                price_per = 1)  ## per ton
 
-## Combine the products into one specification table
+## Combine the products in cutting priority order
 specifications <- products(large, medium, small, pulp)
 ```
 
 ``` r
 ## Select logs from the tree
-result <- merchandise(dbh = tree$dbh,
+result <- merchandise(tree_id = tree$tree_id,
+                      dbh = tree$dbh,
                       ht = tree$ht,
-                      model = tree$model,
-                      species = tree$species,
-                      id = tree$tree,
+                      spcd = tree$spcd,
                       products = specifications,
-                      currency = 'USD',
-                      status = TRUE)
+                      model = tree$model)
 ```
 
-| Log | Product       | Length (ft) | Small end inside bark (in) | Net scale | Unit             | Value (USD) |
-|----:|:--------------|------------:|---------------------------:|----------:|:-----------------|------------:|
-|   1 | Large sawlog  |          32 |                     14.017 |   230.000 | board feet       |     207.000 |
-|   2 | Medium sawlog |          16 |                     11.643 |    80.000 | board feet       |      56.000 |
-|   3 | Small sawlog  |          16 |                      8.413 |    40.000 | board feet       |      20.000 |
-|   4 | Pulp          |          20 |                      3.341 |     0.098 | green short tons |       2.951 |
+| Log | Product       | Length (ft) | Small end inside bark (in) |   Scale | Unit             | Value (USD) |
+|----:|:--------------|------------:|---------------------------:|--------:|:-----------------|------------:|
+|   1 | Large sawlog  |          32 |                     14.017 | 230.000 | board feet       |     207.000 |
+|   2 | Medium sawlog |          16 |                     11.643 |  80.000 | board feet       |      56.000 |
+|   3 | Small sawlog  |          16 |                      8.413 |  40.000 | board feet       |      20.000 |
+|   4 | Pulp          |          20 |                      3.341 |   0.098 | green short tons |       2.951 |
 
 ``` r
 ## Draw the selected logs
@@ -108,37 +101,30 @@ plot(result)
 
 ![](man/figures/README-unnamed-chunk-4-1.png)<!-- -->
 
-`net_scale` uses the unit shown in `scale_unit`. The result also
-contains tree totals, residual intervals, deductions, and values.
+`scale` uses the unit shown in `volume_unit`. The result also contains
+residual intervals, tree status, and assumptions.
 
 ## Biomass and carbon
 
-`biomass()` returns component masses and aboveground carbon from tree
-measurements.
+`biomass()` returns dry mass and carbon in metric tonnes from diameters
+in inches and heights in feet. The default uses national coefficients.
 
 ``` r
 ## Select three example trees
-trees <- example_trees_pnw %>%
+trees <- example_trees %>%
   slice_head(n = 3)
 
-## Estimate dry biomass and carbon in pounds
+## Estimate dry biomass and carbon in metric tonnes
 mass <- biomass(dbh = trees$dbh,
-                ht = trees$ht_simulated,
-                spcd = trees$spcd,
-                division = 0,  ## national coefficients
-                id = trees$tree,
-                status = TRUE)
+                ht = trees$ht,
+                spcd = trees$spcd)
 ```
 
-| Tree | Stem wood (lb) | Stem bark (lb) | Branches (lb) | Carbon (lb) |
-|-----:|---------------:|---------------:|--------------:|------------:|
-|    1 |           4768 |            726 |           459 |        3072 |
-|    2 |            486 |             84 |            94 |         343 |
-|    3 |            679 |            116 |           130 |         477 |
-
-`biomass_component()` returns a selected component. `co2e()` returns
-metric tons of carbon dioxide equivalent. `green_weight()` converts
-supplied cubic volume using species wood and bark properties.
+| Tree | Stem wood (tonnes) | Stem bark (tonnes) | Branches (tonnes) | Carbon (tonnes) |
+|-----:|-------------------:|-------------------:|------------------:|----------------:|
+|    1 |              0.224 |              0.039 |             0.063 |           0.168 |
+|    2 |              0.318 |              0.042 |             0.094 |           0.230 |
+|    3 |              0.520 |              0.087 |             0.105 |           0.367 |
 
 ## Package site
 
@@ -152,14 +138,18 @@ supplied cubic volume using species wood and bark properties.
   heights](https://siskiyoubiometrics.github.io/merchandiser/articles/fill-missing-heights.html).
 - [Taper and stem
   profiles](https://siskiyoubiometrics.github.io/merchandiser/articles/taper-profiles.html).
-- [Volumes and
-  scaling](https://siskiyoubiometrics.github.io/merchandiser/articles/volumes-scaling.html).
-- [Biomass, carbon, and green
-  weight](https://siskiyoubiometrics.github.io/merchandiser/articles/biomass-carbon.html).
-- [Compiling an
-  inventory](https://siskiyoubiometrics.github.io/merchandiser/articles/compiling-inventory.html).
-- [Bucking choices and
-  prices](https://siskiyoubiometrics.github.io/merchandiser/articles/bucking-prices.html).
+- [Volumes and green
+  weight](https://siskiyoubiometrics.github.io/merchandiser/articles/volumes-scaling.html).
+- [Scaling
+  rules](https://siskiyoubiometrics.github.io/merchandiser/articles/scaling-rules.html).
+- [Biomass and
+  carbon](https://siskiyoubiometrics.github.io/merchandiser/articles/biomass-carbon.html).
+- [Pacific Northwest tree
+  list](https://siskiyoubiometrics.github.io/merchandiser/articles/pacific-northwest.html).
+- [Southern
+  stands](https://siskiyoubiometrics.github.io/merchandiser/articles/southern.html).
+- [Optimal
+  bucking](https://siskiyoubiometrics.github.io/merchandiser/articles/optimal-bucking.html).
 - [Assumptions and
   status](https://siskiyoubiometrics.github.io/merchandiser/articles/assumptions-status.html).
 - [Taper equation

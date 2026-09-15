@@ -1,85 +1,85 @@
 .tv_cpp_kernel_eval_impl <- tv_cpp_kernel_eval_impl
 .tv_cpp_duplicate_map_impl <- tv_cpp_duplicate_map_impl
 
-tv_cpp_kernel_eval <- function(kernel_name, operation, dbh, ht, x1, x2,
-                               bark_ratio, threads, upper_ht1 = NULL,
-                               upper_d1 = NULL, upper_ht2 = NULL,
-                               upper_d2 = NULL, upper_bark = NULL,
-                               site_index = NULL, basal_area = NULL,
-                               form_class = NULL, coefficients = numeric()) {
+tv_cpp_kernel_eval <- function(
+  kernel_name, operation, dbh, ht, x1, x2, bark_ratio, threads,
+  upper_ht1 = NULL, upper_d1 = NULL, upper_ht2 = NULL, upper_d2 = NULL, upper_bark = NULL,
+  site_index = NULL, basal_area = NULL, form_class = NULL, coefficients = numeric()
+) {
   size <- length(dbh)
   numeric_default <- function(value) {
-    if (is.null(value)) rep(NA_real_, size) else value
+    if (is.null(value))
+      rep(NA_real_, size) else value
   }
   if (is.null(upper_bark)) {
     upper_bark <- integer(size)
   }
   result <- .tv_cpp_kernel_eval_impl(
-    kernel_name, operation, dbh, ht, x1, x2, bark_ratio,
-    numeric_default(upper_ht1), numeric_default(upper_d1),
-    numeric_default(upper_ht2), numeric_default(upper_d2),
-    upper_bark, numeric_default(site_index), numeric_default(basal_area),
-    numeric_default(form_class), coefficients,
-    identical(.treevolume_compat(), "nvel"), threads
+    kernel_name, operation, dbh, ht, x1, x2,
+    bark_ratio, numeric_default(upper_ht1),
+    numeric_default(upper_d1), numeric_default(upper_ht2), numeric_default(
+      upper_d2
+    ), upper_bark,
+    numeric_default(site_index), numeric_default(basal_area), numeric_default(form_class),
+    coefficients, identical(.treevolume_compat(), "nvel"), threads
   )
-  structured <- startsWith(kernel_name, "flewelling:") |
-    startsWith(kernel_name, "clark:") |
-    startsWith(kernel_name, "r10:") |
-    startsWith(kernel_name, "r4mat:") |
-    startsWith(kernel_name, "smalltapers:") |
-    startsWith(kernel_name, "nsvb:") |
-    startsWith(kernel_name, "published:") |
+  structured <- startsWith(kernel_name, "flewelling:") | startsWith(kernel_name, "clark:") |
+    startsWith(kernel_name, "r10:") | startsWith(kernel_name, "r4mat:") |
+    startsWith(
+      kernel_name,
+      "smalltapers:"
+    ) | startsWith(kernel_name, "nsvb:") | startsWith(
+    kernel_name,
+    "published:"
+  ) |
     operation %in% c(6L, 7L, 8L)
-  if (structured) result else result$value
+  if (structured)
+    result else result$value
 }
 
 .callback_result <- function(callback, arguments, size) {
   condition_message <- NULL
-  value <- tryCatch(
-    withCallingHandlers(
-      do.call(callback, arguments),
-      condition = function(condition) {
-        stop(conditionMessage(condition), call. = FALSE)
-      }
-    ),
-    error = function(error) {
-      condition_message <<- conditionMessage(error)
-      NULL
+  value <- tryCatch(withCallingHandlers(do.call(callback, arguments),
+    condition = function(condition) {
+      stop(conditionMessage(condition), call. = FALSE)
     }
-  )
+  ), error = function(error) {
+    condition_message <<- conditionMessage(error)
+    NULL
+  })
   if (!is.null(condition_message)) {
-    return(list(
-      value = rep(NA_real_, size),
-      status = rep(54L, size),
-      details = rep(condition_message, size)
-    ))
+    return(list(value = rep(NA_real_, size), status = rep(54L, size), details = rep(
+      condition_message,
+      size
+    )))
   }
   supplied_status <- attr(value, "status", exact = TRUE)
   if (!is.double(value) || length(value) != size) {
-    return(list(
-      value = rep(NA_real_, size),
-      status = rep(54L, size),
-      details = rep("kernel returned the wrong type or length", size)
-    ))
+    return(list(value = rep(NA_real_, size), status = rep(54L, size), details = rep(
+      "kernel returned the wrong type or length",
+      size
+    )))
   }
   if (is.null(supplied_status)) {
     supplied_status <- integer(size)
   }
   valid_status <- is.numeric(supplied_status) && length(supplied_status) == size &&
-    all(is.finite(supplied_status)) && all(supplied_status <= .Machine$integer.max) &&
-    all(supplied_status == floor(supplied_status)) &&
+    all(is.finite(supplied_status)) &&
+    all(supplied_status <= .Machine$integer.max) && all(supplied_status == floor(
+    supplied_status
+  )) &&
     all(supplied_status %in% .tv_status_table$code | supplied_status > 300L)
   if (!valid_status) {
-    return(list(
-      value = rep(NA_real_, size),
-      status = rep(54L, size),
-      details = rep("kernel returned an invalid status attribute", size)
-    ))
+    return(list(value = rep(NA_real_, size), status = rep(54L, size), details = rep(
+      "kernel returned an invalid status attribute",
+      size
+    )))
   }
   supplied_status <- as.integer(supplied_status)
   supplied_status[!is.finite(value) & supplied_status == 0L] <- 54L
   details <- rep(NA_character_, size)
-  details[!is.finite(value) & supplied_status == 54L] <- "kernel returned a non-finite value"
+  details[!is.finite(value) & supplied_status == 54L] <-
+    "kernel returned a non-finite value"
   value[!is.finite(value)] <- NA_real_
   value[!supplied_status %in% c(0L, 52L, 102L)] <- NA_real_
   list(value = value, status = supplied_status, details = details)
@@ -92,8 +92,10 @@ tv_cpp_kernel_eval <- function(kernel_name, operation, dbh, ht, x1, x2,
   as.double(aux[[name]])
 }
 
-.compiled_result <- function(model, operation, dbh, ht, x1, x2, bark_ratio,
-                             aux = list(), rows = seq_along(dbh)) {
+.compiled_result <- function(
+  model, operation, dbh, ht, x1, x2, bark_ratio,
+  aux = list(), rows = seq_along(dbh)
+) {
   size <- length(dbh)
   native_aux <- .subset_aux(aux, rows, model)
   flewelling <- startsWith(model$kernel$key, "flewelling:")
@@ -109,14 +111,24 @@ tv_cpp_kernel_eval <- function(kernel_name, operation, dbh, ht, x1, x2,
   }
   inputs <- list(
     dbh = dbh, ht = ht, x1 = x1, x2 = x2, bark_ratio = native_bark,
-    upper_ht1 = .compiled_auxiliary(native_aux, "upper_ht1", size),
-    upper_d1 = .compiled_auxiliary(native_aux, "upper_d1", size),
-    upper_ht2 = .compiled_auxiliary(native_aux, "upper_ht2", size),
-    upper_d2 = .compiled_auxiliary(native_aux, "upper_d2", size),
-    upper_bark = as.integer(upper_bark),
+    upper_ht1 = .compiled_auxiliary(
+      native_aux,
+      "upper_ht1", size
+    ), upper_d1 = .compiled_auxiliary(
+      native_aux, "upper_d1",
+      size
+    ), upper_ht2 = .compiled_auxiliary(
+      native_aux,
+      "upper_ht2", size
+    ), upper_d2 = .compiled_auxiliary(
+      native_aux, "upper_d2",
+      size
+    ), upper_bark = as.integer(upper_bark),
     site_index = .compiled_auxiliary(native_aux, "site_index", size),
-    basal_area = .compiled_auxiliary(native_aux, "basal_area", size),
-    form_class = .compiled_auxiliary(native_aux, "form_class", size)
+    basal_area = .compiled_auxiliary(
+      native_aux,
+      "basal_area", size
+    ), form_class = .compiled_auxiliary(native_aux, "form_class", size)
   )
   duplicate_map <- do.call(.tv_cpp_duplicate_map_impl, inputs)
   evaluate_inputs <- inputs
@@ -124,9 +136,11 @@ tv_cpp_kernel_eval <- function(kernel_name, operation, dbh, ht, x1, x2,
     evaluate_inputs <- lapply(inputs, `[`, duplicate_map$unique)
   }
   evaluated <- do.call(tv_cpp_kernel_eval, c(
-    list(kernel_name = model$kernel$key, operation = operation),
-    evaluate_inputs,
-    list(threads = threads(), coefficients = as.double(model$data))
+    list(
+      kernel_name = model$kernel$key,
+      operation = operation
+    ),
+    evaluate_inputs, list(threads = threads(), coefficients = as.double(model$data))
   ))
   if (is.numeric(evaluated)) {
     evaluated <- list(value = evaluated, status = integer(length(evaluated)))
@@ -139,11 +153,10 @@ tv_cpp_kernel_eval <- function(kernel_name, operation, dbh, ht, x1, x2,
   status <- evaluated$status
   status[!is.finite(value) & status == 0L] <- 54L
   value[!is.finite(value)] <- NA_real_
-  list(
-    value = value,
-    status = status,
-    details = ifelse(status == 54L, "compiled kernel returned a non-finite value", NA_character_)
-  )
+  list(value = value, status = status, details = ifelse(status == 54L,
+    "compiled kernel returned a non-finite value",
+    NA_character_
+  ))
 }
 
 .model_bark_ratio <- function(model, aux, rows, require = FALSE) {
@@ -163,12 +176,10 @@ tv_cpp_kernel_eval <- function(kernel_name, operation, dbh, ht, x1, x2,
 .merge_kernel_result <- function(status, details, rows, result) {
   current <- status[rows]
   returned <- result$status
-  model_before_numeric <- current >= 100L & current < 150L &
-    returned >= 50L & returned < 100L & returned != 52L
-  replace <- returned != 0L & (
-    current == 0L | model_before_numeric |
-      current == 52L
-  )
+  model_before_numeric <- current >= 100L & current < 150L & returned >= 50L &
+    returned < 100L &
+    returned != 52L
+  replace <- returned != 0L & (current == 0L | model_before_numeric | current == 52L)
   current[replace] <- returned[replace]
   status[rows] <- current
   has_detail <- replace & !is.na(result$details)
@@ -178,24 +189,27 @@ tv_cpp_kernel_eval <- function(kernel_name, operation, dbh, ht, x1, x2,
 
 .evaluate_profile_native <- function(model, basis, dbh, ht, h, aux, rows) {
   direct_dob <- identical(basis, "dob") && isTRUE(model$kernel$has_dob)
-  callback_name <- if (direct_dob) "dob" else "dib"
+  callback_name <- if (direct_dob)
+    "dob" else "dib"
   if (identical(model$kernel$type, "compiled")) {
-    bark <- .model_bark_ratio(
-      model, aux, rows, require = identical(basis, "dob") && !direct_dob
-    )
-    operation <- if (identical(basis, "dob")) 4L else 1L
+    bark <- .model_bark_ratio(model, aux, rows, require = identical(basis, "dob") &&
+                                !direct_dob)
+    operation <- if (identical(basis, "dob"))
+      4L else 1L
     result <- .compiled_result(
-      model, operation, dbh, ht, h, rep(0, length(h)), bark$value, aux, rows
+      model, operation, dbh, ht, h, rep(0, length(h)), bark$value,
+      aux, rows
     )
   } else {
-    result <- .callback_result(
-      model[[callback_name]],
-      list(dbh = dbh, ht = ht, h = h, aux = .subset_aux(aux, rows, model)),
-      length(h)
-    )
+    result <- .callback_result(model[[callback_name]], list(
+      dbh = dbh, ht = ht,
+      h = h, aux = .subset_aux(
+        aux,
+        rows, model
+      )
+    ), length(h))
   }
-  if (identical(basis, "dob") && !direct_dob &&
-        !identical(model$kernel$type, "compiled")) {
+  if (identical(basis, "dob") && !direct_dob && !identical(model$kernel$type, "compiled")) {
     bark <- .model_bark_ratio(model, aux, rows, require = TRUE)
     missing <- bark$invalid
     result$value[!missing] <- result$value[!missing] / bark$value[!missing]
@@ -207,376 +221,174 @@ tv_cpp_kernel_eval <- function(kernel_name, operation, dbh, ht, x1, x2,
 }
 
 .prepare_profile_call <- function(dbh, ht, h, model, aux) {
-  prepared <- .prepare_vectors(
-    list(dbh = dbh, ht = ht, h = h, model = model),
-    numeric_names = c("dbh", "ht", "h"),
-    character_names = "model",
-    aux = aux
+  prepared <- .prepare_vectors(list(dbh = dbh, ht = ht, h = h, model = model),
+    numeric_names = c(
+      "dbh",
+      "ht", "h"
+    ), character_names = "model", aux = aux
   )
   values <- prepared$values
-  status <- .input_status(
-    prepared$size, values, c("dbh", "ht", "h", "model")
-  )
-  status <- .assign_status(status, values$dbh <= 0, 2L)
-  status <- .assign_status(status, values$ht <= 0, 3L)
-  status <- .assign_status(
-    status, values$h < 0 | values$h > values$ht, 4L
-  )
+  status <- .input_status(prepared$size, values, c("dbh", "ht", "h", "model"))
+  status <- .assign_status(status, values$dbh <= 0 | values$dbh > 400, 2L)
+  status <- .assign_status(status, values$ht <= 0 | values$ht > 500, 3L)
+  status <- .assign_status(status, values$h < 0 | values$h > values$ht, 4L)
   resolved <- .resolve_models(values$model, prepared$aux, status)
   c(prepared, list(resolved = resolved))
 }
 
-.diameter_impl <- function(dbh, ht, h, model, aux, units, status, basis,
-                           function_name) {
-  units <- .validate_units(units)
-  status_requested <- .validate_status(status)
-  generation <- .registry_enter()
-  on.exit(.registry_exit(generation), add = TRUE)
-  call <- .prepare_profile_call(dbh, ht, h, model, aux)
-  call$aux <- .set_aux_caller_units(call$aux, units)
-  output <- rep(NA_real_, call$size)
-  result_status <- call$resolved$status
-  details <- call$resolved$details
-  for (group_index in seq_along(call$resolved$dictionary)) {
-    model_object <- call$resolved$models[[group_index]]
-    if (is.null(model_object)) {
-      next
+.diameter_impl <-
+  function(dbh, ht, h, model, aux, measurement_system, status, basis, function_name) {
+    measurement_system <- .validate_units(measurement_system)
+    status_requested <- .validate_status(status)
+    generation <- .registry_enter()
+    on.exit(.registry_exit(generation), add = TRUE)
+    call <- .prepare_profile_call(dbh, ht, h, model, aux)
+    call$aux <- .set_aux_caller_units(call$aux, measurement_system)
+    output <- rep(NA_real_, call$size)
+    result_status <- call$resolved$status
+    details <- call$resolved$details
+    for (group_index in seq_along(call$resolved$dictionary)) {
+      model_object <- call$resolved$models[[group_index]]
+      if (is.null(model_object)) {
+        next
+      }
+      group_rows <- call$resolved$groups[[as.character(group_index)]]
+      rows <- group_rows[result_status[group_rows] %in% c(0L, 52L)]
+      if (!length(rows)) {
+        next
+      }
+      native_dbh <-
+        .diameter_to_native(
+          call$values$dbh[rows], measurement_system, model_object$measurement_system
+        )
+      native_ht <-
+        .height_to_native(
+          call$values$ht[rows], measurement_system, model_object$measurement_system
+        )
+      native_h <-
+        .height_to_native(
+          call$values$h[rows], measurement_system, model_object$measurement_system
+        )
+      evaluated <- .evaluate_profile_native(
+        model_object, basis, native_dbh,
+        native_ht, native_h,
+        call$aux, rows
+      )
+      merged <- .merge_kernel_result(result_status, details, rows, evaluated)
+      result_status <- merged$status
+      details <- merged$details
+      output[
+        rows
+      ] <-
+        .diameter_from_native(
+          evaluated$value, measurement_system, model_object$measurement_system
+        )
     }
-    group_rows <- call$resolved$groups[[as.character(group_index)]]
-    rows <- group_rows[result_status[group_rows] %in% c(0L, 52L)]
-    if (!length(rows)) {
-      next
-    }
-    native_dbh <- .diameter_to_native(call$values$dbh[rows], units, model_object$units)
-    native_ht <- .height_to_native(call$values$ht[rows], units, model_object$units)
-    native_h <- .height_to_native(call$values$h[rows], units, model_object$units)
-    evaluated <- .evaluate_profile_native(
-      model_object, basis, native_dbh, native_ht, native_h, call$aux, rows
-    )
-    merged <- .merge_kernel_result(result_status, details, rows, evaluated)
-    result_status <- merged$status
-    details <- merged$details
-    output[rows] <- .diameter_from_native(
-      evaluated$value, units, model_object$units
-    )
+    output[!result_status %in% c(0L, 52L, 102L)] <- NA_real_
+    .status_result(output, result_status, status_requested, details, function_name)
   }
-  output[!result_status %in% c(0L, 52L, 102L)] <- NA_real_
-  .status_result(output, result_status, status_requested, details, function_name)
-}
 
-#' Calculate stem diameter inside bark at a height
+#' Diameter inside bark at a height
 #'
-#' Return inside-bark diameter at each supplied stem height.
-#'
-#' @param dbh Required positive finite numeric diameter at breast height
-#'   outside bark, in inches for imperial units or centimeters for metric
-#'   units. Length one repeats, otherwise supply one value per tree. Omission
-#'   is an error.
-#'
-#' Missing or nonfinite values give `na_input` and a missing result. Example: `example_trees$dbh`.
-#' @param ht Required positive finite numeric total height above ground, in
-#'   feet for imperial units or meters for metric units. Length one repeats,
-#'   otherwise supply one value per tree. Omission is an error.
-#'
-#' Missing or
-#'   nonfinite values give `na_input`. Example: `example_trees$ht`.
-#' @param model Required character vector or factor of equation identifiers,
-#'   length one or one per tree. Unitless. Omission is an error, missing values
-#'   give `na_input`, and unknown identifiers give `unknown_model`.
-#'
-#' Example:
-#'   `example_trees$model`. No replacement equation is chosen here.
-#' @param ... Uniquely named equation inputs listed in the corresponding section. Each has length
-#'   one or one per tree.
-#'
-#' Omit optional inputs to use the selected equation's
-#'   defaults. Unknown names, invalid types, and invalid finite values stop
-#'   the call. Missing supplied inputs give `na_input`, and an omitted required
-#'   input gives `missing_input`.
-#' @param units One character value, `'imperial'` (default) or `'metric'`. Omission selects inches,
-#'   feet, and cubic feet. Metric selects centimeters,
-#'   meters, and cubic meters.
-#'
-#' Missing and unknown values are errors. Example: `units = 'metric'`.
-#' @param status One nonmissing logical value, default `FALSE`. `TRUE` returns
-#'   numeric `value` and integer `status` columns and suppresses row warnings. Both columns have
-#' one row per tree.
-#'
-#' The code is unitless. Invalid types
-#'   or missing flags stop the call. Example: `status = TRUE`.
-#' @param h Required finite numeric height above ground, from zero through
-#'   `ht`, inclusive. Feet in imperial units or meters in metric units. Length one repeats,
-#' otherwise it must match the tree inputs.
-#'
-#' Omission
-#'   is an error. Missing or nonfinite values give `na_input`.
-#'
-#' @details The equation is evaluated without log-scaling rounding. For
-#'   outside-bark diameter, a direct outside-bark equation takes precedence.
-#'   Otherwise inside-bark diameter is divided by an available bark ratio,
-#'   the constant ratio of inside-bark to outside-bark diameter.
-#'
-#' @return Numeric diameter in inches or centimeters, one per input tree.
-#'   With `status = TRUE`, a data frame has numeric `value` in those units
-#'   and integer unitless `status`. Failed values are `NA`.
-#' @section Equation inputs through dots:
-#' Inputs are used only where declared by the selected equation. Numeric
-#' inputs accept integers and doubles. Each input has length one or the common
-#' number of trees, with units following the call. For a particular model,
-#' `get_taper_model(model)$inputs` lists required, optional, and paired inputs.
-#'
-#' \describe{
-#' \item{`bark_ratio`}{Numeric ratio of inside-bark to outside-bark diameter,
-#' strictly greater than zero and at most one. Unitless.
-#' Omission uses a model ratio where supplied.
-#' An explicit missing ratio gives `na_input`, not the default.}
-#' \item{`upper_ht1`, `upper_ht2`}{Positive finite numeric upper measurement
-#' heights above ground, in feet or meters.
-#' Omission supplies no measurement. A required missing height gives `missing_input`
-#' when omitted or `na_input` when supplied as missing.}
-#' \item{`upper_d1`, `upper_d2`}{Positive finite numeric diameters at the
-#' corresponding upper heights, in inches or centimeters.  Supply each diameter with its paired
-#' height where the model requires
-#' a pair. An incomplete pair gives `missing_input`.}
-#' \item{`upper_bark`}{Character `'ib'` or `'ob'` for the upper
-#' measurements, unitless. Example: `'ib'`. Omission uses the model
-#' convention, which is inside bark for Flewelling upper measurements.
-#' A missing supplied label gives `na_input`.}
-#' \item{`form_class`}{Positive numeric equation form class, unitless.
-#'  Its definition follows the selected equation. Omission
-#' uses its default only when optional. Missing supplied values give `na_input`.}
-#' \item{`site_index`}{Positive numeric site-index height, in feet or meters.
-#'  The equation determines species and reference age.
-#' Omission uses its defaults only when optional. Missing gives `na_input`.}
-#' \item{`basal_area`}{Positive numeric stand basal area, in square feet per
-#' acre or square meters per hectare.  Omission uses the
-#' model's defaults only when optional. Missing gives `na_input`.}
-#' \item{`decay_class`}{Whole-number class from 1 through 5, unitless.
-#'  This is an equation input only where declared, with no
-#' universal default. Missing gives `na_input`. The separate biomass function
-#' also accepts zero for a live tree.}
-#' \item{`cull`}{Numeric percentage from zero through 100.
-#' Omission supplies no override. Missing gives `na_input` where declared.
-#' This does not create located defect records.}
-#' \item{`spcd`}{Positive whole-number Forest Inventory and Analysis tree
-#' inventory species code within R's integer range, unitless.
-#' Omission skips the species-scope check. Supplied codes can return `na_input`, `unknown_species`,
-#' or `species_out_of_scope`.}
-#' }
-#' @section Status and missing values:
-#' Structural errors stop the call. Row failures return missing values unless
-#' a retained-value case is explicitly identified below. `na_input` is silent
-#' with `status = FALSE`, while other nonzero codes produce warnings.
-#' \describe{
-#' \item{`ok`}{Calculation completed. The value is usable within the selected equation's scope.}
-#' \item{`na_input`}{A required value is missing or nonfinite. Supply the measurement
-#'   before using this row.}
-#' \item{`dbh_nonpositive`}{Tree diameter is not positive. Correct the diameter and rerun.}
-#' \item{`ht_nonpositive`}{Total height is not positive. Correct the height and rerun.}
-#' \item{`h_out_of_range`}{A height is below ground or above total height. Check height
-#'   units and bounds.}
-#' \item{`unknown_species`}{The supplied species code is invalid or unrecognized for this
-#'   operation. Correct it.}
-#' \item{`unknown_model`}{No equation was found. Check the identifier or register the
-#'   local equation.}
-#' \item{`missing_input`}{An equation requires an omitted input or complete measurement
-#'   pair. Supply it and rerun.}
-#' \item{`species_out_of_scope`}{A value is retained for a species outside the declared
-#'   scope. Review equation suitability before reporting.}
-#' \item{`capability_missing`}{The requested calculation is unavailable, often because
-#'   outside-bark information is absent. Supply a supported bark ratio or choose another
-#'   equation.}
-#' \item{`kernel_error`}{The equation calculation failed to
-#'   evaluate. The result is missing. Check the
-#'   tree and equation separately.}
-#' }
-#' Source equation errors retain their library diagnosis.
-#'
-#' Those values are unavailable. Check the selected equation and its inputs. Zero volume or
-#' diameter can be a modeled boundary value.
-#'
-#' These functions
-#' do not select logs, so a zero is not evidence of merchantable zero volume.
-#' @seealso [height_at_dib()] to find height from diameter, [stem_volume()]
-#'   for volume between heights, [get_taper_model()] for the equation inputs.
-#' @export
+#' @param dbh Diameter at breast height outside bark. Numeric vector,
+#'   inches, greater than zero and at most 400. Required, with no default.
+#' @param ht Total height above ground. Numeric vector, feet.
+#'   Required, with no default.
+#' @param h The measurement height is the distance above the ground. Numeric vector, feet.
+#'   Required, with no default. Heights must be greater than zero and at most 500 feet.
+#' @param spcd Numeric inventory species code. Numeric
+#'   vector, species codes. Required, with no default.
+#' @param model Registered taper model identifier. Character vector of
+#'   registered model identifiers. Default: \code{NULL}.
+#'   model NULL selects the shipped default for the species, see [default_taper_models].
+#'   Species without a default return status 404.
+#' @param ... Additional named inputs supply measurements required by the selected model. Named
+#'   vectors in inches for diameters and feet for heights, none by default.
+#' @return A data frame with value (diameter inside bark, inches) and status (integer result
+#'   code), one row per input row.
 #' @usage
-#'
-#' ## Call signatures
-#' dib(dbh, ht, h, model, ..., units = 'imperial', status = FALSE)
+#' dib(
+#'   dbh,
+#'   ht,
+#'   h,
+#'   spcd,
+#'   model = NULL,
+#'   ...
+#' )
+#' @export
 #' @examples
-#' ## Estimate diameters at the supplied height
-#' dib(dbh = example_trees$dbh,
-#'     ht = example_trees$ht,
-#'     h = 20,
-#'     model = example_trees$model)
-dib <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
-  .diameter_impl(
-    dbh, ht, h, model, list(...), units, status, "dib", "dib"
+#' ## Load data verbs
+#' library(dplyr)
+#'
+#' ## Measure diameter inside bark at breast height.
+#' dib(dbh = example_trees$dbh[1],
+#'     ht = example_trees$ht[1],
+#'     h = 4.5,
+#'     spcd = example_trees$spcd[1]) %>%
+#'   rename(`diameter inside bark (inches)` = value)
+dib <- function(dbh, ht, h, spcd, model = NULL, ...) {
+  input <- .mc_stem_inputs(spcd, model, list(...), FALSE)
+  .public_status(
+    .diameter_impl(dbh, ht, h, input$model, input$aux, "imperial", TRUE, "dib", "dib")
   )
 }
 
-#' Calculate stem diameter outside bark at a height
+#' Diameter outside bark at a height
 #'
-#' Return outside-bark diameter at each supplied stem height. The model must provide outside-
-#' bark diameter or an applicable bark ratio.
-#'
-#' @param dbh Required positive finite numeric diameter at breast height
-#'   outside bark, in inches for imperial units or centimeters for metric
-#'   units. Length one repeats, otherwise supply one value per tree. Omission
-#'   is an error.
-#'
-#' Missing or nonfinite values give `na_input` and a missing result. Example: `example_trees$dbh`.
-#' @param ht Required positive finite numeric total height above ground, in
-#'   feet for imperial units or meters for metric units. Length one repeats,
-#'   otherwise supply one value per tree. Omission is an error.
-#'
-#' Missing or
-#'   nonfinite values give `na_input`. Example: `example_trees$ht`.
-#' @param model Required character vector or factor of equation identifiers,
-#'   length one or one per tree. Unitless. Omission is an error, missing values
-#'   give `na_input`, and unknown identifiers give `unknown_model`.
-#'
-#' Example:
-#'   `example_trees$model`. No replacement equation is chosen here.
-#' @param ... Uniquely named equation inputs listed in the corresponding section. Each has length
-#'   one or one per tree.
-#'
-#' Omit optional inputs to use the selected equation's
-#'   defaults. Unknown names, invalid types, and invalid finite values stop
-#'   the call. Missing supplied inputs give `na_input`, and an omitted required
-#'   input gives `missing_input`.
-#' @param units One character value, `'imperial'` (default) or `'metric'`. Omission selects inches,
-#'   feet, and cubic feet. Metric selects centimeters,
-#'   meters, and cubic meters.
-#'
-#' Missing and unknown values are errors. Example: `units = 'metric'`.
-#' @param status One nonmissing logical value, default `FALSE`. `TRUE` returns
-#'   numeric `value` and integer `status` columns and suppresses row warnings. Both columns have
-#' one row per tree.
-#'
-#' The code is unitless. Invalid types
-#'   or missing flags stop the call. Example: `status = TRUE`.
-#' @param h Required finite numeric height above ground, from zero through
-#'   `ht`, inclusive. Feet in imperial units or meters in metric units. Length one repeats,
-#' otherwise it must match the tree inputs.
-#'
-#' Omission
-#'   is an error. Missing or nonfinite values give `na_input`.
-#'
-#' @details The equation is evaluated without log-scaling rounding. For
-#'   outside-bark diameter, a direct outside-bark equation takes precedence.
-#'   Otherwise inside-bark diameter is divided by an available bark ratio,
-#'   the constant ratio of inside-bark to outside-bark diameter.
-#'
-#' @return Numeric diameter in inches or centimeters, one per input tree.
-#'   With `status = TRUE`, a data frame has numeric `value` in those units
-#'   and integer unitless `status`. Failed values are `NA`.
-#' @section Equation inputs through dots:
-#' Inputs are used only where declared by the selected equation. Numeric
-#' inputs accept integers and doubles. Each input has length one or the common
-#' number of trees, with units following the call. For a particular model,
-#' `get_taper_model(model)$inputs` lists required, optional, and paired inputs.
-#'
-#' \describe{
-#' \item{`bark_ratio`}{Numeric ratio of inside-bark to outside-bark diameter,
-#' strictly greater than zero and at most one. Unitless.
-#' Omission uses a model ratio where supplied.
-#' An explicit missing ratio gives `na_input`, not the default.}
-#' \item{`upper_ht1`, `upper_ht2`}{Positive finite numeric upper measurement
-#' heights above ground, in feet or meters.
-#' Omission supplies no measurement. A required missing height gives `missing_input`
-#' when omitted or `na_input` when supplied as missing.}
-#' \item{`upper_d1`, `upper_d2`}{Positive finite numeric diameters at the
-#' corresponding upper heights, in inches or centimeters.  Supply each diameter with its paired
-#' height where the model requires
-#' a pair. An incomplete pair gives `missing_input`.}
-#' \item{`upper_bark`}{Character `'ib'` or `'ob'` for the upper
-#' measurements, unitless. Example: `'ib'`. Omission uses the model
-#' convention, which is inside bark for Flewelling upper measurements.
-#' A missing supplied label gives `na_input`.}
-#' \item{`form_class`}{Positive numeric equation form class, unitless.
-#'  Its definition follows the selected equation. Omission
-#' uses its default only when optional. Missing supplied values give `na_input`.}
-#' \item{`site_index`}{Positive numeric site-index height, in feet or meters.
-#'  The equation determines species and reference age.
-#' Omission uses its defaults only when optional. Missing gives `na_input`.}
-#' \item{`basal_area`}{Positive numeric stand basal area, in square feet per
-#' acre or square meters per hectare.  Omission uses the
-#' model's defaults only when optional. Missing gives `na_input`.}
-#' \item{`decay_class`}{Whole-number class from 1 through 5, unitless.
-#'  This is an equation input only where declared, with no
-#' universal default. Missing gives `na_input`. The separate biomass function
-#' also accepts zero for a live tree.}
-#' \item{`cull`}{Numeric percentage from zero through 100.
-#' Omission supplies no override. Missing gives `na_input` where declared.
-#' This does not create located defect records.}
-#' \item{`spcd`}{Positive whole-number Forest Inventory and Analysis tree
-#' inventory species code within R's integer range, unitless.
-#' Omission skips the species-scope check. Supplied codes can return `na_input`, `unknown_species`,
-#' or `species_out_of_scope`.}
-#' }
-#' @section Status and missing values:
-#' Structural errors stop the call. Row failures return missing values unless
-#' a retained-value case is explicitly identified below. `na_input` is silent
-#' with `status = FALSE`, while other nonzero codes produce warnings.
-#' \describe{
-#' \item{`ok`}{Calculation completed. The value is usable within the selected equation's scope.}
-#' \item{`na_input`}{A required value is missing or nonfinite. Supply the measurement
-#'   before using this row.}
-#' \item{`dbh_nonpositive`}{Tree diameter is not positive. Correct the diameter and rerun.}
-#' \item{`ht_nonpositive`}{Total height is not positive. Correct the height and rerun.}
-#' \item{`h_out_of_range`}{A height is below ground or above total height. Check height
-#'   units and bounds.}
-#' \item{`unknown_species`}{The supplied species code is invalid or unrecognized for this
-#'   operation. Correct it.}
-#' \item{`unknown_model`}{No equation was found. Check the identifier or register the
-#'   local equation.}
-#' \item{`missing_input`}{An equation requires an omitted input or complete measurement
-#'   pair. Supply it and rerun.}
-#' \item{`species_out_of_scope`}{A value is retained for a species outside the declared
-#'   scope. Review equation suitability before reporting.}
-#' \item{`capability_missing`}{The requested calculation is unavailable, often because
-#'   outside-bark information is absent. Supply a supported bark ratio or choose another
-#'   equation.}
-#' \item{`kernel_error`}{The equation calculation failed to
-#'   evaluate. The result is missing. Check the
-#'   tree and equation separately.}
-#' }
-#' Source equation errors retain their library diagnosis.
-#'
-#' Those values are unavailable. Check the selected equation and its inputs. Zero volume or
-#' diameter can be a modeled boundary value.
-#'
-#' These functions
-#' do not select logs, so a zero is not evidence of merchantable zero volume.
-#' @seealso [height_at_dob()] to find height from diameter, [stem_volume()]
-#'   for volume between heights, [get_taper_model()] for the equation inputs.
-#' @export
+#' @param dbh Diameter at breast height outside bark. Numeric vector,
+#'   inches, greater than zero and at most 400. Required, with no default.
+#' @param ht Total height above ground. Numeric vector, feet.
+#'   Required, with no default.
+#' @param h The measurement height is the distance above the ground. Numeric vector, feet.
+#'   Required, with no default. Heights must be greater than zero and at most 500 feet.
+#' @param spcd Numeric inventory species code. Numeric
+#'   vector, species codes. Required, with no default.
+#' @param model Registered taper model identifier. Character vector of
+#'   registered model identifiers. Default: \code{NULL}.
+#'   model NULL selects the shipped default for the species, see [default_taper_models].
+#'   Species without a default return status 404.
+#' @param ... Additional named inputs supply measurements required by the selected model. Named
+#'   vectors in inches for diameters and feet for heights, none by default.
+#' @return A data frame with value (diameter outside bark, inches) and status (integer result
+#'   code), one row per input row.
 #' @usage
-#'
-#' ## Call signatures
-#' dob(dbh, ht, h, model, ..., units = 'imperial', status = FALSE)
+#' dob(
+#'   dbh,
+#'   ht,
+#'   h,
+#'   spcd,
+#'   model = NULL,
+#'   ...
+#' )
+#' @export
 #' @examples
-#' ## Estimate diameters at the supplied height
-#' dob(dbh = example_trees$dbh,
-#'     ht = example_trees$ht,
-#'     h = 20,
-#'     model = example_trees$model)
-dob <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
-  .diameter_impl(
-    dbh, ht, h, model, list(...), units, status, "dob", "dob"
+#' ## Load data verbs
+#' library(dplyr)
+#'
+#' ## Measure diameter outside bark at breast height.
+#' dob(dbh = example_trees$dbh[1],
+#'     ht = example_trees$ht[1],
+#'     h = 4.5,
+#'     spcd = example_trees$spcd[1]) %>%
+#'   rename(`diameter outside bark (inches)` = value)
+dob <- function(dbh, ht, h, spcd, model = NULL, ...) {
+  input <- .mc_stem_inputs(spcd, model, list(...), TRUE)
+  .public_status(
+    .diameter_impl(dbh, ht, h, input$model, input$aux, "imperial", TRUE, "dob", "dob")
   )
 }
 
-.inverse_grid_step <- function(units) {
-  one_inch <- if (identical(units, "imperial")) 1 / 12 else 0.0254
+.inverse_grid_step <- function(measurement_system) {
+  one_inch <- if (identical(measurement_system, "imperial"))
+    1 / 12 else 0.0254
   one_inch / 16
 }
 
-.refine_crossing_brackets <- function(model, basis, dbh, ht, target, aux, rows,
-                                      lower, upper, lower_value,
-                                      max_iterations = 200L) {
+.refine_crossing_brackets <- function(
+  model, basis, dbh, ht, target, aux, rows,
+  lower, upper,
+  lower_value, max_iterations = 200L
+) {
   count <- length(lower)
   result <- rep(NA_real_, count)
   status <- integer(count)
@@ -589,7 +401,8 @@ dob <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
     }
     midpoint <- (lower[work] + upper[work]) / 2
     midpoint_result <- .evaluate_profile_native(
-      model, basis, dbh[work], ht[work], midpoint, aux, rows[work]
+      model, basis, dbh[work], ht[work], midpoint,
+      aux, rows[work]
     )
     bad <- midpoint_result$status != 0L
     if (any(bad)) {
@@ -616,7 +429,7 @@ dob <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
         lower[nonexact_rows[!left]] <- midpoint_good[!exact][!left]
         lower_value[nonexact_rows[!left]] <- nonexact_values[!left]
       }
-      now <- upper[good_rows] - lower[good_rows] <= 1e-4
+      now <- upper[good_rows] - lower[good_rows] <= 1e-04
       result[good_rows[now]] <- (upper[good_rows[now]] + lower[good_rows[now]]) / 2
       active[good_rows[now]] <- FALSE
     }
@@ -625,18 +438,24 @@ dob <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
   list(value = result, status = status, details = details)
 }
 
-.numeric_inverse <- function(model, basis, dbh, ht, target, aux, rows,
-                             max_iterations = 200L) {
+.numeric_inverse <- function(
+  model, basis, dbh, ht, target, aux, rows,
+  max_iterations = 200L
+) {
   if (identical(basis, "dib") && identical(model$kernel$type, "compiled") &&
-        startsWith(model$kernel$key, "smalltapers:")) {
+    startsWith(
+      model$kernel$key,
+      "smalltapers:"
+    )) {
     bark <- .model_bark_ratio(model, aux, rows, require = FALSE)$value
     return(.compiled_result(
-      model, 5L, dbh, ht, target, rep(0, length(target)), bark, aux, rows
+      model, 5L, dbh, ht, target, rep(0, length(target)), bark, aux,
+      rows
     ))
   }
   tree_count <- length(dbh)
   stump <- rep(model$stump_ht, tree_count)
-  grid_step <- .inverse_grid_step(model$units)
+  grid_step <- .inverse_grid_step(model$measurement_system)
   interval_count <- pmax(1L, as.integer(ceiling(pmax(ht - stump, 0) / grid_step)))
   grid_count <- interval_count + 1L
   map <- rep(seq_len(tree_count), grid_count)
@@ -647,14 +466,16 @@ dob <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
   grid_h[grid_end] <- ht
   flat_rows <- rows[map]
   profile <- .evaluate_profile_native(
-    model, basis, dbh[map], ht[map], grid_h, aux, flat_rows
+    model, basis, dbh[map], ht[map], grid_h, aux,
+    flat_rows
   )
   result <- rep(NA_real_, tree_count)
   status <- integer(tree_count)
   details <- rep(NA_character_, tree_count)
   exact_roots <- vector("list", tree_count)
   bracket_tree <- bracket_lower <- bracket_upper <- bracket_value <- vector(
-    "list", tree_count
+    "list",
+    tree_count
   )
 
   for (tree in seq_len(tree_count)) {
@@ -704,8 +525,9 @@ dob <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
     bracket_upper <- unlist(bracket_upper, use.names = FALSE)
     bracket_value <- unlist(bracket_value, use.names = FALSE)
     refined <- .refine_crossing_brackets(
-      model, basis, dbh[bracket_tree], ht[bracket_tree], target[bracket_tree],
-      aux, rows[bracket_tree], bracket_lower, bracket_upper, bracket_value,
+      model, basis, dbh[bracket_tree], ht[bracket_tree],
+      target[bracket_tree], aux, rows[bracket_tree], bracket_lower, bracket_upper,
+      bracket_value,
       max_iterations
     )
     for (tree in unique(bracket_tree)) {
@@ -722,8 +544,7 @@ dob <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
       }
     }
   }
-  exact_only <- which(lengths(exact_roots) > 0L &
-                        !seq_len(tree_count) %in% bracket_tree)
+  exact_only <- which(lengths(exact_roots) > 0L & !seq_len(tree_count) %in% bracket_tree)
   for (tree in exact_only) {
     result[[tree]] <- max(exact_roots[[tree]])
   }
@@ -734,25 +555,26 @@ dob <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
   if (identical(model$kernel$type, "compiled")) {
     bark <- .model_bark_ratio(model, aux, rows, require = FALSE)$value
     return(.compiled_result(
-      model, 2L, dbh, ht, target, rep(0, length(target)), bark, aux, rows
+      model, 2L, dbh, ht, target, rep(0, length(target)), bark, aux,
+      rows
     ))
   }
-  .callback_result(
-    model$height_at_dib,
-    list(dbh = dbh, ht = ht, dib = target, aux = .subset_aux(aux, rows, model)),
-    length(target)
-  )
+  .callback_result(model$height_at_dib, list(
+    dbh = dbh, ht = ht, dib = target,
+    aux = .subset_aux(
+      aux,
+      rows, model
+    )
+  ), length(target))
 }
 
 .analytic_discovered_inverse <- function(model, dbh, ht, target, aux, rows) {
   analytic <- .analytic_inverse(model, dbh, ht, target, aux, rows)
   discovered <- .numeric_inverse(model, "dib", dbh, ht, target, aux, rows)
-  use_discovery <- analytic$status %in% c(0L, 52L, 102L) &
-    discovered$status != 0L
+  use_discovery <- analytic$status %in% c(0L, 52L, 102L) & discovered$status != 0L
   analytic$status[use_discovery] <- discovered$status[use_discovery]
   analytic$details[use_discovery] <- discovered$details[use_discovery]
-  usable <- analytic$status %in% c(0L, 52L, 102L) &
-    discovered$status %in% c(0L, 102L)
+  usable <- analytic$status %in% c(0L, 52L, 102L) & discovered$status %in% c(0L, 102L)
   analytic$value[!usable] <- NA_real_
   analytic
 }
@@ -760,29 +582,28 @@ dob <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
 .inverse_group <- function(model, basis, dbh, ht, target, aux, rows) {
   direct_dob <- identical(basis, "dob") && isTRUE(model$kernel$has_dob)
   if (identical(model$kernel$type, "compiled")) {
-    bark <- .model_bark_ratio(
-      model, aux, rows, require = identical(basis, "dob") && !direct_dob
-    )$value
+    bark <- .model_bark_ratio(model, aux, rows, require = identical(basis, "dob") &&
+                                !direct_dob)$value
     return(.compiled_result(
-      model, if (identical(basis, "dib")) 6L else 7L,
-      dbh, ht, target, rep(model$stump_ht, length(target)), bark, aux, rows
+      model, if (identical(basis, "dib")) 6L else 7L, dbh, ht, target,
+      rep(model$stump_ht, length(target)), bark, aux, rows
     ))
   }
   if (identical(basis, "dob") && !direct_dob) {
     bark <- .model_bark_ratio(model, aux, rows, require = TRUE)
     if (any(bark$invalid)) {
-      result <- list(
-        value = rep(NA_real_, length(target)),
-        status = ifelse(bark$invalid, 53L, 0L),
-        details = rep(NA_character_, length(target))
-      )
+      result <- list(value = rep(NA_real_, length(target)), status = ifelse(bark$invalid,
+                       53L, 0L
+                     ), details = rep(NA_character_, length(target)))
       good <- which(!bark$invalid)
       if (!length(good)) {
         return(result)
       }
       inside <- if (isTRUE(model$kernel$has_inverse)) {
         .analytic_discovered_inverse(
-          model, dbh[good], ht[good], target[good] * bark$value[good], aux, rows[good]
+          model, dbh[good], ht[good], target[good] *
+            bark$value[good],
+          aux, rows[good]
         )
       } else {
         .numeric_inverse(
@@ -804,26 +625,30 @@ dob <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
   .numeric_inverse(model, basis, dbh, ht, target, aux, rows)
 }
 
-.height_impl <- function(dbh, ht, diameter, model, aux, units, status, basis,
-                         function_name) {
-  units <- .validate_units(units)
+.height_impl <- function(
+  dbh, ht, diameter, model, aux, measurement_system, status, basis,
+  function_name
+) {
+  measurement_system <- .validate_units(measurement_system)
   status_requested <- .validate_status(status)
   generation <- .registry_enter()
   on.exit(.registry_exit(generation), add = TRUE)
-  call <- .prepare_vectors(
-    list(dbh = dbh, ht = ht, diameter = diameter, model = model),
-    numeric_names = c("dbh", "ht", "diameter"),
-    character_names = "model",
-    aux = aux
-  )
-  result_status <- .input_status(
-    call$size, call$values, c("dbh", "ht", "diameter", "model")
-  )
-  result_status <- .assign_status(result_status, call$values$dbh <= 0, 2L)
-  result_status <- .assign_status(result_status, call$values$ht <= 0, 3L)
+  call <- .prepare_vectors(list(
+    dbh = dbh, ht = ht, diameter = diameter,
+    model = model
+  ), numeric_names = c(
+    "dbh",
+    "ht", "diameter"
+  ), character_names = "model", aux = aux, aliases = c(diameter = basis))
+  result_status <- .input_status(call$size, call$values, c(
+    "dbh", "ht", "diameter",
+    "model"
+  ))
+  result_status <- .assign_status(result_status, call$values$dbh <= 0 | call$values$dbh > 400, 2L)
+  result_status <- .assign_status(result_status, call$values$ht <= 0 | call$values$ht > 500, 3L)
   result_status <- .assign_status(result_status, call$values$diameter <= 0, 5L)
   resolved <- .resolve_models(call$values$model, call$aux, result_status)
-  call$aux <- .set_aux_caller_units(call$aux, units)
+  call$aux <- .set_aux_caller_units(call$aux, measurement_system)
   result_status <- resolved$status
   details <- resolved$details
   output <- rep(NA_real_, call$size)
@@ -837,363 +662,124 @@ dob <- function(dbh, ht, h, model, ..., units = "imperial", status = FALSE) {
     if (!length(rows)) {
       next
     }
-    native_dbh <- .diameter_to_native(call$values$dbh[rows], units, model_object$units)
-    native_ht <- .height_to_native(call$values$ht[rows], units, model_object$units)
+    native_dbh <-
+      .diameter_to_native(
+        call$values$dbh[rows], measurement_system, model_object$measurement_system
+      )
+    native_ht <-
+      .height_to_native(
+        call$values$ht[rows], measurement_system, model_object$measurement_system
+      )
     native_target <- .diameter_to_native(
-      call$values$diameter[rows], units, model_object$units
+      call$values$diameter[rows], measurement_system,
+      model_object$measurement_system
     )
     inverted <- .inverse_group(
-      model_object, basis, native_dbh, native_ht, native_target, call$aux, rows
+      model_object, basis, native_dbh, native_ht, native_target,
+      call$aux, rows
     )
     merged <- .merge_kernel_result(result_status, details, rows, inverted)
     result_status <- merged$status
     details <- merged$details
-    output[rows] <- .height_from_native(
-      inverted$value, units, model_object$units
-    )
+    output[
+      rows
+    ] <-
+      .height_from_native(inverted$value, measurement_system, model_object$measurement_system)
   }
   output[!result_status %in% c(0L, 52L, 102L)] <- NA_real_
   .status_result(output, result_status, status_requested, details, function_name)
 }
 
-#' Find the highest height at a diameter inside bark
+#' Height to a diameter inside bark
 #'
-#' Return the highest modeled height at the supplied inside-bark diameter. Search from the
-#' model's stump height to the tip.
-#'
-#' @param dbh Required positive finite numeric diameter at breast height
-#'   outside bark, in inches for imperial units or centimeters for metric
-#'   units. Length one repeats, otherwise supply one value per tree. Omission
-#'   is an error.
-#'
-#' Missing or nonfinite values give `na_input` and a missing result. Example: `example_trees$dbh`.
-#' @param ht Required positive finite numeric total height above ground, in
-#'   feet for imperial units or meters for metric units. Length one repeats,
-#'   otherwise supply one value per tree. Omission is an error.
-#'
-#' Missing or
-#'   nonfinite values give `na_input`. Example: `example_trees$ht`.
-#' @param model Required character vector or factor of equation identifiers,
-#'   length one or one per tree. Unitless. Omission is an error, missing values
-#'   give `na_input`, and unknown identifiers give `unknown_model`.
-#'
-#' Example:
-#'   `example_trees$model`. No replacement equation is chosen here.
-#' @param ... Uniquely named equation inputs listed in the corresponding section. Each has length
-#'   one or one per tree.
-#'
-#' Omit optional inputs to use the selected equation's
-#'   defaults. Unknown names, invalid types, and invalid finite values stop
-#'   the call. Missing supplied inputs give `na_input`, and an omitted required
-#'   input gives `missing_input`.
-#' @param units One character value, `'imperial'` (default) or `'metric'`. Omission selects inches,
-#'   feet, and cubic feet. Metric selects centimeters,
-#'   meters, and cubic meters.
-#'
-#' Missing and unknown values are errors. Example: `units = 'metric'`.
-#' @param status One nonmissing logical value, default `FALSE`. `TRUE` returns
-#'   numeric `value` and integer `status` columns and suppresses row warnings. Both columns have
-#' one row per tree.
-#'
-#' The code is unitless. Invalid types
-#'   or missing flags stop the call. Example: `status = TRUE`.
-#' @param dib Required positive finite numeric target diameter, in inches
-#'   or centimeters. Length one repeats, otherwise it must match the trees. Omission is an error.
-#'
-#' Missing gives `na_input`, nonpositive values give
-#'   `diameter_nonpositive`. Zero is not a request for the tip.
-#'
-#' @details A profile can cross the same diameter at several heights. The
-#'   highest crossing is retained and `not_unique` identifies another crossing. Outside-bark
-#' targets use a direct profile where available.
-#'
-#' Otherwise
-#'   the bark ratio converts the target to its inside-bark counterpart.
-#' @section Numerical methods:
-#' The search checks a grid spaced at one-sixteenth inch in height and
-#' refines crossing intervals by bisection. It uses the equation's direct
-#' inverse where supported. Compatibility settings and regional equations
-#' can retain source-specific search behavior.
-#'
-#' No log-length rounding is
-#' applied to the returned height.
-#' @return Numeric height above ground in feet or meters, one per input tree.
-#'   With `status = TRUE`, the data frame contains numeric `value` in those
-#'   units and integer unitless `status`. Failed heights are `NA`.
-#' @section Equation inputs through dots:
-#' Inputs are used only where declared by the selected equation. Numeric
-#' inputs accept integers and doubles. Each input has length one or the common
-#' number of trees, with units following the call. For a particular model,
-#' `get_taper_model(model)$inputs` lists required, optional, and paired inputs.
-#'
-#' \describe{
-#' \item{`bark_ratio`}{Numeric ratio of inside-bark to outside-bark diameter,
-#' strictly greater than zero and at most one. Unitless.
-#' Omission uses a model ratio where supplied.
-#' An explicit missing ratio gives `na_input`, not the default.}
-#' \item{`upper_ht1`, `upper_ht2`}{Positive finite numeric upper measurement
-#' heights above ground, in feet or meters.
-#' Omission supplies no measurement. A required missing height gives `missing_input`
-#' when omitted or `na_input` when supplied as missing.}
-#' \item{`upper_d1`, `upper_d2`}{Positive finite numeric diameters at the
-#' corresponding upper heights, in inches or centimeters.  Supply each diameter with its paired
-#' height where the model requires
-#' a pair. An incomplete pair gives `missing_input`.}
-#' \item{`upper_bark`}{Character `'ib'` or `'ob'` for the upper
-#' measurements, unitless. Example: `'ib'`. Omission uses the model
-#' convention, which is inside bark for Flewelling upper measurements.
-#' A missing supplied label gives `na_input`.}
-#' \item{`form_class`}{Positive numeric equation form class, unitless.
-#'  Its definition follows the selected equation. Omission
-#' uses its default only when optional. Missing supplied values give `na_input`.}
-#' \item{`site_index`}{Positive numeric site-index height, in feet or meters.
-#'  The equation determines species and reference age.
-#' Omission uses its defaults only when optional. Missing gives `na_input`.}
-#' \item{`basal_area`}{Positive numeric stand basal area, in square feet per
-#' acre or square meters per hectare.  Omission uses the
-#' model's defaults only when optional. Missing gives `na_input`.}
-#' \item{`decay_class`}{Whole-number class from 1 through 5, unitless.
-#'  This is an equation input only where declared, with no
-#' universal default. Missing gives `na_input`. The separate biomass function
-#' also accepts zero for a live tree.}
-#' \item{`cull`}{Numeric percentage from zero through 100.
-#' Omission supplies no override. Missing gives `na_input` where declared.
-#' This does not create located defect records.}
-#' \item{`spcd`}{Positive whole-number Forest Inventory and Analysis tree
-#' inventory species code within R's integer range, unitless.
-#' Omission skips the species-scope check. Supplied codes can return `na_input`, `unknown_species`,
-#' or `species_out_of_scope`.}
-#' }
-#' @section Status and missing values:
-#' Structural errors stop the call. Row failures return missing values unless
-#' a retained-value case is explicitly identified below. `na_input` is silent
-#' with `status = FALSE`, while other nonzero codes produce warnings.
-#' \describe{
-#' \item{`ok`}{Calculation completed. The value is usable within the selected equation's scope.}
-#' \item{`na_input`}{A required value is missing or nonfinite. Supply the measurement
-#'   before using this row.}
-#' \item{`dbh_nonpositive`}{Tree diameter is not positive. Correct the diameter and rerun.}
-#' \item{`ht_nonpositive`}{Total height is not positive. Correct the height and rerun.}
-#' \item{`unknown_species`}{The supplied species code is invalid or unrecognized for this
-#'   operation. Correct it.}
-#' \item{`unknown_model`}{No equation was found. Check the identifier or register the
-#'   local equation.}
-#' \item{`missing_input`}{An equation requires an omitted input or complete measurement
-#'   pair. Supply it and rerun.}
-#' \item{`species_out_of_scope`}{A value is retained for a species outside the declared
-#'   scope. Review equation suitability before reporting.}
-#' \item{`capability_missing`}{The requested calculation is unavailable, often because
-#'   outside-bark information is absent. Supply a supported bark ratio or choose another
-#'   equation.}
-#' \item{`kernel_error`}{The equation calculation failed to
-#'   evaluate. The result is missing. Check the
-#'   tree and equation separately.}
-#' \item{`diameter_nonpositive`}{The target diameter is not positive. Supply a positive
-#'   target or use the tip bound for volume.}
-#' \item{`above_tip`}{The requested diameter is smaller than the modeled tip diameter.
-#'   Revise the target.}
-#' \item{`below_stump`}{The requested diameter exceeds the modeled diameter at stump.
-#'   Revise the target or stump convention.}
-#' \item{`not_unique`}{The profile has another diameter crossing below the returned
-#'   height. The highest crossing is retained. Review whether it matches the intended
-#'   utilization limit.}
-#' \item{`no_convergence`}{The numerical search did not converge. Review the target and
-#'   profile before using the tree.}
-#' }
-#' Source equation errors retain their library diagnosis. Those values are
-#' unavailable.
-#'
-#' Check the selected equation and its inputs. Zero volume or diameter can be a modeled boundary
-#' value. These functions
-#' do not select logs, so a zero is not evidence of merchantable zero volume.
-#'
-#' @seealso [dib()] for diameter at height, [stem_profile()] to inspect
-#'   crossings, [stem_volume()] to use diameter limits directly.
-#' @export
+#' @param dbh Diameter at breast height outside bark. Numeric vector,
+#'   inches, greater than zero and at most 400. Required, with no default.
+#' @param ht Total height above ground. Numeric vector, feet.
+#'   Required, with no default.
+#' @param dib The target diameter identifies the point to locate on the stem. Numeric vector,
+#'   inches, greater than zero and at most 400. Required, with no default.
+#' @param spcd Numeric inventory species code. Numeric
+#'   vector, species codes. Required, with no default.
+#' @param model Registered taper model identifier. Character vector of
+#'   registered model identifiers. Default: \code{NULL}.
+#'   model NULL selects the shipped default for the species, see [default_taper_models].
+#'   Species without a default return status 404.
+#' @param ... Additional named inputs supply measurements required by the selected model. Named
+#'   vectors in inches for diameters and feet for heights, none by default.
+#' @return A data frame with value (height above ground, feet) and status (integer result code),
+#'   one row per input row.
 #' @usage
-#'
-#' ## Call signatures
-#' height_at_dib(dbh, ht, dib, model, ..., units = 'imperial', status = FALSE)
+#' height_at_dib(
+#'   dbh,
+#'   ht,
+#'   dib,
+#'   spcd,
+#'   model = NULL,
+#'   ...
+#' )
+#' @export
 #' @examples
-#' ## Find the height of the supplied stem diameter
-#' height_at_dib(dbh = example_trees$dbh,
-#'               ht = example_trees$ht,
+#' ## Load data verbs
+#' library(dplyr)
+#'
+#' ## Find the height of a six-inch inside-bark diameter.
+#' height_at_dib(dbh = example_trees$dbh[1],
+#'               ht = example_trees$ht[1],
 #'               dib = 6,
-#'               model = example_trees$model)
-height_at_dib <- function(dbh, ht, dib, model, ..., units = "imperial",
-                          status = FALSE) {
-  .height_impl(
-    dbh, ht, dib, model, list(...), units, status, "dib", "height_at_dib"
-  )
+#'               spcd = example_trees$spcd[1],
+#'               model = example_trees$model[1]) %>%
+#'   rename(`height (feet)` = value)
+height_at_dib <- function(dbh, ht, dib, spcd, model = NULL, ...) {
+  input <- .mc_stem_inputs(spcd, model, list(...), FALSE)
+  .public_status(.height_impl(
+    dbh, ht, dib, input$model, input$aux, "imperial", TRUE, "dib",
+    "height_at_dib"
+  ))
 }
 
-#' Find the highest height at a diameter outside bark
+#' Height to a diameter outside bark
 #'
-#' Return the highest modeled height at the supplied outside-bark diameter. Search from the
-#' model's stump height to the tip.
-#'
-#' @param dbh Required positive finite numeric diameter at breast height
-#'   outside bark, in inches for imperial units or centimeters for metric
-#'   units. Length one repeats, otherwise supply one value per tree. Omission
-#'   is an error.
-#'
-#' Missing or nonfinite values give `na_input` and a missing result. Example: `example_trees$dbh`.
-#' @param ht Required positive finite numeric total height above ground, in
-#'   feet for imperial units or meters for metric units. Length one repeats,
-#'   otherwise supply one value per tree. Omission is an error.
-#'
-#' Missing or
-#'   nonfinite values give `na_input`. Example: `example_trees$ht`.
-#' @param model Required character vector or factor of equation identifiers,
-#'   length one or one per tree. Unitless. Omission is an error, missing values
-#'   give `na_input`, and unknown identifiers give `unknown_model`.
-#'
-#' Example:
-#'   `example_trees$model`. No replacement equation is chosen here.
-#' @param ... Uniquely named equation inputs listed in the corresponding section. Each has length
-#'   one or one per tree.
-#'
-#' Omit optional inputs to use the selected equation's
-#'   defaults. Unknown names, invalid types, and invalid finite values stop
-#'   the call. Missing supplied inputs give `na_input`, and an omitted required
-#'   input gives `missing_input`.
-#' @param units One character value, `'imperial'` (default) or `'metric'`. Omission selects inches,
-#'   feet, and cubic feet. Metric selects centimeters,
-#'   meters, and cubic meters.
-#'
-#' Missing and unknown values are errors. Example: `units = 'metric'`.
-#' @param status One nonmissing logical value, default `FALSE`. `TRUE` returns
-#'   numeric `value` and integer `status` columns and suppresses row warnings. Both columns have
-#' one row per tree.
-#'
-#' The code is unitless. Invalid types
-#'   or missing flags stop the call. Example: `status = TRUE`.
-#' @param dob Required positive finite numeric target diameter, in inches
-#'   or centimeters. Length one repeats, otherwise it must match the trees. Omission is an error.
-#'
-#' Missing gives `na_input`, nonpositive values give
-#'   `diameter_nonpositive`. Zero is not a request for the tip.
-#'
-#' @details A profile can cross the same diameter at several heights. The
-#'   highest crossing is retained and `not_unique` identifies another crossing. Outside-bark
-#' targets use a direct profile where available.
-#'
-#' Otherwise
-#'   the bark ratio converts the target to its inside-bark counterpart.
-#' @section Numerical methods:
-#' The search checks a grid spaced at one-sixteenth inch in height and
-#' refines crossing intervals by bisection. It uses the equation's direct
-#' inverse where supported. Compatibility settings and regional equations
-#' can retain source-specific search behavior.
-#'
-#' No log-length rounding is
-#' applied to the returned height.
-#' @return Numeric height above ground in feet or meters, one per input tree.
-#'   With `status = TRUE`, the data frame contains numeric `value` in those
-#'   units and integer unitless `status`. Failed heights are `NA`.
-#' @section Equation inputs through dots:
-#' Inputs are used only where declared by the selected equation. Numeric
-#' inputs accept integers and doubles. Each input has length one or the common
-#' number of trees, with units following the call. For a particular model,
-#' `get_taper_model(model)$inputs` lists required, optional, and paired inputs.
-#'
-#' \describe{
-#' \item{`bark_ratio`}{Numeric ratio of inside-bark to outside-bark diameter,
-#' strictly greater than zero and at most one. Unitless.
-#' Omission uses a model ratio where supplied.
-#' An explicit missing ratio gives `na_input`, not the default.}
-#' \item{`upper_ht1`, `upper_ht2`}{Positive finite numeric upper measurement
-#' heights above ground, in feet or meters.
-#' Omission supplies no measurement. A required missing height gives `missing_input`
-#' when omitted or `na_input` when supplied as missing.}
-#' \item{`upper_d1`, `upper_d2`}{Positive finite numeric diameters at the
-#' corresponding upper heights, in inches or centimeters.  Supply each diameter with its paired
-#' height where the model requires
-#' a pair. An incomplete pair gives `missing_input`.}
-#' \item{`upper_bark`}{Character `'ib'` or `'ob'` for the upper
-#' measurements, unitless. Example: `'ib'`. Omission uses the model
-#' convention, which is inside bark for Flewelling upper measurements.
-#' A missing supplied label gives `na_input`.}
-#' \item{`form_class`}{Positive numeric equation form class, unitless.
-#'  Its definition follows the selected equation. Omission
-#' uses its default only when optional. Missing supplied values give `na_input`.}
-#' \item{`site_index`}{Positive numeric site-index height, in feet or meters.
-#'  The equation determines species and reference age.
-#' Omission uses its defaults only when optional. Missing gives `na_input`.}
-#' \item{`basal_area`}{Positive numeric stand basal area, in square feet per
-#' acre or square meters per hectare.  Omission uses the
-#' model's defaults only when optional. Missing gives `na_input`.}
-#' \item{`decay_class`}{Whole-number class from 1 through 5, unitless.
-#'  This is an equation input only where declared, with no
-#' universal default. Missing gives `na_input`. The separate biomass function
-#' also accepts zero for a live tree.}
-#' \item{`cull`}{Numeric percentage from zero through 100.
-#' Omission supplies no override. Missing gives `na_input` where declared.
-#' This does not create located defect records.}
-#' \item{`spcd`}{Positive whole-number Forest Inventory and Analysis tree
-#' inventory species code within R's integer range, unitless.
-#' Omission skips the species-scope check. Supplied codes can return `na_input`, `unknown_species`,
-#' or `species_out_of_scope`.}
-#' }
-#' @section Status and missing values:
-#' Structural errors stop the call. Row failures return missing values unless
-#' a retained-value case is explicitly identified below. `na_input` is silent
-#' with `status = FALSE`, while other nonzero codes produce warnings.
-#' \describe{
-#' \item{`ok`}{Calculation completed. The value is usable within the selected equation's scope.}
-#' \item{`na_input`}{A required value is missing or nonfinite. Supply the measurement
-#'   before using this row.}
-#' \item{`dbh_nonpositive`}{Tree diameter is not positive. Correct the diameter and rerun.}
-#' \item{`ht_nonpositive`}{Total height is not positive. Correct the height and rerun.}
-#' \item{`unknown_species`}{The supplied species code is invalid or unrecognized for this
-#'   operation. Correct it.}
-#' \item{`unknown_model`}{No equation was found. Check the identifier or register the
-#'   local equation.}
-#' \item{`missing_input`}{An equation requires an omitted input or complete measurement
-#'   pair. Supply it and rerun.}
-#' \item{`species_out_of_scope`}{A value is retained for a species outside the declared
-#'   scope. Review equation suitability before reporting.}
-#' \item{`capability_missing`}{The requested calculation is unavailable, often because
-#'   outside-bark information is absent. Supply a supported bark ratio or choose another
-#'   equation.}
-#' \item{`kernel_error`}{The equation calculation failed to
-#'   evaluate. The result is missing. Check the
-#'   tree and equation separately.}
-#' \item{`diameter_nonpositive`}{The target diameter is not positive. Supply a positive
-#'   target or use the tip bound for volume.}
-#' \item{`above_tip`}{The requested diameter is smaller than the modeled tip diameter.
-#'   Revise the target.}
-#' \item{`below_stump`}{The requested diameter exceeds the modeled diameter at stump.
-#'   Revise the target or stump convention.}
-#' \item{`not_unique`}{The profile has another diameter crossing below the returned
-#'   height. The highest crossing is retained. Review whether it matches the intended
-#'   utilization limit.}
-#' \item{`no_convergence`}{The numerical search did not converge. Review the target and
-#'   profile before using the tree.}
-#' }
-#' Source equation errors retain their library diagnosis. Those values are
-#' unavailable.
-#'
-#' Check the selected equation and its inputs. Zero volume or diameter can be a modeled boundary
-#' value. These functions
-#' do not select logs, so a zero is not evidence of merchantable zero volume.
-#'
-#' @seealso [dob()] for diameter at height, [stem_profile()] to inspect
-#'   crossings, [stem_volume()] to use diameter limits directly.
-#' @export
+#' @param dbh Diameter at breast height outside bark. Numeric vector,
+#'   inches, greater than zero and at most 400. Required, with no default.
+#' @param ht Total height above ground. Numeric vector, feet.
+#'   Required, with no default.
+#' @param dob The target diameter identifies the point to locate on the stem. Numeric vector,
+#'   inches, greater than zero and at most 400. Required, with no default.
+#' @param spcd Numeric inventory species code. Numeric
+#'   vector, species codes. Required, with no default.
+#' @param model Registered taper model identifier. Character vector of
+#'   registered model identifiers. Default: \code{NULL}.
+#'   model NULL selects the shipped default for the species, see [default_taper_models].
+#'   Species without a default return status 404.
+#' @param ... Additional named inputs supply measurements required by the selected model. Named
+#'   vectors in inches for diameters and feet for heights, none by default.
+#' @return A data frame with value (height above ground, feet) and status (integer result code),
+#'   one row per input row.
 #' @usage
-#'
-#' ## Call signatures
-#' height_at_dob(dbh, ht, dob, model, ..., units = 'imperial', status = FALSE)
+#' height_at_dob(
+#'   dbh,
+#'   ht,
+#'   dob,
+#'   spcd,
+#'   model = NULL,
+#'   ...
+#' )
+#' @export
 #' @examples
-#' ## Find the height of the supplied stem diameter
-#' height_at_dob(dbh = example_trees$dbh,
-#'               ht = example_trees$ht,
+#' ## Load data verbs
+#' library(dplyr)
+#'
+#' ## Find the height of a six-inch outside-bark diameter.
+#' height_at_dob(dbh = example_trees$dbh[1],
+#'               ht = example_trees$ht[1],
 #'               dob = 6,
-#'               model = example_trees$model)
-height_at_dob <- function(dbh, ht, dob, model, ..., units = "imperial",
-                          status = FALSE) {
-  .height_impl(
-    dbh, ht, dob, model, list(...), units, status, "dob", "height_at_dob"
-  )
+#'               spcd = example_trees$spcd[1],
+#'               model = example_trees$model[1]) %>%
+#'   rename(`height (feet)` = value)
+height_at_dob <- function(dbh, ht, dob, spcd, model = NULL, ...) {
+  input <- .mc_stem_inputs(spcd, model, list(...), TRUE)
+  .public_status(.height_impl(
+    dbh, ht, dob, input$model, input$aux, "imperial", TRUE, "dob",
+    "height_at_dob"
+  ))
 }

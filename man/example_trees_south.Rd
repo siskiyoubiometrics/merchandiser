@@ -3,80 +3,28 @@
 \docType{data}
 \name{example_trees_south}
 \alias{example_trees_south}
-\title{Example trees from the South}
+\title{Example southern plantation trees}
 \format{
-A data frame. Only stopper fields
-contain missing values, indicating no recorded stopper of that kind.
+A data frame with the following columns:
 \describe{
-\item{stand}{Character stand label, unitless.}
-\item{plot}{Character synthetic plot label, unitless.}
-\item{tree}{Integer tree number, unique within this example set.}
-\item{spcd}{Integer Forest Inventory and Analysis species code, unitless.}
-\item{species}{Character common species name, unitless.}
-\item{dbh}{Numeric diameter at breast height outside bark, inches.}
-\item{ht_observed}{Numeric retained synthetic total height above ground, feet. Missing values
-mark withheld heights.}
-\item{ht_simulated}{Numeric generated total height above ground, feet.}
-\item{age}{Integer assumed age in years.}
-\item{pruned}{Logical synthetic pruning indicator.}
-\item{region}{Integer Forest Service region code, unitless.}
-\item{forest}{Integer Forest Service forest code, unitless.}
-\item{district}{Integer Forest Service district code, unitless.}
-\item{longitude}{Numeric assumed longitude, decimal degrees east.}
-\item{latitude}{Numeric assumed latitude, decimal degrees north.}
-\item{expansion_factor}{Numeric example expansion factors in trees per acre.}
-\item{saw_stop}{Numeric height above ground, feet. Wood above this
-stopper is restricted to pulp.
-
-Missing means no saw stopper.}
-\item{pulp_stop}{Numeric height above ground, feet. Wood above this
-stopper is culled. Missing means no pulp stopper.}
-\item{jump_butt}{Numeric height above ground, feet.
-
-Wood from stump to
-this height is culled. Missing means no jump butt.}
+\item{stand}{Stand identifier, text.}
+\item{plot}{Plot identifier, text.}
+\item{tree_id}{Tree identifier, unique within the example table.}
+\item{spcd}{Numeric inventory species code.}
+\item{dbh}{Diameter at breast height outside bark, inches.}
+\item{ht}{Total tree height above ground, feet.}
+\item{age}{Tree age, years.}
+\item{saw_stop}{Height where only pulpwood may be cut above it, feet. Missing means no stop.}
+\item{pulp_stop}{Height where merchandising ends, feet. Missing means no stop.}
+\item{jump_butt}{Height above a cull butt section, feet. Missing means no jump.}
+\item{longitude}{Longitude, decimal degrees.}
+\item{latitude}{Latitude, decimal degrees.}
 }
-}
-\source{
-\code{data-raw/example-trees.R} contains the height coefficients and source references.
 }
 \usage{
-## Call signatures
 example_trees_south
 }
 \description{
-Synthetic tree measurements with stopping heights for \code{\link[=defects_from_stoppers]{defects_from_stoppers()}} and
-\code{\link[=merchandise]{merchandise()}}. \code{ht_observed} retains every simulated height.
-}
-\details{
-The generator is \code{data-raw/example-trees.R}. Locations, ages, pruning flags,
-and expansion factors are synthetic inputs.
-}
-\section{Status and missing values}{
-
-The data carry no calculation statuses. Missing heights in \code{ht_observed} are withheld from
-fitting. Missing stopping heights produce no corresponding restriction in
-\code{\link[=defects_from_stoppers]{defects_from_stoppers()}}.
-}
-
-\section{Using the supplied measurements}{
-
-The measurements use imperial units. \code{units = 'metric'} declares input units without converting
-these data.
-}
-
-\examples{
-## Load dplyr
-library(dplyr)
-
-## Inspect the shipped measurements
-example_trees_south \%>\%
-  select(tree, species, dbh, ht_observed) \%>\%
-  slice_head(n = 3)
-}
-\seealso{
-\link{example_trees_pnw} for unmeasured-height examples,
-\link{example_trees} for a small complete inventory,
-\code{\link[=defects_from_stoppers]{defects_from_stoppers()}} to translate the stopping-height columns.
+The trees are synthetic and illustrate package calculations.
 }
 \keyword{datasets}

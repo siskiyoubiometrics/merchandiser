@@ -1,5 +1,6 @@
 .demo_r_dib <- function(dbh, ht, h, aux) {
-  bark_ratio <- if (!is.null(aux$bark_ratio)) aux$bark_ratio else rep(0.9, length(dbh))
+  bark_ratio <- if (!is.null(aux$bark_ratio))
+    aux$bark_ratio else rep(0.9, length(dbh))
   as.double(dbh * bark_ratio * sqrt((ht - h) / (ht - 4.5)))
 }
 
@@ -8,51 +9,28 @@
     return(1L)
   }
   parsed <- suppressWarnings(as.double(value))
-  if (!is.finite(parsed) || parsed > .Machine$integer.max) {
-    return(1L)
-  }
-  as.integer(parsed)
+  if (is.infinite(parsed))
+    parsed <- .Machine$double.xmax
+  .validate_thread_count(parsed, "MERCHANDISER_THREADS")
 }
 
 .demo_models <- function() {
-  common_inputs <- list(
-    required = character(),
-    optional = "bark_ratio",
-    pairs = list()
-  )
+  common_inputs <- list(required = character(), optional = "bark_ratio", pairs = list())
   compiled <- new_stem_model_unchecked(
-    id = "demo.paraboloid",
-    family = "demo",
-    kernel = list(
+    id = "demo.paraboloid", form = "demo", kernel = list(
       type = "compiled",
-      key = "demo_paraboloid",
-      has_dob = FALSE,
-      has_inverse = TRUE,
-      has_integral = TRUE
-    ),
-    inputs = common_inputs,
-    units = "imperial",
-    species = integer(),
-    stump_ht = 1,
-    bark_ratio = 0.9,
+      key = "demo_paraboloid", has_dob = FALSE, has_inverse = TRUE, has_integral = TRUE
+    ), inputs = common_inputs,
+    measurement_system = "imperial", spcd = integer(), stump_ht = 1, bark_ratio = 0.9,
     source = "demonstration kernel",
     notes = "Quadratic paraboloid with a constant bark ratio."
   )
   r_model <- new_stem_model_unchecked(
-    id = "demo.paraboloid.r",
-    family = "demo",
-    kernel = list(
+    id = "demo.paraboloid.r", form = "demo", kernel = list(
       type = "r",
-      key = NA_character_,
-      has_dob = FALSE,
-      has_inverse = FALSE,
-      has_integral = FALSE
-    ),
-    dib = .demo_r_dib,
-    inputs = common_inputs,
-    units = "imperial",
-    species = integer(),
-    stump_ht = 1,
+      key = NA_character_, has_dob = FALSE, has_inverse = FALSE, has_integral = FALSE
+    ), dib = .demo_r_dib,
+    inputs = common_inputs, measurement_system = "imperial", spcd = integer(), stump_ht = 1,
     bark_ratio = 0.9,
     source = "demonstration kernel",
     notes = "R-kernel copy used to exercise numerical inversion and integration."
@@ -61,27 +39,19 @@
 }
 
 .onLoad <- function(libname, pkgname) {
-  makeActiveBinding("tv_species", function() {
-    # Namespace inspection reads bindings through lookup and filtering. Keep
-    # inspection quiet so it can classify the data without user diagnostics.
-    inspecting <- any(vapply(sys.calls(), function(call) {
-      head <- call[[1L]]
-      is.symbol(head) && as.character(head) %in% c("get", "get0", "mget", "Filter")
-    }, logical(1L)))
-    if (!inspecting) .merge_deprecated("tv_species", "species_reference")
-    species_reference
-  }, asNamespace(pkgname))
-  value <- Sys.getenv("MERCHANDISER_THREADS",
-                      unset = Sys.getenv("TREEVOLUME_THREADS", unset = ""))
+  value <- Sys.getenv("MERCHANDISER_THREADS", unset = Sys.getenv(
+    "TREEVOLUME_THREADS",
+    unset = ""
+  ))
   .tv_runtime$threads <- .thread_count_from_env(value)
   .tv_registry$patterns <- rbind(
     .flewelling_patterns(), .clark_patterns(), .r10r4_patterns(),
-    .smalltaper_patterns(),
-    .nsvb_patterns()
+    .smalltaper_patterns(), .nsvb_patterns()
   )
   for (model in c(
     .demo_models(), .flewelling_models(), .clark_models(), .r10r4_models(),
-    .smalltaper_models(), .nsvb_models()
+    .smalltaper_models(),
+    .nsvb_models()
   )) {
     .register_package_model(model)
   }

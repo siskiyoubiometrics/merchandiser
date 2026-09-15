@@ -4,52 +4,30 @@
 \alias{unregister_taper_model}
 \title{Remove a local equation from the current analysis}
 \usage{
-## Call signatures
-unregister_taper_model(id)
+unregister_taper_model(
+  model
+)
 }
 \arguments{
-\item{id}{Required single nonempty character identifier of a registered local equation. No
-default. Missing or unknown identifiers are errors.
-
-Unitless. Example:
-\code{'example.remove'}.}
+\item{model}{The identifier names the taper model in the registry. Character scalar model
+identifier. Required, with no default.}
 }
 \value{
-Logical \code{TRUE}, invisibly, after successful removal. Unitless.
+TRUE, invisibly, after removing the private model.
 }
 \description{
-Remove a local model registration from the current session.
+Remove a local equation from the current analysis
 }
-\details{
-Removal affects only this session. Saved result plots or price comparisons can
-need the removed model again. Register the saved object before rerunning those
-calculations.
-
-Removal is prohibited while equation evaluation is active.
-}
-\section{Status and missing values}{
-
-No tree status codes are returned. Invalid inputs stop the call. Repair
-the model or identifier before continuing.
-
-A successful check or lookup
-does not establish tree volume.
-}
-
 \examples{
-## Fit a model to the shipped stem measurements
-fit <- fit_taper(data = example_stem_measurements, form = 'max_burkhart', units = 'imperial')
+## Copy an example tree's model
+local_model <- get_taper_model(model = example_trees$model[1])
 
-## Register fitted coefficients for the session
-register_taper_model(model = as_taper_model(x = fit, id = 'example.registered'))
+## Name the local copy
+local_model$id <- 'example.remove'
 
-## Check the session registration
-has_taper_model(id = 'example.registered')
+## Register the copy
+register_taper_model(x = local_model)
 
-## Remove the session registration
-unregister_taper_model(id = 'example.registered')
-}
-\seealso{
-\code{\link[=new_taper_model]{new_taper_model()}} to define an equation, \code{\link[=has_taper_model]{has_taper_model()}} to
-check availability, \code{\link[=dib]{dib()}} to calculate diameter.
+## Remove and report the local registration
+print(unregister_taper_model(model = local_model$id))
 }

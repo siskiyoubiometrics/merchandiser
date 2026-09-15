@@ -1,11 +1,11 @@
 Package: merchandiser
-Title: Estimate Log and Product Volumes from Forest Inventory
-Version: 0.4.0
+Title: Estimate Log and Product Volumes from Tree Measurements
+Version: 0.5.0
 Authors@R:
     person("Hunter", "Stanke", , "hunter@siskiyoubiometrics.com", role = c("aut", "cre", "cph"))
-Description: Estimates log and product volumes from forest inventory.
+Description: Estimates log and product volumes from tree measurements.
     Combines stem profiles, height models, biomass equations, product
-    specifications, located defects, bucking, and summaries. The National
+    specifications, located defects, and bucking. The National
     Volume Estimator Library supplies the shipped source equations.
 License: MIT + file LICENSE
 Copyright: See inst/COPYRIGHTS for copyright holders of ported material.
@@ -16,6 +16,7 @@ Depends:
 LazyData: true
 Imports:
     nlme,
+    parallel,
     Rcpp,
     RcppParallel
 LinkingTo:
@@ -43,3 +44,4 @@ Language: en-US
 Roxygen: list(markdown = TRUE)
 SystemRequirements: GNU make
 Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.1

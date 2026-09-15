@@ -7,25 +7,22 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE,
-                      comment = '#>',
-                      message = FALSE,
-                      fig.width = 7,
-                      fig.height = 4)
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 120)
 library(merchandiser)
 library(dplyr)
 ```
 
-Equation identifiers select a taper implementation. Species identifiers select species scope and property records.
-Forest Service region, forest, and district fields are agency codes used by the source default lookup.
+Equation identifiers select taper implementations, and species codes select equation scope and properties.
+Stored assignments and registry records support repeating a calculation.
 
 ## Stored equations
 
 ```{r}
-## Inspect equations stored with the shipped tree list
+## Inspect stored species and model assignments
 assignments <- example_trees %>%
-  distinct(spcd, species, model)
+  distinct(spcd, model)
 ```
 
 ```{r, echo = FALSE}
@@ -34,73 +31,63 @@ assignments %>%
 ```
 
 ```{r}
-## Check the stored species and equation assignments
-check_taper_models(id = assignments$model, spcd = assignments$spcd)
+## Check the stored assignments
+check_taper_models(model = assignments$model, spcd = assignments$spcd)
 ```
 
-An empty diagnosis table means the assignment checks passed.
-An explicit `model` takes precedence over `taper_map` and automatic defaults.
+An empty diagnosis table means the assignments passed. Explicit `model` takes precedence over `taper_map` and species defaults.
 
-## Source defaults
+## Species defaults
 
-`nvel_default_equation()` applies the pinned lookup to agency codes already present in the example inventory.
+Automatic selections are recorded by `merchandise()`. The result retains the selected equation for every tree.
 
 ```{r}
-## Resolve equations for the shipped agency-code combinations
-defaults <- example_trees_pnw %>%
-  distinct(region, forest, district, spcd) %>%
-  mutate(model = nvel_default_equation(region = region,
-                                       forest = forest,
-                                       district = district,
-                                       spcd = spcd))
+## Define saw specifications
+saw <- product(product = 'domestic_saw',  ## product name, unitless
+               min_length = 16,  ## feet
+               max_length = 40,  ## feet
+               trim = 1,  ## feet
+               min_sed = 6,  ## inches
+               volume_unit = 'scribner')  ## Scribner board feet
+
+## Cut and scale the trees
+result <- merchandise(tree_id = example_trees$tree_id,
+                      dbh = example_trees$dbh,
+                      ht = example_trees$ht,
+                      spcd = example_trees$spcd,
+                      products = saw)
 ```
 
 ```{r, echo = FALSE}
-defaults %>%
+result$assumptions %>%
+  filter(assumption == 'species_model') %>%
+  select(tree_id, spcd, model) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-```{r}
-## Attach the resolved equations to inventory rows
-trees <- example_trees_pnw %>%
-  left_join(defaults, by = c('region', 'forest', 'district', 'spcd'))
-```
-
-```{r, echo = FALSE}
-trees %>%
-  select(tree, species, model) %>%
-  slice_head(n = 5) %>%
-  knitr::kable(digits = 3, row.names = FALSE)
-```
-
-`nvel_from_fia_code()` translates Forest Inventory and Analysis inventory equation codes into source identifiers.
-Its `geosub` and `primary_top` arguments participate in source substitutions.
-
-## Species and ecological codes
+## Species properties
 
 ```{r}
-## Resolve species records for the example tree list
-species <- species_lookup(x = assignments$spcd, from = 'spcd')
+## Select the example species records
+species <- species_reference %>%
+  filter(spcd %in% assignments$spcd)
 ```
 
 ```{r, echo = FALSE}
 species %>%
-  select(spcd, common, scientific) %>%
+  select(spcd, common, scientific, `bark ratio (unitless)` = bark_ratio) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-`species_reference` stores names, wood density, and bark ratios.
-`nsvb_division()` returns county-predominant ecological codes from state and county codes.
-`nsvb_division_xy()` uses coordinates and packaged ecological boundaries for location-based assignment.
+`species_reference` stores names, wood density, and bark ratios. Calculation calls accept numeric species codes.
+County and coordinate lookups select optional [biomass coefficients](biomass-carbon.html).
 
 ## Registry record
 
 ```{r}
-## Save the current equation registrations
+## Record the current registry
 manifest <- taper_manifest()
 
-## Compare the saved record with the current registry
-check_taper_manifest(manifest = manifest)
 ```
 
 ```{r, echo = FALSE}
@@ -110,5 +97,4 @@ manifest %>%
 ```
 
 The manifest records registered identifiers, owning packages, versions, and registration order.
-It excludes local coefficients and source identifiers resolved without explicit registration.
-Save fitted objects or coefficient vectors separately.
+It excludes coefficients and source identifiers resolved without explicit registration. Save fitted objects or coefficient vectors separately.

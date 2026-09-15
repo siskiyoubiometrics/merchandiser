@@ -1,178 +1,97 @@
-#' Example trees from the Pacific Northwest
+#' Example trees for stem calculations
 #'
-#' Synthetic tree measurements for [complete_heights()], [biomass()], and [merchandise()].
-#' `ht_observed` retains a subset of `ht_simulated` for height fitting.
-#' @details The generator is `data-raw/example-trees.R`. Locations, ages, pruning flags,
-#' and expansion factors are synthetic inputs.
-#' @format A data frame. No values are missing
-#'   except unmeasured `ht_observed` values.
+#' The trees are synthetic and illustrate package calculations.
+#' @format A data frame with the following columns:
 #' \describe{
-#'   \item{stand}{Character stand label, unitless.}
-#'   \item{plot}{Character synthetic plot label, unitless.}
-#'   \item{tree}{Integer tree number, unique within this example set.}
-#'   \item{spcd}{Integer Forest Inventory and Analysis species code, unitless.}
-#'   \item{species}{Character common species name, unitless.}
-#'   \item{dbh}{Numeric diameter at breast height outside bark, inches.}
-#'   \item{ht_observed}{Numeric retained synthetic total height above ground, feet. Missing values
-#' mark withheld heights.}
-#'   \item{ht_simulated}{Numeric generated total height above ground, feet.}
-#'   \item{age}{Integer assumed age in years.}
-#'   \item{pruned}{Logical synthetic pruning indicator.}
-#'   \item{region}{Integer Forest Service region code, unitless.}
-#'   \item{forest}{Integer Forest Service forest code, unitless.}
-#'   \item{district}{Integer Forest Service district code, unitless.}
-#'   \item{longitude}{Numeric assumed longitude, decimal degrees east.}
-#'   \item{latitude}{Numeric assumed latitude, decimal degrees north.}
-#'   \item{expansion_factor}{Numeric example expansion factors in trees per acre.}
+#' \item{tree_id}{Tree identifier, unique within the example table.}
+#' \item{spcd}{Numeric inventory species code.}
+#' \item{dbh}{Diameter at breast height outside bark, inches.}
+#' \item{ht}{Total tree height above ground, feet.}
+#' \item{model}{Registered taper model identifier.}
 #' }
-#' @source `data-raw/example-trees.R` contains the height coefficients and source references.
-#' @seealso [example_trees] for a smaller complete inventory,
-#'   [example_trees_south] for stopping-height examples,
-#'   [fit_height()] to estimate missing heights from measured trees.
-#' @usage
+"example_trees"
+
+#' Example Pacific Northwest trees
 #'
-#' ## Call signatures
-#' example_trees_pnw
-#' @examples
-#' ## Load dplyr
-#' library(dplyr)
-#'
-#' ## Inspect the shipped measurements
-#' example_trees_pnw %>%
-#'   select(tree, species, dbh, ht_observed) %>%
-#'   slice_head(n = 3)
-#' @section Status and missing values:
-#' The data carry no calculation statuses. Missing heights in `ht_observed` are withheld from
-#' fitting. Missing stopping heights produce no corresponding restriction in
-#' [defects_from_stoppers()].
-#' @section Using the supplied measurements:
-#' The measurements use imperial units. `units = 'metric'` declares input units without converting
-#' these data.
+#' The trees are synthetic and illustrate package calculations.
+#' @format A data frame with the following columns:
+#' \describe{
+#' \item{stand}{Stand identifier, text.}
+#' \item{plot}{Plot identifier, text.}
+#' \item{tree_id}{Tree identifier, unique within the example table.}
+#' \item{spcd}{Numeric inventory species code.}
+#' \item{dbh}{Diameter at breast height outside bark, inches.}
+#' \item{ht}{Total tree height above ground, feet.}
+#' \item{ht_status}{Height origin, measured or predicted.}
+#' \item{age}{Tree age, years.}
+#' \item{longitude}{Longitude, decimal degrees.}
+#' \item{latitude}{Latitude, decimal degrees.}
+#' }
 "example_trees_pnw"
 
-#' Example trees from the South
+#' Example southern plantation trees
 #'
-#' Synthetic tree measurements with stopping heights for [defects_from_stoppers()] and
-#' [merchandise()]. `ht_observed` retains every simulated height.
-#' @details The generator is `data-raw/example-trees.R`. Locations, ages, pruning flags,
-#' and expansion factors are synthetic inputs.
-#' @format A data frame. Only stopper fields
-#'   contain missing values, indicating no recorded stopper of that kind.
+#' The trees are synthetic and illustrate package calculations.
+#' @format A data frame with the following columns:
 #' \describe{
-#'   \item{stand}{Character stand label, unitless.}
-#'   \item{plot}{Character synthetic plot label, unitless.}
-#'   \item{tree}{Integer tree number, unique within this example set.}
-#'   \item{spcd}{Integer Forest Inventory and Analysis species code, unitless.}
-#'   \item{species}{Character common species name, unitless.}
-#'   \item{dbh}{Numeric diameter at breast height outside bark, inches.}
-#'   \item{ht_observed}{Numeric retained synthetic total height above ground, feet. Missing values
-#' mark withheld heights.}
-#'   \item{ht_simulated}{Numeric generated total height above ground, feet.}
-#'   \item{age}{Integer assumed age in years.}
-#'   \item{pruned}{Logical synthetic pruning indicator.}
-#'   \item{region}{Integer Forest Service region code, unitless.}
-#'   \item{forest}{Integer Forest Service forest code, unitless.}
-#'   \item{district}{Integer Forest Service district code, unitless.}
-#'   \item{longitude}{Numeric assumed longitude, decimal degrees east.}
-#'   \item{latitude}{Numeric assumed latitude, decimal degrees north.}
-#'   \item{expansion_factor}{Numeric example expansion factors in trees per acre.}
-#'   \item{saw_stop}{Numeric height above ground, feet. Wood above this
-#'     stopper is restricted to pulp.
-#'
-#' Missing means no saw stopper.}
-#'   \item{pulp_stop}{Numeric height above ground, feet. Wood above this
-#'     stopper is culled. Missing means no pulp stopper.}
-#'   \item{jump_butt}{Numeric height above ground, feet.
-#'
-#' Wood from stump to
-#'     this height is culled. Missing means no jump butt.}
+#' \item{stand}{Stand identifier, text.}
+#' \item{plot}{Plot identifier, text.}
+#' \item{tree_id}{Tree identifier, unique within the example table.}
+#' \item{spcd}{Numeric inventory species code.}
+#' \item{dbh}{Diameter at breast height outside bark, inches.}
+#' \item{ht}{Total tree height above ground, feet.}
+#' \item{age}{Tree age, years.}
+#' \item{saw_stop}{Height where only pulpwood may be cut above it, feet. Missing means no stop.}
+#' \item{pulp_stop}{Height where merchandising ends, feet. Missing means no stop.}
+#' \item{jump_butt}{Height above a cull butt section, feet. Missing means no jump.}
+#' \item{longitude}{Longitude, decimal degrees.}
+#' \item{latitude}{Latitude, decimal degrees.}
 #' }
-#' @source `data-raw/example-trees.R` contains the height coefficients and source references.
-#' @seealso [example_trees_pnw] for unmeasured-height examples,
-#'   [example_trees] for a small complete inventory,
-#'   [defects_from_stoppers()] to translate the stopping-height columns.
-#' @usage
-#'
-#' ## Call signatures
-#' example_trees_south
-#' @examples
-#' ## Load dplyr
-#' library(dplyr)
-#'
-#' ## Inspect the shipped measurements
-#' example_trees_south %>%
-#'   select(tree, species, dbh, ht_observed) %>%
-#'   slice_head(n = 3)
-#' @section Status and missing values:
-#' The data carry no calculation statuses. Missing heights in `ht_observed` are withheld from
-#' fitting. Missing stopping heights produce no corresponding restriction in
-#' [defects_from_stoppers()].
-#' @section Using the supplied measurements:
-#' The measurements use imperial units. `units = 'metric'` declares input units without converting
-#' these data.
 "example_trees_south"
 
-#' Synthetic example trees
+#' Example Pacific Northwest defect records
 #'
-#' Complete synthetic Douglas-fir and western hemlock measurements with assigned taper models. The
-#' table supplies inputs for stem volume, biomass, and log calculations.
-#' @details `data-raw/example-trees.R` records the measurements and model assignments.
-#' @format A data frame without missing values:
+#' The trees are synthetic and illustrate package calculations.
+#' @format A data frame with the following columns:
 #' \describe{
-#'   \item{tree}{Integer tree number, unique within this example set.}
-#'   \item{spcd}{Numeric Forest Inventory and Analysis species code, unitless.}
-#'   \item{species}{Character common name, unitless.}
-#'   \item{dbh}{Numeric diameter at breast height outside bark, inches.}
-#'   \item{ht}{Numeric total height above ground, feet.}
-#'   \item{model}{Character registered taper model identifier, unitless,
-#'     `F00FW2W202` for Douglas-fir and `F03FW2W263` for western hemlock.}
+#' \item{tree_id}{Identifier linking this record to tree_id in example_trees_pnw.}
+#' \item{start_height}{Start of the defect section above ground, feet.}
+#' \item{end_height}{End of the defect section above ground, feet. Missing means the top of the
+#'   tree.}
+#' \item{effect}{Cutting effect, cull, restrict, end, or sweep.}
+#' \item{product}{Required product name for restrict, pulp in this example. Missing for other
+#'   effects.}
+#' \item{percent}{Whole-number sweep percentage. Missing for other effects.}
 #' }
-#' @seealso [example_trees_pnw] for height completion examples,
-#'   [example_trees_south] for stopping-height examples,
-#'   [merchandise()] to calculate log volume.
-#' @usage
+"example_defects_pnw"
+
+#' Example stem measurements
 #'
-#' ## Call signatures
-#' example_trees
-#' @examples
-#' ## Load dplyr
-#' library(dplyr)
-#'
-#' ## Inspect the shipped measurements
-#' example_trees %>%
-#'   select(tree, species, dbh, ht) %>%
-#'   slice_head(n = 3)
-#' @section Status and missing values:
-#' The data have no missing measurements or calculation statuses.
-#' @section Using the supplied measurements:
-#' The measurements use imperial units. `units = 'metric'` declares input units without converting
-#' these data.
-"example_trees"
-#' Modeled upper-stem measurements for taper fitting
-#'
-#' Inside-bark diameters calculated from the complete synthetic example inventory.
-#' These are modeled measurements for demonstrating fitting, not field observations
-#' or independent validation data. The generator is `data-raw/example-trees.R`.
-#' @format A data frame with these columns:
+#' The trees are synthetic and illustrate package calculations.
+#' @format A data frame with the following columns:
 #' \describe{
-#'   \item{tree}{Integer tree number matching [example_trees], repeated by measurement.}
-#'   \item{species}{Character common species name.}
-#'   \item{dbh}{Numeric outside-bark breast height diameter, inches.}
-#'   \item{ht}{Numeric total height above ground, feet.}
-#'   \item{h}{Numeric measurement height above ground, feet.}
-#'   \item{dib}{Numeric modeled diameter inside bark at the measurement height, inches.}
+#' \item{tree_id}{Tree identifier, repeated for measurements on the same tree.}
+#' \item{spcd}{Numeric inventory species code.}
+#' \item{dbh}{Diameter at breast height outside bark, inches.}
+#' \item{ht}{Total tree height above ground, feet.}
+#' \item{h}{Measurement height above ground, feet.}
+#' \item{dib}{Diameter inside bark, inches.}
 #' }
-#' @seealso [fit_taper()] for fitting and [example_trees] for the complete inventory.
-#' @usage
-#'
-#' ## Call signatures
-#' example_stem_measurements
-#' @examples
-#' ## Load dplyr
-#' library(dplyr)
-#'
-#' ## Inspect the shipped measurements
-#' example_stem_measurements %>%
-#'   select(tree, dbh, ht, h, dib) %>%
-#'   slice_head(n = 3)
 "example_stem_measurements"
+
+#' Shipped default taper models by species
+#'
+#' Species-specific models are selected from Region 6, then Region 8, then Region 9 lookups.
+#' A default must resolve to exactly that species and require no extra measurements.
+#' Species without an accepted model have no row.
+#' @format A data frame with the following columns:
+#' \describe{
+#' \item{spcd}{Integer inventory species code.}
+#' \item{model}{Character taper model identifier.}
+#' \item{source}{Character lookup call that supplied the model.}
+#' }
+#' @export
+#' @examples
+#' ## Inspect the shipped defaults for the example species
+#' default_taper_models[default_taper_models$spcd %in% example_trees$spcd, ]
+"default_taper_models"

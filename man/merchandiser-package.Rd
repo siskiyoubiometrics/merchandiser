@@ -4,59 +4,18 @@
 \name{merchandiser-package}
 \alias{merchandiser}
 \alias{merchandiser-package}
-\title{Estimate log and product volumes from forest inventory}
-\value{
-The package provides product definitions, calculations, tables, and
-plotting methods . It imposes no special inventory class.
-}
+\title{Tree merchandising from measured stems}
 \description{
-Calculate log dimensions, product volumes, and values from tree measurements, taper
-equations, product tables, and defects. Fit heights and taper, estimate biomass and carbon,
-convert volume to green weight, and compile expanded inventory summaries.
-}
-\section{Working objects}{
-
-\code{stem_profile()} returns modeled diameters and cumulative volumes. \code{products()} combines log
-specifications, measurement rules, and optional prices.
-
-\code{defect()} records located restrictions and deductions. \code{merchandise()} returns logs, tree
-totals, residual sections, and calculation choices.
-}
-
-\section{Sources}{
-
-The National Volume Estimator Library supplies the shipped source equations.
-\code{\link[=nvel_source_revision]{nvel_source_revision()}} records the version used. Local equations can be
-registered for an analysis, with their coefficients and inputs saved separately.
-}
-
-\section{Status and missing values}{
-
-Use \code{status = TRUE} in \code{\link[=merchandise]{merchandise()}} to retain tree and log diagnoses. \code{ok} means completion
-and 410 means a valid result with no logs. Review other
-codes and missing quantities before reporting totals.
-
-Structural errors
-stop a call. \code{\link[=stand_table]{stand_table()}} keeps failed and absent trees separate when
-applying caller-supplied expansion weights.
-}
-
-\examples{
-## Calculate logs for the shipped tree list
-result <- merchandise(dbh = example_trees$dbh,
-                      ht = example_trees$ht,
-                      model = example_trees$model,
-                      species = example_trees$species,
-                      products = example_products(name = 'pnw'),
-                      status = TRUE)
-
-## Inspect the result
-plot(result, tree = 5)
+Cut logs from tree measurements in inches and feet, explicit products, and located defects.
+Measure stem dimensions and volume, fit heights and taper, and estimate dry mass and carbon.
 }
 \seealso{
-\code{\link[=merchandise]{merchandise()}} to select logs, \code{\link[=product]{product()}} to state specifications,
-\code{\link[=defect]{defect()}} to record conditions, \code{\link[=stand_table]{stand_table()}} for expanded totals,
-\code{\link[=fit_height]{fit_height()}} to model unmeasured heights.
+Useful links:
+\itemize{
+  \item \url{https://github.com/siskiyoubiometrics/merchandiser}
+  \item Report bugs at \url{https://github.com/siskiyoubiometrics/merchandiser/issues}
+}
+
 }
 \author{
 \strong{Maintainer}: Hunter Stanke \email{hunter@siskiyoubiometrics.com} [copyright holder]

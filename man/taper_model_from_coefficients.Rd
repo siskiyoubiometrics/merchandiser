@@ -4,178 +4,62 @@
 \alias{taper_model_from_coefficients}
 \title{Create a taper model from a coefficient set}
 \usage{
-## Call signatures
-taper_model_from_coefficients(id, form, coefficients, species = integer(), stump_ht = 0,
-  bark_ratio = NA_real_, source = NULL, notes = '')
+taper_model_from_coefficients(
+  id,
+  form,
+  coefficients,
+  spcd = integer(),
+  stump_ht = 1,
+  bark_ratio = NA_real_,
+  source = NULL
+)
 }
 \arguments{
-\item{id}{Required single nonempty character equation name, unitless. Missing and empty names
-are errors. Example: \code{'example.fitted'}.
+\item{id}{The identifier names the taper model in the registry. Character scalar model
+identifier. Required, with no default.}
 
-Registration additionally requires a distinct local name containing a dot.}
+\item{form}{The equation form chooses the relationship to fit. Character scalar, equation name.
+Required, with no default.}
 
-\item{form}{Required single character equation name, "kozak_2002",
-"kozak_1988", or "max_burkhart". No default. Unitless.
+\item{coefficients}{The coefficients supply the published taper equation values. Named numeric
+vector. Required, with no default.}
 
-Missing or unknown names are errors. Example: \code{'max_burkhart'}.}
+\item{spcd}{The species codes limit the trees this model covers. Numeric vector of species
+codes. Default: \code{integer()}.}
 
-\item{coefficients}{Required complete finite named numeric vector, with
-the specified order and bounds. No default. Missing or incomplete values are
-errors.
+\item{stump_ht}{Stump height above ground. Numeric
+scalar, feet. Default: \code{1}.}
 
-Coefficients use centimeters and meters.}
+\item{bark_ratio}{The bark ratio estimates inside diameter from outside diameter when needed.
+Numeric scalar, inside diameter divided by outside diameter. Default: \code{NA_real_}.}
 
-\item{species}{Positive whole-number Forest Inventory and Analysis species
-codes supplied as an integer
-or double vector, or \code{integer()} for an unrestricted model. Values are
-normalized to integers during validation. Default \code{integer()} is unrestricted.
-
-Missing or invalid codes are errors. Unitless.}
-
-\item{stump_ht}{One finite nonnegative numeric stump height in meters. Default
-\code{0} means ground. Missing is an error.}
-
-\item{bark_ratio}{One numeric ratio of inside-bark to outside-bark diameter,
-strictly greater than zero and at most one. Default \code{NA_real_} supplies
-no bark ratio. Unitless.}
-
-\item{source}{One nonmissing character source description, unitless. Default \code{NULL} supplies the
-equation-form citation and, for a converted
-fit, its fitting origin. An empty string is allowed.
-
-Example:
-\code{source = 'Illustrative coefficient set'}. Missing text is an error.}
-
-\item{notes}{One character note, unitless. Empty text is allowed, missing text
-is an error. The coefficient conversion defaults to \code{''}.
-
-Conversion
-from a fit defaults to \code{'Population fixed effects from fit_taper().'},
-identifying the common fitted relationship. Example: \code{notes = 'Local fit'}.}
+\item{source}{The source records where the model came from. Character scalar, provenance text.
+Default: \code{NULL}.}
 }
 \value{
-A validated \code{taper_model} with the coefficients in its \code{data}
-field.
+A taper_model object with the supplied coefficients and provenance, ready for
+register_taper_model().
 }
 \description{
-Create a compiled taper model from a named coefficient vector in centimeters and meters.
+Create a taper model from a coefficient set
 }
-\details{
-Kozak 1988 coefficients are ordered \code{a0}, \code{a1}, \code{a2}, \code{b1}
-through \code{b5}, and \code{p}. Kozak 2002 coefficients are ordered \code{a0}, \code{a1},
-\code{a2}, and \code{b1} through \code{b6}. Max and Burkhart coefficients are ordered
-\code{b1} through \code{b4}, \code{a1}, and \code{a2}, where \code{a2} is the lower join point.
-
-Diameters are in centimeters and heights are in meters in each equation.
-The computation functions convert imperial calls at the package boundary.
-}
-\section{Coefficient order and bounds}{
-
-Kozak 1988 requires \code{a0}, \code{a1}, \code{a2}, \code{b1}, \code{b2}, \code{b3}, \code{b4}, \code{b5}, \code{p},
-in that order. \code{a0} and \code{a2} must be positive and \code{p} strictly between zero
-and one. A fitting start additionally requires \verb{0.05 < p < 0.35}.
-
-Kozak 2002 requires \code{a0}, \code{a1}, \code{a2}, \code{b1}, \code{b2}, \code{b3}, \code{b4}, \code{b5}, \code{b6},
-with positive \code{a0}. Max and Burkhart requires \code{b1}, \code{b2}, \code{b3}, \code{b4},
-\code{a1}, \code{a2}, with \verb{0 < a2 < a1 < 1}. Other coefficients may be any finite
-numeric value.
-
-Names and order must match, with no missing entries. Coefficients describe diameter in
-centimeters and height in meters and
-must not be treated as coefficients for an imperial equation. Join heights
-and \code{p} are unitless proportions of total height.
-}
-
-\section{Status and missing values}{
-
-These functions return no tree codes. Missing or invalid coefficients,
-identifiers, species codes, or conventions stop construction. An omitted
-bark ratio leaves outside-bark calculations unavailable unless a later
-call supplies one.
-
-Register the object before using its name.
-}
-
-\section{Taper model fields}{
-
-A \code{taper_model} is a named list. Fields are supplied by the defining function,
-not columns of an inventory. \code{id} is its nonempty character equation name,
-\code{family} is its nonempty character equation family, and \code{units} is either
-\code{'imperial'} or \code{'metric'}.
-
-These labels are unitless. \code{species} is a
-vector of positive whole-number inventory species codes, with \code{integer()}
-meaning unrestricted. Missing codes are errors.
-
-\code{stump_ht} is one finite
-nonnegative height in the equation's feet or meters. \code{bark_ratio} is one
-numeric inside-bark to outside-bark diameter ratio greater than zero and
-at most one, or \code{NA} when no default is supplied.
-
-\code{dib}, \code{dob}, \code{height_at_dib}, and \code{volume} contain equation functions or \code{NULL} when that
-function is absent. For an equation written in R, \code{dib} is required.
-
-\code{inputs} is a list with character vectors \code{required} and \code{optional}, then a list \code{pairs}, in
-that order. For example, \code{list(required = character(), optional = 'bark_ratio', pairs = list())} declares an optional bark ratio. All declared input names must come from the
-equation inputs described on \code{\link[=dib]{dib()}}.
-
-Names cannot be duplicated. A pair is a character vector such as \code{c('upper_ht1', 'upper_d1')}.
-
-\code{source} and \code{notes} are single character strings, default \code{''} when made by
-\code{\link[=new_taper_model]{new_taper_model()}}. Empty text is allowed and missing text is an error. \code{data} holds
-equation coefficients or other fixed equation data.
-
-It cannot be an environment, function, or external pointer. \code{class_version} is the character
-representation version, currently \code{'0.3'}, and must match.
-
-The literal field \code{kernel} describes which equation functions are present. Its \code{type} is
-\code{'r'} or \code{'compiled'}, \code{key} identifies a built-in equation or is \code{NA} for an R function,
-and logical \code{has_dob}, \code{has_inverse}, and \code{has_integral} identify direct calculations. These
-flags are not missing.
-
-The logical \code{oracle_verified} attribute records source-test coverage: \code{TRUE} means checked
-against source-library test cases, \code{FALSE} means not exercised, and \code{NA} means that
-comparison does not apply. It does not rate prediction accuracy for a stand. There are no
-data-frame list columns.
-}
-
-\section{Equation function inputs and returns}{
-
-Diameter callbacks take \code{dbh}, \code{ht}, \code{h}, and \code{aux}, in that order. Height callbacks replace \code{h}
-with \code{dib}. Volume callbacks take \code{dbh}, \code{ht}, \code{lower}, \code{upper}, and \code{aux}.
-
-Measurements arrive as equal-length vectors in the equation's declared units. \code{aux} is a
-named list of declared extra input vectors. A function must return a double vector of the
-same length in diameter, height, or cubic units, respectively.
-
-Missing or invalid outputs fail evaluation. An optional integer \code{status} attribute can
-retain per-row diagnoses. The functions must not change global objects, options, or random
-state.
-}
-
 \examples{
-## Fit coefficients from the shipped stem measurements
-fit <- fit_taper(data = example_stem_measurements,
-                 form = 'max_burkhart',
-                 units = 'imperial')
+## Obtain coefficients from the shipped synthetic stem measurements.
+fitted <- fit_taper(
+  tree_id = example_stem_measurements$tree_id,
+  dbh = example_stem_measurements$dbh,
+  ht = example_stem_measurements$ht,
+  h = example_stem_measurements$h,
+  dib = example_stem_measurements$dib,
+  spcd = example_stem_measurements$spcd,
+  form = 'max_burkhart'
+)
 
-## Create a compiled model from the coefficients
-taper_model_from_coefficients(id = 'example.coefficients',
-                              form = fit$form,
-                              coefficients = fit$coefficients)
-}
-\references{
-Kozak A (1988). "A variable-exponent taper equation." \emph{Canadian Journal
-of Forest Research}, 18(11), 1363-1368. \doi{10.1139/x88-213}.
+## Create a model from that coefficient set.
+local_model <- taper_model_from_coefficients(id = 'example.coefficients',
+                                             form = 'max_burkhart',
+                                             coefficients = fitted$coefficients)
 
-Kozak A (2004). "My last words on taper equations." \emph{The Forestry
-Chronicle}, 80(4), 507-515. \doi{10.5558/tfc80507-4}.
-
-Max TA, Burkhart HE (1976). "Segmented polynomial regression applied to
-taper equations." \emph{Forest Science}, 22(3), 283-289.
-\doi{10.1093/forestscience/22.3.283}.
-}
-\seealso{
-\code{\link[=fit_taper]{fit_taper()}} to estimate coefficients, \code{\link[=register_taper_model]{register_taper_model()}}
-to make the returned equation available, \code{\link[=dib]{dib()}} to calculate diameter.
+## Inspect the local model
+print(local_model)
 }

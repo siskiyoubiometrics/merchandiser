@@ -4,200 +4,89 @@
 \alias{fit_taper}
 \title{Fit a taper model to stem-analysis data}
 \usage{
-## Call signatures
-fit_taper(data, form = c('kozak_2002', 'kozak_1988', 'max_burkhart'), species = NULL, group =
-  NULL, weights = NULL, start = NULL, units = 'metric')
+fit_taper(
+  tree_id,
+  dbh,
+  ht,
+  h,
+  dib,
+  spcd,
+  form = 'max_burkhart',
+  group = NULL,
+  weights = NULL,
+  start = NULL
+)
 }
 \arguments{
-\item{data}{Required data frame with one row per diameter measurement and the
-fields. Omission or missing required columns is an error. Missing
-measurement rows are omitted with a warning.
+\item{tree_id}{Identify each measurement's tree. Atomic vector, unitless, required.}
 
-Example: \code{example_stem_measurements}. Tree measurements must remain consistent within \code{tree_id}.}
+\item{dbh}{Diameter at breast height outside bark. Numeric vector, inches, required.}
 
-\item{form}{One character form: \code{'kozak_2002'} (default), \code{'kozak_1988'}, or
-\code{'max_burkhart'}. Unitless. Missing or unknown choices are errors.
+\item{ht}{Total tree height above ground. Numeric vector, feet, required.}
 
-Example: \code{form = 'max_burkhart'}.}
+\item{h}{Measurement height above ground. Numeric vector, feet, required.}
 
-\item{species}{Default \code{NULL} leaves model scope unrestricted. Otherwise supply
-a positive whole-number inventory species code, a vector with one code
-per measurement, or a column name. Unitless.
+\item{dib}{Measured inside bark diameter. Numeric vector, inches, required.}
 
-Missing species rows are
-omitted, and invalid finite codes are errors.}
+\item{spcd}{Species code of each measurement's tree. Numeric vector, required.
+The fitted species scope is the sorted unique set of measured codes.}
 
-\item{group}{Default \code{NULL} fits one common relationship. Otherwise supply a
-group label, one atomic value per measurement, or a column name, such as
-\code{'stand'}. Unitless.
+\item{form}{Equation form to fit. Character scalar, default \code{'max_burkhart'}.
+Choices are \code{'max_burkhart'}, \code{'kozak_1988'}, and \code{'kozak_2002'}.}
 
-Missing groups are omitted. At least two distinct
-retained groups enable estimated group differences. One group produces
-a warning and fits a common relationship.}
+\item{group}{Trees in the same group share a local height or taper adjustment. Atomic vector of
+group identifiers. Default: \code{NULL}.}
 
-\item{weights}{Default \code{NULL} weights each measurement equally. Otherwise supply
-a numeric value to repeat, one per measurement, or a column name. Weights
-must be finite and positive, and missing values are errors.
+\item{weights}{The weights control the contribution of each measured diameter to the fit.
+Numeric vector, relative weights. Default: \code{NULL}.}
 
-Unitless
-relative weights.}
-
-\item{start}{Default \code{NULL} derives starting coefficients from the measurements. Otherwise
-supply a complete finite named numeric vector in the coefficient
-specified order. Missing or incomplete vectors are errors.
-
-Coefficients must
-use centimeters and meters even with imperial measurement inputs. Example: \code{c(b1 = -3, b2 = 1.5, b3 = -0.4, b4 = 25, a1 = 0.75, a2 = 0.12)}
-for an illustrative Max and Burkhart start.}
-
-\item{units}{One character value, \code{'metric'} (default) or \code{'imperial'}.
-Measurements use centimeters and meters or inches and feet, respectively.
-Missing or unknown values are errors. Example: \code{units = 'imperial'}.}
+\item{start}{Starting coefficients give the fitting routine an initial estimate. Named numeric
+vector. Default: \code{NULL}.}
 }
 \value{
-An object of class \code{taper_fit} containing fixed coefficients, fit
-statistics, residual diagnostics, counts, convergence details, and the
-fitted \code{nls} or \code{nlme} object.
+A \code{taper_fit} object with coefficients, form, species scope, fitting method,
+convergence details, the fitted model, and these diagnostic tables.
+\code{residual_diagnostics} has \code{tree_id} (identifier), \code{dbh}, \code{observed_dib},
+\code{fitted_dib}, \code{population_fitted_dib}, and \code{residual} (inches), \code{ht} and \code{h}
+(feet), \code{relative_height} (height fraction), and \code{standardized_residual}
+(unitless). Optional \code{group} retains the supplied group identifiers.
+\code{fit_statistics$overall} has \code{n} (measurement count), \code{rmse} (root mean squared
+error, inches), and \code{bias} (mean residual, inches).
+\code{fit_statistics$by_relative_height} adds \code{relative_height_class} (height-fraction
+interval) to those columns. \code{random_effects} has \code{group} (identifier) and \code{effect}
+(adjustment on the fitted parameter's internal scale).
+\code{data_metric} is the internal metric copy the fit uses for prediction. It has
+\code{tree_id}, \code{dbh}, \code{dib} (centimeters), \code{ht}, \code{h} (meters), and
+\code{weight} (relative weight), with optional \code{group} and \code{p_fixed}
+(relative inflection height). Published equations retain their native metric
+coefficients. Inputs, predictions, and diagnostics use inches and feet.
 }
 \description{
-Fit a compiled taper form to repeated stem measurements. Return coefficients, residuals, fit
-statistics, and the fitted model.
+Fit a taper model to stem-analysis data
 }
 \details{
-Fit one row per measured diameter and retain tree identifiers so
-repeated measurements can be checked together. Inspect the fitted
-residuals across stem height and tree size before applying the model.
+Invalid rows are omitted with one warning giving the count and reasons. Diameters
+must be at most 400 inches and total heights at most 500 feet. Species must occur
+in \code{species_reference}. Taper measurement heights must lie within the tree.
 }
-\section{Numerical methods}{
-
-All fits use centimeters and meters, with diameter in centimeters and height in meters.
-Kozak 1988 estimates the coefficients at a fixed inflection proportion \code{p}. Its starts are
-weighted log-linear fits over a grid of candidate inflection proportions.
-
-A user-supplied start fixes \code{p} at that supplied value. Kozak 2002 starts from its weighted
-log-linear representation. Max and Burkhart starts use a grid of lower and upper join points
-followed by weighted linear fits of squared relative diameter.
-
-Each final nonlinear fit tries up to three starts.
-
-Bias is mean observed minus fitted diameter, so positive bias means the model underpredicts.
-Root mean squared error and bias are stored in centimeters overall and by relative-height class.
-Mixed-model diagnostics use
-conditional fitted values.
-
-The coefficients used by \code{\link[=as_taper_model]{as_taper_model()}} are the population fixed effects. Some well-
-scaled fits reach a stationary solution while \code{nls()} reports its false-convergence code.
-Acceptance requires a sufficiently small final tolerance and finite coefficients and fitted
-values. \code{convergence} retains the optimizer report.
-}
-
-\section{Measurement table fields}{
-
-\code{tree_id} is a required tree label repeated for measurements on one stem. It is unitless,
-for example \code{'example-1'}. \code{tree} is an accepted alias.
-
-Required numeric \code{dbh} is positive outside-bark breast-height diameter, and \code{ht} is positive
-total height above ground. \code{total_height} is an alias for \code{ht}. Required numeric \code{h} is
-measurement height above ground, from zero through \code{ht}.
-
-Its alias is \code{measurement_height}. Required numeric \code{dib} is nonnegative inside-bark
-diameter at that height, with alias \code{diameter_inside_bark}. Diameters use inches or
-centimeters, heights use feet or meters.
-
-No field has a default. Missing and nonfinite measurements are omitted with a warning. If
-both a preferred name and its alias occur, the preferred name is used.
-
-Other columns matter only when named in \code{species}, \code{group}, or \code{weights}. No list columns
-are required.
-}
-
-\section{Fitted taper fields}{
-
-\code{coefficients} is a named numeric vector in the form's required order. \code{form}, \code{method},
-\code{units}, \code{input_units}, and \code{package_version} are character labels. \code{n_trees} and
-\code{n_measurements} are counts.
-
-\code{species} is an integer scope vector and \code{groups_seen} is a character label vector.
-\code{convergence} records logical \code{converged}, counts \code{nls_attempts} and \code{nlme_attempts},
-logical \code{nls_optimizer_converged}, and character \code{nls_stop_message}. These record numerical
-completion, not model validity.
-
-\code{fit_statistics$overall} has sample count \code{n}, root mean squared error \code{rmse}, and mean error
-\code{bias}. The count is unitless, while both
-error measures use centimeters. \code{fit_statistics$by_relative_height} has the same fields plus
-character \code{relative_height_class}, in tenths of height.
-
-Classes include the lower boundary and exclude the upper boundary, except the final class
-also contains the tip. Bias is observed minus fitted.
-
-\code{residual_diagnostics} has \code{tree_id}, numeric \code{dbh}, \code{ht}, \code{h}, \code{relative_height},
-\code{observed_dib}, \code{fitted_dib}, \code{population_fitted_dib}, \code{residual}, and
-\code{standardized_residual}. Diameter and residual fields use centimeters, heights use meters,
-and relative height and standardized residuals are unitless. \code{species} and \code{group} appear
-when supplied.
-
-\code{data_metric} retains fitting fields in centimeters and meters, with numeric \code{weight} and
-optional \code{species}, \code{group}, and \code{p_fixed}. \code{random_effects} contains character \code{group} and
-numeric \code{effect} for group differences, or zero rows. \code{random_parameter} names the adjusted
-coefficient or is \code{NULL}.
-
-\code{model} holds the fitted R model and \code{internal_coefficients} holds its transformed parameter
-vector. None is a data-frame list column.
-}
-
-\section{Status and missing values}{
-
-No tree status codes are returned. Incomplete measurement rows are omitted with a warning,
-while invalid finite measurements stop the fit. For Kozak 2002 total height must exceed 1.3
-meters.
-
-The usable measurement count must exceed the fitted parameter count. A fit that cannot
-converge stops the call. Zero residual variation leaves standardized residuals missing with
-a warning.
-
-Review residuals before applying the model to new trees. These fits do not establish valid
-zero log volume.
-}
-
-\section{Coefficient order and bounds}{
-
-Kozak 1988 requires \code{a0}, \code{a1}, \code{a2}, \code{b1}, \code{b2}, \code{b3}, \code{b4}, \code{b5}, \code{p},
-in that order. \code{a0} and \code{a2} must be positive and \code{p} strictly between zero
-and one. A fitting start additionally requires \verb{0.05 < p < 0.35}.
-
-Kozak 2002 requires \code{a0}, \code{a1}, \code{a2}, \code{b1}, \code{b2}, \code{b3}, \code{b4}, \code{b5}, \code{b6},
-with positive \code{a0}. Max and Burkhart requires \code{b1}, \code{b2}, \code{b3}, \code{b4},
-\code{a1}, \code{a2}, with \verb{0 < a2 < a1 < 1}. Other coefficients may be any finite
-numeric value.
-
-Names and order must match, with no missing entries. Coefficients describe diameter in
-centimeters and height in meters and
-must not be treated as coefficients for an imperial equation. Join heights
-and \code{p} are unitless proportions of total height.
-}
-
 \examples{
-## Fit the shipped stem measurements
-fit <- fit_taper(data = example_stem_measurements,
-                 form = 'max_burkhart',
-                 units = 'imperial')
+## Load data verbs
+library(dplyr)
 
-## Inspect diameter errors in centimeters
-fit$fit_statistics$overall
-}
-\references{
-Kozak A (1988). "A variable-exponent taper equation." \emph{Canadian Journal
-of Forest Research}, 18(11), 1363-1368. \doi{10.1139/x88-213}.
+## Fit the shipped synthetic stem measurements
+fit <- fit_taper(
+  tree_id = example_stem_measurements$tree_id,
+  dbh = example_stem_measurements$dbh,
+  ht = example_stem_measurements$ht,
+  h = example_stem_measurements$h,
+  dib = example_stem_measurements$dib,
+  spcd = example_stem_measurements$spcd,
+  form = 'max_burkhart'
+)
 
-Kozak A (2004). "My last words on taper equations." \emph{The Forestry
-Chronicle}, 80(4), 507-515. \doi{10.5558/tfc80507-4}.
-
-Max TA, Burkhart HE (1976). "Segmented polynomial regression applied to
-taper equations." \emph{Forest Science}, 22(3), 283-289.
-\doi{10.1093/forestscience/22.3.283}.
-}
-\seealso{
-\code{\link[=as_taper_model]{as_taper_model()}} to use fitted coefficients in stem
-calculations, \code{\link[=taper_model_from_coefficients]{taper_model_from_coefficients()}} for known coefficients, \link{taper_fit_methods}
-for fitted predictions and diagnostic plots.
+## Show fit statistics with units
+fit$fit_statistics$overall \%>\%
+  rename(`measurements (count)` = n,
+         `root mean squared error (inches)` = rmse,
+         `mean residual (inches)` = bias)
 }

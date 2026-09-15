@@ -4,163 +4,75 @@
 \alias{new_taper_model}
 \title{Define a taper equation written as an R function}
 \usage{
-## Call signatures
-new_taper_model(id, family, dib, dob = NULL, height_at_dib = NULL, volume = NULL, inputs =
-  list(required = character(), optional = character(), pairs = list()), units = 'imperial',
-  species = integer(), stump_ht = 1, bark_ratio = NA_real_, source = '', notes = '')
+new_taper_model(
+  id,
+  form,
+  dib,
+  dob = NULL,
+  height_at_dib = NULL,
+  volume = NULL,
+  inputs = list(required = character(), optional = character(), pairs = list()),
+  spcd = integer(),
+  stump_ht = 1,
+  bark_ratio = NA_real_,
+  source = NULL
+)
 }
 \arguments{
-\item{id}{Required single nonempty character name, unitless. Missing is an
-error. Example: \code{'example.linear'}.
+\item{id}{The identifier names the taper model in the registry. Character scalar model
+identifier. Required, with no default.}
 
-Registration additionally requires
-a distinct name beginning with a letter and containing a dot.}
+\item{form}{Equation form used by the taper model. Character scalar. Required, with no default.}
 
-\item{family}{Required single nonempty character family name, unitless.
-Missing is an error. Example: \code{'user'}.}
+\item{dib}{The callback computes inside diameter along the stem. R function accepting dbh, ht,
+measurement arguments, and aux, with diameters in inches, heights in feet, and volumes in
+cubic feet. Required, with no default.}
 
-\item{dib}{Required R function for inside-bark diameter, with the exact
-arguments and return type listed in the corresponding section. Omission or missing is an
-error.}
+\item{dob}{The callback computes outside diameter along the stem. R function accepting dbh, ht,
+measurement arguments, and aux, with diameters in inches, heights in feet, and volumes in
+cubic feet. Default: \code{NULL}.}
 
-\item{dob}{Optional R function for outside-bark diameter. Default \code{NULL}
-uses a supplied bark ratio when available. Missing is invalid.
+\item{height_at_dib}{The callback finds height from inside diameter. R function accepting dbh,
+ht, measurement arguments, and aux, with diameters in inches, heights in feet, and volumes in
+cubic feet. Default: \code{NULL}.}
 
-It has the same argument names as \code{dib}.}
+\item{volume}{The callback computes volume between two heights. R function accepting dbh, ht,
+measurement arguments, and aux, with diameters in inches, heights in feet, and volumes in
+cubic feet. Default: \code{NULL}.}
 
-\item{height_at_dib}{Optional R function for height at inside-bark diameter. Default \code{NULL} uses
-numerical search. Missing is invalid.
+\item{inputs}{The input declaration lists additional measurements the model needs. List with
+required and optional character vectors and a list of paired input names. Default:
+\code{list(required = character(), optional = character(), pairs = list())}.}
 
-Its arguments
-are \code{dbh}, \code{ht}, \code{dib}, and \code{aux}.}
+\item{spcd}{The species codes limit the trees this model covers. Numeric vector of species
+codes. Default: \code{integer()}.}
 
-\item{volume}{Optional R function for inside-bark volume. Default \code{NULL}
-uses numerical integration. Missing is invalid.
+\item{stump_ht}{Stump height above ground. Numeric
+scalar, feet. Default: \code{1}.}
 
-Its arguments are \code{dbh},
-\code{ht}, \code{lower}, \code{upper}, and \code{aux}.}
+\item{bark_ratio}{The bark ratio estimates inside diameter from outside diameter when needed.
+Numeric scalar, inside diameter divided by outside diameter. Default: \code{NA_real_}.}
 
-\item{inputs}{Named list of required and optional equation inputs and
-paired names. The default empty vectors and empty pair list require no
-extra measurements. Missing is an error.
-
-the callback contract defines the shape. Unitless names describe inputs with their own units.}
-
-\item{units}{One character value, \code{'imperial'} (default) or \code{'metric'},
-declaring the equation's measurement system. Missing is an error. Imperial means inches, feet,
-and cubic feet.
-
-Metric means centimeters,
-meters, and cubic meters. Example: \code{units = 'metric'}.}
-
-\item{species}{Numeric vector of positive whole-number inventory species
-codes. Default \code{integer()} means unrestricted. Missing, nonfinite,
-fractional, or out-of-integer-range codes are errors. Unitless.}
-
-\item{stump_ht}{One finite nonnegative numeric height. Default \code{1} means
-1 foot for an imperial equation or 1 meter for a metric equation.
-Missing is an error.}
-
-\item{bark_ratio}{One numeric inside-bark to outside-bark diameter ratio. Default \code{NA_real_}
-means no default ratio. A supplied value must exceed
-zero and be at most one.
-
-Unitless.}
-
-\item{source, notes}{Single character source description and equation notes. Both default to
-\code{''}, meaning no text supplied. Missing is an error.
-
-Unitless. Example: \code{source = 'Illustrative equation'}.}
+\item{source}{The source records where the model came from. Character scalar, provenance text.
+Default: \code{NULL} stores an empty string.}
 }
 \value{
-A validated \code{taper_model} list with the fields.
+A validated taper_model list containing id, form, kernel (callbacks), inputs,
+spcd, stump_ht (feet), bark_ratio (diameter ratio), source (provenance), and internal
+equation metadata.
 }
 \description{
-Construct a taper model from R callbacks and declared inputs. Register the returned object
-with \code{\link[=register_taper_model]{register_taper_model()}}.
+Define a taper equation written as an R function
 }
-\details{
-Validation checks object fields and evaluates an illustrative
-profile. Passing this check does not establish scientific suitability.
-Register the returned model before using its identifier in calculations.
-}
-\section{Taper model fields}{
-
-A \code{taper_model} is a named list. Fields are supplied by the defining function,
-not columns of an inventory. \code{id} is its nonempty character equation name,
-\code{family} is its nonempty character equation family, and \code{units} is either
-\code{'imperial'} or \code{'metric'}.
-
-These labels are unitless. \code{species} is a
-vector of positive whole-number inventory species codes, with \code{integer()}
-meaning unrestricted. Missing codes are errors.
-
-\code{stump_ht} is one finite
-nonnegative height in the equation's feet or meters. \code{bark_ratio} is one
-numeric inside-bark to outside-bark diameter ratio greater than zero and
-at most one, or \code{NA} when no default is supplied.
-
-\code{dib}, \code{dob}, \code{height_at_dib}, and \code{volume} contain equation functions or \code{NULL} when that
-function is absent. For an equation written in R, \code{dib} is required.
-
-\code{inputs} is a list with character vectors \code{required} and \code{optional}, then a list \code{pairs}, in
-that order. For example, \code{list(required = character(), optional = 'bark_ratio', pairs = list())} declares an optional bark ratio. All declared input names must come from the
-equation inputs described on \code{\link[=dib]{dib()}}.
-
-Names cannot be duplicated. A pair is a character vector such as \code{c('upper_ht1', 'upper_d1')}.
-
-\code{source} and \code{notes} are single character strings, default \code{''} when made by
-\code{\link[=new_taper_model]{new_taper_model()}}. Empty text is allowed and missing text is an error. \code{data} holds
-equation coefficients or other fixed equation data.
-
-It cannot be an environment, function, or external pointer. \code{class_version} is the character
-representation version, currently \code{'0.3'}, and must match.
-
-The literal field \code{kernel} describes which equation functions are present. Its \code{type} is
-\code{'r'} or \code{'compiled'}, \code{key} identifies a built-in equation or is \code{NA} for an R function,
-and logical \code{has_dob}, \code{has_inverse}, and \code{has_integral} identify direct calculations. These
-flags are not missing.
-
-The logical \code{oracle_verified} attribute records source-test coverage: \code{TRUE} means checked
-against source-library test cases, \code{FALSE} means not exercised, and \code{NA} means that
-comparison does not apply. It does not rate prediction accuracy for a stand. There are no
-data-frame list columns.
-}
-
-\section{Equation function inputs and returns}{
-
-Diameter callbacks take \code{dbh}, \code{ht}, \code{h}, and \code{aux}, in that order. Height callbacks replace \code{h}
-with \code{dib}. Volume callbacks take \code{dbh}, \code{ht}, \code{lower}, \code{upper}, and \code{aux}.
-
-Measurements arrive as equal-length vectors in the equation's declared units. \code{aux} is a
-named list of declared extra input vectors. A function must return a double vector of the
-same length in diameter, height, or cubic units, respectively.
-
-Missing or invalid outputs fail evaluation. An optional integer \code{status} attribute can
-retain per-row diagnoses. The functions must not change global objects, options, or random
-state.
-}
-
-\section{Status and missing values}{
-
-This
-function returns no tree status code. Invalid declarations or failed function checks stop
-the call. Correct the equation before registering it.
-
-Missing optional functions select the fallback only when supplied as \code{NULL}, not as \code{NA}.
-}
-
 \examples{
-## Retrieve the shipped R callback
-existing <- get_taper_model(id = 'demo.paraboloid.r')
+## Inspect the shipped demonstration callback
+base <- get_taper_model(model = 'demo.paraboloid.r')
 
-## Create a model using that callback
-new_taper_model(id = 'example.callback',
-                family = 'example',
-                dib = existing$dib,
-                bark_ratio = existing$bark_ratio)
-}
-\seealso{
-\code{\link[=register_taper_model]{register_taper_model()}} to make the equation available, \code{\link[=validate_taper_model]{validate_taper_model()}}
-to check a saved object, \code{\link[=dib]{dib()}} to calculate.
+## Construct a local model from the callback
+local_model <- new_taper_model(id = 'example.callback',
+                               form = 'demonstration',
+                               dib = base$dib)
+
+## Inspect the local model
+print(local_model)
 }

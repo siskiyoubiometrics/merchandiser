@@ -1,6 +1,4 @@
-# Regenerate inst/extdata/oracle-agreement.csv from one fixture-enabled test run.
-#
-# Usage:
+# Regenerate inst/extdata/oracle-agreement.csv from one fixture-enabled test run.  Usage:
 # Rscript data-raw/agreement.R /tmp/oracle-agreement-raw.csv
 
 arguments <- commandArgs(trailingOnly = TRUE)
@@ -10,17 +8,15 @@ input <- if (length(arguments)) {
   Sys.getenv("TREEVOLUME_AGREEMENT_INPUT", unset = "")
 }
 if (!nzchar(input) || !file.exists(input)) {
-  stop(
-    "Supply the raw TREEVOLUME_GATE1_RESULTS CSV as the first argument or ",
+  stop("Supply the raw TREEVOLUME_GATE1_RESULTS CSV as the first argument or ",
     "TREEVOLUME_AGREEMENT_INPUT.",
     call. = FALSE
   )
 }
 
 required <- c(
-  "family", "output", "precision", "compat", "rows_compared",
-  "rows_within_tolerance", "max_relative_difference", "tolerance",
-  "exclusions"
+  "family", "output", "precision", "compat", "rows_compared", "rows_within_tolerance",
+  "max_relative_difference", "tolerance", "exclusions"
 )
 agreement <- utils::read.csv(input, stringsAsFactors = FALSE)
 if (!identical(names(agreement), required)) {
@@ -39,10 +35,10 @@ if (any(agreement$rows_within_tolerance > agreement$rows_compared)) {
   stop("Rows within tolerance exceed rows compared.", call. = FALSE)
 }
 
-ordering <- order(
-  agreement$family, agreement$output, agreement$compat,
-  match(agreement$precision, c("double", "single"))
-)
+ordering <- order(agreement$family, agreement$output, agreement$compat, match(
+  agreement$precision,
+  c("double", "single")
+))
 agreement <- agreement[ordering, required, drop = FALSE]
 rownames(agreement) <- NULL
 

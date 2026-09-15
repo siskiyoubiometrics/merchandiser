@@ -2,159 +2,74 @@
 % Please edit documentation in R/stem-green_weight.R
 \name{green_weight}
 \alias{green_weight}
-\title{Convert stem volume to wood and bark weight}
+\title{Convert cubic volume to merchandising weight}
 \usage{
-## Call signatures
-green_weight(volume, spcd, volume_basis = c('inside', 'outside'), component = c('stem',
-  'wood', 'bark'), moisture = c('green', 'dry'), specific_gravity = NULL, moisture_pct = NULL,
-  bark_specific_gravity = NULL, bark_moisture_pct = NULL, bark_volume_pct = NULL, ..., units =
-  'imperial', status = FALSE)
+green_weight(
+  volume,
+  spcd,
+  inside_bark = TRUE,
+  component = 'stem',
+  moisture = 'green',
+  specific_gravity = NULL,
+  moisture_pct = NULL,
+  bark_specific_gravity = NULL,
+  bark_moisture_pct = NULL,
+  bark_volume_pct = NULL
+)
 }
 \arguments{
-\item{volume}{Required nonnegative numeric cubic volume, in cubic feet or cubic
-meters. Length one repeats, otherwise one per input. Omission is an
-error.
+\item{volume}{The cubic volume is the amount of solid wood to weigh. Numeric vector, cubic
+feet. Required, with no default.}
 
-Missing or nonfinite volume returns \code{NA} with \code{na_input}. Negative finite volume stops the call.}
+\item{spcd}{Numeric inventory species code. Numeric
+vector, species codes. Required, with no default.}
 
-\item{spcd}{Required numeric species codes, length one or one
-per input. Positive whole numbers in the reference table are recognized. Unitless.
+\item{inside_bark}{The bark flag says whether the supplied volume excludes bark. Logical,
+TRUE for volume inside bark and FALSE for volume including bark. Default: \code{TRUE}.}
 
-Omission is an error. Missing gives \code{na_input} and an unknown code gives \code{unknown_species}, both
-with missing weight. Example: \code{example_trees$spcd}.}
+\item{component}{The component selects the part of the tree to measure. Character scalar,
+'stem', 'wood', or 'bark'. Default: \code{'stem'}.}
 
-\item{volume_basis}{Character selection for whether supplied cubic volume includes bark. Supply
-length one or one per input. Choices are \code{'inside'} or \code{'outside'}.
+\item{moisture}{The moisture choice selects green or dry merchandising weight. Character
+scalar, 'green' or 'dry'. Default: \code{'green'}.}
 
-Omission or \code{NULL} selects \code{'inside'}. Missing values give \code{na_input}. Unknown labels stop the
-call.
+\item{specific_gravity}{The wood specific gravity replaces the species table value. Numeric
+vector, ratio to water density. Default: \code{NULL}.}
 
-Unitless. Example: \code{volume_basis = 'inside'}.}
+\item{moisture_pct}{The wood moisture replaces the species table value. Numeric vector, percent
+of dry mass. Default: \code{NULL}.}
 
-\item{component}{Character selection for wood with attached bark, wood alone, or bark alone.
-Supply length one or one per input. Choices are \code{'stem'}, \code{'wood'}, or \code{'bark'}.
+\item{bark_specific_gravity}{The bark specific gravity replaces the species table value.
+Numeric vector, ratio to water density. Default: \code{NULL}.}
 
-Omission or \code{NULL} selects \code{'stem'}. Missing values give \code{na_input}. Unknown labels stop the
-call.
+\item{bark_moisture_pct}{The bark moisture replaces the species table value. Numeric vector,
+percent of dry mass. Default: \code{NULL}.}
 
-Unitless. Example: \code{component = 'stem'}.}
-
-\item{moisture}{Character selection for weight including moisture or oven-dry weight. Supply
-length one or one per input. Choices are \code{'green'} or \code{'dry'}.
-
-Omission or \code{NULL} selects \code{'green'}. Missing values give \code{na_input}. Unknown labels stop the
-call.
-
-Unitless. Example: \code{moisture = 'green'}.}
-
-\item{specific_gravity}{Numeric wood specific gravity, strictly greater than zero. Length one or
-one per input. Default \code{NULL} uses the species reference.
-
-Missing or nonfinite overrides give \code{na_input} even if the chosen component
-would not need them. Invalid finite values stop the call. Unitless.}
-
-\item{moisture_pct}{Numeric wood moisture as percent of oven-dry weight, from zero through 300.
-Length one or one per input. Default \code{NULL} uses the species reference.
-
-Missing or nonfinite overrides give \code{na_input} even if the chosen component
-would not need them. Invalid finite values stop the call. Unitless.}
-
-\item{bark_specific_gravity}{Numeric bark specific gravity, strictly greater than zero. Length
-one or one per input. Default \code{NULL} uses the species reference.
-
-Missing or nonfinite overrides give \code{na_input} even if the chosen component
-would not need them. Invalid finite values stop the call. Unitless.}
-
-\item{bark_moisture_pct}{Numeric bark moisture as percent of oven-dry weight, from zero
-through 300. Length one or one per input. Default \code{NULL} uses the species reference.
-
-Missing or nonfinite overrides give \code{na_input} even if the chosen component
-would not need them. Invalid finite values stop the call. Unitless.}
-
-\item{bark_volume_pct}{Numeric bark volume as percent of wood volume, from zero through 100.
-Length one or one per input. Default \code{NULL} uses the species reference.
-
-Missing or nonfinite overrides give \code{na_input} even if the chosen component
-would not need them. Invalid finite values stop the call. Unitless.}
-
-\item{...}{No additional inputs are accepted. Omit this argument.
-
-Any supplied
-input is an error. Use the named property overrides above.}
-
-\item{units}{One character value, \code{'imperial'} (default) for cubic feet and
-pounds or \code{'metric'} for cubic meters and kilograms. Missing or unknown
-labels are errors. Example: \code{units = 'metric'}.}
-
-\item{status}{One nonmissing logical value, default \code{FALSE} for a numeric weight
-vector. \code{TRUE} returns numeric \code{value} in pounds or kilograms and integer
-unitless \code{status}, suppressing row warnings. Example: \code{status = TRUE}.}
+\item{bark_volume_pct}{The bark volume replaces the species table value. Numeric vector,
+percent of inside-bark wood volume. Default: \code{NULL}.}
 }
 \value{
-A numeric vector with one value per input element, or a data frame
-with \code{value} and \code{status}. Unknown species use \code{unknown_species}. A recognized
-species with a required missing reference value uses \code{na_input} and is
-named in the warning.
+A data frame with value (merchandising weight, short tons) and status
+(integer result code), one row per input row.
 }
 \description{
-Convert cubic volume to wood, bark, or combined stem weight using species properties and
-optional overrides. Return pounds or kilograms.
+Convert cubic volume to merchandising weight
 }
 \details{
-Choose the bark basis of the supplied volume first, then whether
-to include wood, bark, or both. Supply measured property overrides when
-available. Missing required properties remain missing.
+Specific gravities must be at most 2. Wood and bark moisture percentages must be at
+most 300. Bark volume percentage must be at most 100.
 }
-\section{Weight calculation}{
-
-The function applies species wood density, bark volume, and moisture properties
-to the supplied cubic volume. \code{volume_basis} selects inside- or outside-bark volume.
-\code{component} selects wood, bark, or their combined stem weight.
-
-\code{moisture = 'dry'} omits the moisture multiplier. Property overrides replace
-species-table values for the supplied inputs. Properties remain constant along the stem.
-
-The pinned National Volume Estimator Library file \code{wdbkwtdata.inc} supplies
-species properties. Regional source weight factors are not used by this function.
-\code{\link[=biomass]{biomass()}} calculates component masses from tree dimensions separately.
-}
-
-\section{Status and missing values}{
-
-\code{ok} means weight is available. \code{na_input} means a required value is missing or nonfinite,
-including a required species property. \code{unknown_species} means species is invalid or absent from
-the
-reference.
-
-Missing properties and invalid species return missing weight. Property overrides can supply
-missing reference values. Missing reference properties are named in a warning when \code{status = FALSE}.
-
-Zero input volume returns zero estimated weight when the required properties are available.
-}
-
 \examples{
-## Estimate stem volume for the example inventory
-volume <- stem_volume(dbh = example_trees$dbh,
-                      ht = example_trees$ht,
-                      model = example_trees$model)
+## Load data verbs
+library(dplyr)
 
-## Convert volume to green wood and bark weight
-green_weight(volume = volume, spcd = example_trees$spcd)
+## Measure the first example stem
+volume <- stem_volume(dbh = example_trees$dbh[1],
+                      ht = example_trees$ht[1],
+                      spcd = example_trees$spcd[1])
+
+## Convert volume using its species properties
+green_weight(volume = volume$value,
+             spcd = example_trees$spcd[1]) \%>\%
+  rename(`green weight (short tons)` = value)
 }
-\references{
-United States Department of Agriculture Forest Service Forest Inventory and
-Analysis Database,
-\code{REF_SPECIES}. Department of Agriculture Forest Service National Volume Estimator Library,
-\code{wdbkwtdata.inc}. Forest Products Laboratory, General Technical Report 282.
-}
-\seealso{
-\code{\link[=stem_volume]{stem_volume()}} to calculate cubic
-volume, \code{\link[=biomass]{biomass()}} to estimate components from tree dimensions, \link{species_reference} to
-inspect properties.
-}
-\section{Example weight factors}{Green pounds per cubic foot for loblolly pine.
-\tabular{lrr}{
-Volume basis \tab Wood only \tab Wood plus bark \cr
-Inside bark \tab 53.0 \tab 59.8 \cr
-Outside bark \tab 45.5 \tab 51.3
-}}

@@ -10,25 +10,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// mc_simple_plan_cpp
-Rcpp::List mc_simple_plan_cpp(Rcpp::List products, double quantum, Rcpp::IntegerVector tree_status, Rcpp::IntegerVector chain_offsets, Rcpp::IntegerVector chain_product, Rcpp::NumericVector stump, Rcpp::NumericVector top, Rcpp::NumericVector ht, int threads);
-RcppExport SEXP _merchandiser_mc_simple_plan_cpp(SEXP productsSEXP, SEXP quantumSEXP, SEXP tree_statusSEXP, SEXP chain_offsetsSEXP, SEXP chain_productSEXP, SEXP stumpSEXP, SEXP topSEXP, SEXP htSEXP, SEXP threadsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type products(productsSEXP);
-    Rcpp::traits::input_parameter< double >::type quantum(quantumSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type tree_status(tree_statusSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type chain_offsets(chain_offsetsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type chain_product(chain_productSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type stump(stumpSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type top(topSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type ht(htSEXP);
-    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(mc_simple_plan_cpp(products, quantum, tree_status, chain_offsets, chain_product, stump, top, ht, threads));
-    return rcpp_result_gen;
-END_RCPP
-}
 // mc_profile_lookup_cpp
 Rcpp::NumericVector mc_profile_lookup_cpp(Rcpp::IntegerVector offsets, Rcpp::NumericVector height, Rcpp::IntegerVector tree, Rcpp::NumericVector target, Rcpp::NumericVector value);
 RcppExport SEXP _merchandiser_mc_profile_lookup_cpp(SEXP offsetsSEXP, SEXP heightSEXP, SEXP treeSEXP, SEXP targetSEXP, SEXP valueSEXP) {
@@ -45,8 +26,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // mc_buck_cpp
-Rcpp::List mc_buck_cpp(Rcpp::List products, double quantum, int units, int algorithm, int objective, Rcpp::IntegerVector tree_status, Rcpp::IntegerVector chain_offsets, Rcpp::IntegerVector chain_product, Rcpp::IntegerVector segment_offsets, Rcpp::NumericVector segment_lo, Rcpp::NumericVector segment_hi, Rcpp::IntegerVector boundary_offsets, Rcpp::NumericVector boundaries, Rcpp::IntegerVector profile_offsets, Rcpp::NumericVector profile_height, Rcpp::NumericVector dib, Rcpp::NumericVector dob, Rcpp::NumericVector cum_ib, Rcpp::NumericVector cum_ob, Rcpp::IntegerVector defect_offsets, Rcpp::NumericVector defect_from, Rcpp::NumericVector defect_to, Rcpp::IntegerVector defect_effect, Rcpp::NumericVector defect_percent, Rcpp::IntegerVector defect_category_rank, Rcpp::NumericVector weight_factor, int threads);
-RcppExport SEXP _merchandiser_mc_buck_cpp(SEXP productsSEXP, SEXP quantumSEXP, SEXP unitsSEXP, SEXP algorithmSEXP, SEXP objectiveSEXP, SEXP tree_statusSEXP, SEXP chain_offsetsSEXP, SEXP chain_productSEXP, SEXP segment_offsetsSEXP, SEXP segment_loSEXP, SEXP segment_hiSEXP, SEXP boundary_offsetsSEXP, SEXP boundariesSEXP, SEXP profile_offsetsSEXP, SEXP profile_heightSEXP, SEXP dibSEXP, SEXP dobSEXP, SEXP cum_ibSEXP, SEXP cum_obSEXP, SEXP defect_offsetsSEXP, SEXP defect_fromSEXP, SEXP defect_toSEXP, SEXP defect_effectSEXP, SEXP defect_percentSEXP, SEXP defect_category_rankSEXP, SEXP weight_factorSEXP, SEXP threadsSEXP) {
+Rcpp::List mc_buck_cpp(Rcpp::List products, double quantum, int units, int algorithm, int objective, Rcpp::IntegerVector tree_status, Rcpp::IntegerVector chain_offsets, Rcpp::IntegerVector chain_product, Rcpp::IntegerVector segment_offsets, Rcpp::NumericVector segment_lo, Rcpp::NumericVector segment_hi, Rcpp::IntegerVector boundary_offsets, Rcpp::NumericVector boundaries, Rcpp::IntegerVector profile_offsets, Rcpp::NumericVector profile_height, Rcpp::NumericVector dib, Rcpp::NumericVector dob, Rcpp::NumericVector cum_ib, Rcpp::NumericVector cum_ob, Rcpp::IntegerVector defect_offsets, Rcpp::NumericVector defect_from, Rcpp::NumericVector defect_to, Rcpp::IntegerVector defect_effect, Rcpp::NumericVector defect_percent, Rcpp::IntegerVector defect_product, Rcpp::NumericVector weight_factor, int threads);
+RcppExport SEXP _merchandiser_mc_buck_cpp(SEXP productsSEXP, SEXP quantumSEXP, SEXP unitsSEXP, SEXP algorithmSEXP, SEXP objectiveSEXP, SEXP tree_statusSEXP, SEXP chain_offsetsSEXP, SEXP chain_productSEXP, SEXP segment_offsetsSEXP, SEXP segment_loSEXP, SEXP segment_hiSEXP, SEXP boundary_offsetsSEXP, SEXP boundariesSEXP, SEXP profile_offsetsSEXP, SEXP profile_heightSEXP, SEXP dibSEXP, SEXP dobSEXP, SEXP cum_ibSEXP, SEXP cum_obSEXP, SEXP defect_offsetsSEXP, SEXP defect_fromSEXP, SEXP defect_toSEXP, SEXP defect_effectSEXP, SEXP defect_percentSEXP, SEXP defect_productSEXP, SEXP weight_factorSEXP, SEXP threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -74,10 +55,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type defect_to(defect_toSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type defect_effect(defect_effectSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type defect_percent(defect_percentSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type defect_category_rank(defect_category_rankSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type defect_product(defect_productSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type weight_factor(weight_factorSEXP);
     Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(mc_buck_cpp(products, quantum, units, algorithm, objective, tree_status, chain_offsets, chain_product, segment_offsets, segment_lo, segment_hi, boundary_offsets, boundaries, profile_offsets, profile_height, dib, dob, cum_ib, cum_ob, defect_offsets, defect_from, defect_to, defect_effect, defect_percent, defect_category_rank, weight_factor, threads));
+    rcpp_result_gen = Rcpp::wrap(mc_buck_cpp(products, quantum, units, algorithm, objective, tree_status, chain_offsets, chain_product, segment_offsets, segment_lo, segment_hi, boundary_offsets, boundaries, profile_offsets, profile_height, dib, dob, cum_ib, cum_ob, defect_offsets, defect_from, defect_to, defect_effect, defect_percent, defect_product, weight_factor, threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -445,7 +426,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_merchandiser_mc_simple_plan_cpp", (DL_FUNC) &_merchandiser_mc_simple_plan_cpp, 9},
     {"_merchandiser_mc_profile_lookup_cpp", (DL_FUNC) &_merchandiser_mc_profile_lookup_cpp, 5},
     {"_merchandiser_mc_buck_cpp", (DL_FUNC) &_merchandiser_mc_buck_cpp, 27},
     {"_merchandiser_mc_nvel_log_scale_cpp", (DL_FUNC) &_merchandiser_mc_nvel_log_scale_cpp, 4},

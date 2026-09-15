@@ -7,129 +7,184 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE,
-                      comment = '#>',
-                      message = FALSE,
-                      fig.width = 7,
-                      fig.height = 4)
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 120)
 library(merchandiser)
 library(dplyr)
 ```
 
-`merchandise()` selects logs from tree measurements and an ordered product table.
-It returns log dimensions, scaled quantities, tree totals, residual intervals, and recorded settings.
-The shipped tree inventories and product specifications are synthetic examples.
-
-## Tree and products
-
-Default inputs use inches for diameter and feet for height.
+Product order in `products()` sets cutting priority. `merchandise()` returns logs, residuals, status, and assumptions for checking product yield.
 
 ```{r}
-## Select a shipped tree
-tree <- example_trees %>%
-  filter(tree == 5)
+## Load the packages
+library(merchandiser)
+
+## Load data verbs
+library(dplyr)
+
+## Select example trees
+trees <- example_trees %>%
+  slice_tail(n = 3)
 ```
 
-```{r, echo = FALSE}
-tree %>%
-  knitr::kable(digits = 3, row.names = FALSE)
-```
+## Products
+
+The products match `data-raw/example-products.R`.
 
 ```{r}
-## Load the example specifications
-specifications <- example_products(name = 'douglas_fir')
-```
+## Define export specifications
+export <- product(product = 'export',  ## product name, unitless
+                  spcd = c(202, 263),  ## species codes, unitless
+                  min_dbh = 12,  ## inches
+                  min_length = 32,  ## feet
+                  max_length = 40,  ## feet
+                  trim = 1,  ## feet
+                  min_sed = 12,  ## inches
+                  inside_bark = TRUE,  ## logical, unitless
+                  volume_unit = 'scribner',  ## board feet
+                  split_scale = FALSE)  ## logical, unitless
 
-```{r, echo = FALSE}
-specifications %>%
-  mutate(lengths = vapply(lengths, paste, character(1), collapse = ', ')) %>%
-  select(product, lengths, min_length, max_length, min_sed, trim, volume_unit) %>%
-  knitr::kable(digits = 3, row.names = FALSE)
-```
+## Define domestic saw specifications
+domestic_saw <- product(product = 'domestic_saw',  ## product name, unitless
+                        spcd = c(202, 263),  ## species codes, unitless
+                        min_dbh = 10,  ## inches
+                        min_length = 16,  ## feet
+                        max_length = 40,  ## feet
+                        trim = 1,  ## feet
+                        min_sed = 6,  ## inches
+                        inside_bark = TRUE,  ## logical, unitless
+                        volume_unit = 'scribner',  ## board feet
+                        split_scale = FALSE)  ## logical, unitless
 
-`volume_unit` specifies each product's measurement. The example prices use United States dollars (`USD`).
+## Define pulp specifications
+pulp <- product(product = 'pulp',  ## product name, unitless
+                spcd = c(202, 263),  ## species codes, unitless
+                min_dbh = 5,  ## inches
+                min_length = 8,  ## feet
+                max_length = 40,  ## feet
+                trim = 0.5,  ## feet
+                min_sed = 3,  ## inches
+                inside_bark = TRUE,  ## logical, unitless
+                volume_unit = 'green_ton')  ## green short tons
 
-## Logs and result tables
+## Combine products in cutting priority order
+specifications <- products(export = export,
+                           domestic_saw = domestic_saw,
+                           pulp = pulp)
 
-```{r}
-## Select logs from the tree
-result <- merchandise(dbh = tree$dbh,
-                      ht = tree$ht,
-                      model = tree$model,
-                      species = tree$species,
-                      id = tree$tree,
+## Cut and scale the trees
+result <- merchandise(tree_id = trees$tree_id,
+                      dbh = trees$dbh,
+                      ht = trees$ht,
+                      spcd = trees$spcd,
                       products = specifications,
-                      currency = 'USD',
-                      status = TRUE)
+                      model = trees$model)
+```
+
+## Logs
+
+Log numbers restart within each tree. Diameters describe physical log ends on the recorded bark basis.
+
+```{r, echo = FALSE}
+result$logs %>%
+  filter(volume_unit == 'scribner') %>%
+  transmute(`tree_id` = tree_id,
+            `log` = log,
+            `product` = product,
+            `start_height (feet)` = start_height,
+            `end_height (feet)` = end_height,
+            `length (feet)` = length,
+            `scaling_length (feet)` = scaling_length,
+            `sed (inches)` = sed,
+            `led (inches)` = led,
+            `scaling_diameter (inches)` = scaling_diameter,
+            `inside_bark` = inside_bark,
+            `scale (Scribner board feet)` = scale,
+            `volume_unit` = volume_unit) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
 ```
 
 ```{r, echo = FALSE}
 result$logs %>%
-  select(log, product, nominal_length, sed_ib, net_scale, scale_unit) %>%
+  filter(volume_unit == 'green_ton') %>%
+  transmute(`tree_id` = tree_id,
+            `log` = log,
+            `product` = product,
+            `start_height (feet)` = start_height,
+            `end_height (feet)` = end_height,
+            `length (feet)` = length,
+            `scaling_length (feet)` = scaling_length,
+            `sed (inches)` = sed,
+            `led (inches)` = led,
+            `scaling_diameter (inches)` = scaling_diameter,
+            `inside_bark` = inside_bark,
+            `scale (green short tons)` = scale,
+            `volume_unit` = volume_unit) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-`logs` holds the selected cuts. `trees` retains every input tree, including trees without logs.
-`net_scale` uses the accompanying `scale_unit`.
+## Residuals
 
-```{r}
-## Select tree totals
-totals <- result$trees %>%
-  select(id, log_count, log_net_cubic_ib, net_value, status)
-```
+Residual intervals identify stem sections outside the scaled log bodies.
 
 ```{r, echo = FALSE}
-totals %>%
+result$residuals %>%
+  rename(`start_height (feet)` = start_height, `end_height (feet)` = end_height) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-```{r}
-## Draw the selected logs
-plot(result)
-```
+## Status
 
-`residuals` records stem intervals outside the logs. `scales` contains product measurements and any additional reports.
-`defect_accounting` records deductions, and `values` records priced quantities.
-
-
-## Inventory
-
-`ht_simulated` supplies complete example heights. [complete_heights()](fill-missing-heights.html) fills missing `ht_observed` values from retained measurements.
+A clean run has an empty status table.
 
 ```{r}
-## Use the complete simulated heights and retain tree identifiers
-trees <- example_trees_pnw %>%
-  mutate(id = tree, ht = ht_simulated)
+## Show the clean status table
+result$status
 ```
 
-```{r}
-## Load the inventory product specifications
-specifications <- example_products(name = 'pnw')
-```
+## Assumptions
 
-```{r}
-## Apply the product table to the inventory
-result <- merchandise(dbh = trees$dbh,
-                      ht = trees$ht,
-                      species = trees$species,
-                      id = trees$id,
-                      products = specifications,
-                      status = TRUE)
-```
-
-```{r}
-## Expand the inventory by species
-stand <- stand_table(x = result,
-                     trees = trees,
-                     expansion = trees$expansion_factor,
-                     by = 'species')
-```
+`value` uses the accompanying `unit`.
 
 ```{r, echo = FALSE}
-stand %>%
+result$assumptions %>%
+  mutate(source = if_else(assumption == 'species_model',
+                          'pinned source library', source)) %>%
+  rename(`value (unit column)` = value, `source (abbreviated)` = source) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-Expansion factors are used as supplied. These example weights do not represent a sampling design.
-`merchandising_status` separates valid quantities, failed calculations, and inventory trees absent from the result.
+## Drawing
+
+<details>
+<summary>Drawing measurements</summary>
+
+```{r, echo = FALSE}
+drawing_trees <- trees %>%
+  slice_head(n = 1)
+drawing_rows <- match(drawing_trees$tree_id, result$call$tree_id)
+drawing_models <- result$call$model[drawing_rows]
+drawing_profiles <- stem_profile(
+  tree_id = drawing_trees$tree_id,
+  dbh = drawing_trees$dbh,
+  ht = drawing_trees$ht,
+  spcd = drawing_trees$spcd,
+  model = drawing_models,
+  step = 0.5,
+  from = 0
+)
+drawing_profiles %>%
+  transmute(tree_id, `height (feet)` = h, `radius inside bark (inches)` = dib / 2) %>%
+  knitr::kable(digits = 4, row.names = FALSE)
+```
+
+</details>
+
+The drawing locates the selected products and residual sections along the first tree.
+
+```{r, echo = FALSE}
+plot(result, tree_id = trees$tree_id[1], ylab = 'Stem radius (inches)')
+```
+
+`call` retains inputs for replaying the calculation.

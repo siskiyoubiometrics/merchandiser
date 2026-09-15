@@ -1,7 +1,4 @@
-# Regenerate R/nvel_data.R from the pinned NVEL Fortran source.
-#
-# Usage:
-# Rscript data-raw/extract_nvel_scaling.R /path/to/nvel
+# Regenerate R/nvel_data.R from the pinned NVEL Fortran source.  Usage: Rscript
 
 args <- commandArgs(trailingOnly = TRUE)
 source_dir <- if (length(args)) {
@@ -11,11 +8,10 @@ source_dir <- if (length(args)) {
 }
 scrib_path <- file.path(source_dir, "scrib.f")
 intl_path <- file.path(source_dir, "intl78.f")
-required <- c(
-  scrib_path, intl_path, file.path(source_dir, "segmnt.f"),
-  file.path(source_dir, "numlog.f"), file.path(source_dir, "doyal78.f"),
-  file.path(source_dir, "mrules.f")
-)
+required <- c(scrib_path, intl_path, file.path(source_dir, "segmnt.f"), file.path(
+  source_dir,
+  "numlog.f"
+), file.path(source_dir, "doyal78.f"), file.path(source_dir, "mrules.f"))
 if (any(!file.exists(required))) {
   stop("The pinned NVEL reference directory is incomplete.", call. = FALSE)
 }
@@ -24,21 +20,16 @@ extract_blocks <- function(text, pattern) {
   blocks <- regmatches(text, gregexpr(pattern, text, perl = TRUE))[[1L]]
   unlist(lapply(blocks, function(block) {
     body <- sub("^[^/]*/", "", block)
-    tokens <- regmatches(
-      body,
-      gregexpr("[-+]?[0-9]+(?:\\.[0-9]*)?", body, perl = TRUE)
-    )[[1L]]
+    tokens <- regmatches(body, gregexpr("[-+]?[0-9]+(?:\\.[0-9]*)?", body,
+      perl = TRUE
+    ))[[1L]]
     as.double(tokens)
   }), use.names = FALSE)
 }
 
 scrib <- paste(readLines(scrib_path, warn = FALSE), collapse = "\n")
-factor <- extract_blocks(
-  scrib, "DATA \\(FACTOR\\(I\\),I=[^/]*/([^/]*)/"
-)
-exception <- extract_blocks(
-  scrib, "DATA ?\\(EXCEPT\\(I\\),I=[^/]*/([^/]*)/"
-)
+factor <- extract_blocks(scrib, "DATA \\(FACTOR\\(I\\),I=[^/]*/([^/]*)/")
+exception <- extract_blocks(scrib, "DATA ?\\(EXCEPT\\(I\\),I=[^/]*/([^/]*)/")
 stopifnot(length(factor) == 132L, length(exception) == 149L)
 
 intl <- scrib
@@ -58,9 +49,8 @@ header <- c(
   ""
 )
 output <- paste0(
-  paste(header, collapse = "\n"),
-  format_vector(".mc_scribner_factor", factor), "\n",
-  format_vector(".mc_scribner_exception", exception), "\n",
+  paste(header, collapse = "\n"), format_vector(".mc_scribner_factor", factor),
+  "\n", format_vector(".mc_scribner_exception", exception), "\n",
   ".mc_intl14_constants <- c(quadratic = 0.22, linear = 0.71, adjustment = 0.905)\n"
 )
 writeLines(output, file.path("R", "nvel_data.R"), useBytes = TRUE)

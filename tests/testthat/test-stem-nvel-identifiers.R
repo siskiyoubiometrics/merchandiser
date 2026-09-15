@@ -12,16 +12,18 @@ test_that("literal identifier inventory resolves at the NVEL boundary", {
 test_that("pattern inventory resolves concrete identifiers only", {
   expect_true(all(has_taper_model(c(
     "300FW2W202", "300FW3W202", "200CZ2W108", "500WO2W202",
-    "A01DEMW000", "100JB2W108", "B00BEHW202", "400MATW122",
-    "H00SN2W510", "811CLKE100", "900CLKE012", "NVBM240202",
-    "NVB0210110P"
+    "A01DEMW000", "100JB2W108", "B00BEHW202", "400MATW122", "H00SN2W510",
+    "811CLKE100", "900CLKE012",
+    "NVBM240202", "NVB0210110P"
   ))))
   expect_false(any(has_taper_model(c(
-    "900DVEE122", "R01FAU0202", "101DVEW122", "???FW2????"
+    "900DVEE122", "R01FAU0202", "101DVEW122",
+    "???FW2????"
   ))))
   expect_error(get_taper_model("900DVEE122"), "direct volume equations")
-  result <- suppressWarnings(stem_volume(
-    12, 80, "900DVEE122", status = TRUE
+  result <- suppressWarnings(.oracle_stem_volume(
+    dbh = 12, ht = 80, model = "900DVEE122",
+    spcd = .interface_spcd("900DVEE122")
   ))
   expect_identical(result$status, 50L)
 })
@@ -48,9 +50,12 @@ test_that("every wildcard inventory row has the expected concrete boundary", {
       next
     }
     candidates[[at]] <- switch(pattern,
-      `891CLKE***` = "891CLKE100", `891CLKO***` = "891CLKO100",
-      `???FW3????` = "300FW3W202", `???F33????` = "A03F33W098",
-      `9??CLK????` = "900CLKE012", `8?1CLK????` = "811CLKE100",
+      `891CLKE***` = "891CLKE100",
+      `891CLKO***` = "891CLKO100",
+      `???FW3????` = "300FW3W202",
+      `???F33????` = "A03F33W098",
+      `9??CLK????` = "900CLKE012",
+      `8?1CLK????` = "811CLKE100",
       `8??CLK????` = "834CLKE110"
     )
   }
@@ -66,16 +71,19 @@ test_that("every wildcard inventory row has the expected concrete boundary", {
 })
 
 test_that("Clark validation identifiers resolve through source validity", {
-  source <- Sys.getenv("MERCHANDISER_FIXTURES",
-                       unset = Sys.getenv("TREEVOLUME_FIXTURES", unset = ""))
+  source <- Sys.getenv("MERCHANDISER_FIXTURES", unset = Sys.getenv(
+    "TREEVOLUME_FIXTURES",
+    unset = ""
+  ))
   if (!dir.exists(source)) {
     skip("MERCHANDISER_FIXTURES directory is missing. Clark identifiers not tested")
   }
   path <- file.path(source, "clark_identifiers.csv")
-  if (!file.exists(path)) stop("Clark identifier oracle is unavailable: ", path)
-  fixture <- utils::read.csv(
-    path, stringsAsFactors = FALSE, colClasses = c(identifier = "character")
-  )
+  if (!file.exists(path))
+    stop("Clark identifier oracle is unavailable: ", path)
+  fixture <- utils::read.csv(path, stringsAsFactors = FALSE, colClasses = c(
+    identifier = "character"
+  ))
   fixture <- fixture[fixture$discovery_mode == "validation", , drop = FALSE]
   expect_identical(nrow(fixture), 2156L)
   expect_true(all(fixture$DOUBLE_ERRFLAG == 0L))

@@ -7,35 +7,46 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE,
-                      comment = '#>',
-                      message = FALSE,
-                      fig.width = 7,
-                      fig.height = 4)
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 120)
 library(merchandiser)
 library(dplyr)
 ```
 
 The packaged agreement table records comparisons against the pinned National Volume Estimator Library build.
-It reports precision, compatibility mode, compared rows, tolerance, maximum relative difference, and named exclusions.
-
-`DIB` denotes diameter inside bark, and `DOB` denotes diameter outside bark.
+It supports checking implementation agreement by family, operation, precision, and compatibility mode.
 
 ```{r}
-## Report the pinned source revision
+## Inspect the pinned source revision
 nvel_source_revision()
 ```
 
 ```{r, echo = FALSE}
 agreement <- read.csv(system.file('extdata',
-                                  'oracle-agreement.csv',
-                                  package = 'merchandiser'))
-agreement %>%
-  mutate(max_relative_difference = format(max_relative_difference, scientific = TRUE, digits = 12),
-         tolerance = format(tolerance, scientific = TRUE, digits = 12)) %>%
-  knitr::kable(row.names = FALSE)
+  'oracle-agreement.csv',
+  package = 'merchandiser'
+))
 ```
 
-Fixture tests enforce each tolerance and exclusion count. The full source fixtures live outside the package.
-[Compatibility modes](methods-taper-equations.html) select package or source behavior for the documented differences.
+```{r, echo = FALSE}
+agreement %>%
+  mutate(output = recode(output,
+                         DIB = 'diameter inside bark',
+                         DOB = 'diameter outside bark',
+                         `height at DIB` = 'height at inside bark diameter',
+                         `cedar equality height at DIB` =
+                           'cedar equality height at inside bark diameter')) %>%
+  mutate(
+    max_relative_difference = format(max_relative_difference, scientific = TRUE, digits = 12),
+    tolerance = format(tolerance, scientific = TRUE, digits = 12)
+  ) %>%
+  rename(`rows compared (count)` = rows_compared,
+         `rows within tolerance (count)` = rows_within_tolerance,
+         `maximum relative difference (unitless)` = max_relative_difference,
+         `tolerance (unitless)` = tolerance, `exclusions (names and counts)` = exclusions) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Fixture tests enforce each tolerance and exclusion count. Full source fixtures live outside the package.
+[Compatibility behavior](methods-taper-equations.html) describes the differences retained in each mode.

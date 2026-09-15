@@ -4,81 +4,32 @@
 \alias{nsvb_division_xy}
 \title{Look up an ecological division by coordinates}
 \usage{
-## Call signatures
-nsvb_division_xy(x, y, crs = 4326, status = FALSE)
+nsvb_division_xy(
+  x,
+  y,
+  crs = 4326
+)
 }
 \arguments{
-\item{x}{Required numeric longitude or horizontal coordinate, length one
-or one per point. Default geographic coordinates use decimal degrees
-east. Other coordinates use the supplied reference system's units.
+\item{x}{The easting locates the tree in the supplied coordinate system. Numeric vector,
+coordinate-system distance or degrees. Required, with no default.}
 
-Missing or nonfinite values give \code{na_input}.}
+\item{y}{The northing locates the tree in the supplied coordinate system. Numeric vector,
+coordinate-system distance or degrees. Required, with no default.}
 
-\item{y}{Required numeric latitude or vertical coordinate, length one or
-one per point. Default geographic coordinates use decimal degrees north. Other coordinates use
-the supplied reference system's units.
-
-Missing
-or nonfinite values give \code{na_input}. Omission is an error.}
-
-\item{crs}{One coordinate reference system identifier, numeric or character. Default \code{4326}
-selects longitude and latitude on the standard geographic
-reference used by the shipped polygons. Other systems require package
-\code{sf} for transformation.
-
-Missing or invalid identifiers are errors. Unitless.}
-
-\item{status}{One nonmissing logical flag, default \code{FALSE} for an integer vector.
-\code{TRUE} returns integer \code{value} and integer \code{status}, both unitless,
-and suppresses row warnings. Example: \code{status = TRUE}.}
+\item{crs}{The coordinate reference system identifies how to interpret the locations. An
+sf-compatible coordinate reference system, 4326 means longitude and latitude in degrees.
+Default: \code{4326}.}
 }
 \value{
-An integer vector with one division per input point, or a data frame
-with \code{value} and \code{status}.
+A data frame with value (ecological division code) and status (integer result code),
+in input order.
 }
 \description{
-Supply coordinates to select the ecological division used by the national
-biomass equations. The result is one division code per point, with an
-optional status column. Use \code{\link[=nsvb_division]{nsvb_division()}} when only county codes are
-available.
+Look up an ecological division by coordinates
 }
-\details{
-The shipped polygons combine province boundaries into broader divisions. Boundaries are
-simplified and stored as longitude and latitude.
-
-Coordinate system 4326 requires no additional package. Other reference systems require \code{sf} to
-transform the coordinates.
-}
-\section{Status and missing values}{
-
-\code{ok} means a division was found. \code{na_input} means a missing or nonfinite coordinate, and
-\code{outside_divisions} means no shipped division contains the point. Codes 1 and 8 return missing
-division codes.
-
-Check coordinates and their reference system before using the result. \code{outside_divisions} warns
-when
-\code{status = FALSE}.
-}
-
-\section{Boundary rules}{
-
-Holes are excluded and polygon boundaries are
-included. On a shared boundary, the smaller numeric division code is selected.
-
-These simplified polygons support equation selection, not precise site-boundary surveying.
-}
-
 \examples{
-## Load dplyr
-library(dplyr)
-
-## Assign ecological divisions to the shipped coordinates
-example_trees_pnw \%>\%
-  distinct(longitude, latitude) \%>\%
-  mutate(division = nsvb_division_xy(x = longitude, y = latitude))
-}
-\seealso{
-\code{\link[=nsvb_division]{nsvb_division()}} for predominant county lookup. The county helper
-returns its table's county-predominant province. This coordinate
-helper returns the broader division used by the biomass equations.
+## Find divisions for the example tree locations.
+nsvb_division_xy(x = example_trees_pnw$longitude[1],
+                 y = example_trees_pnw$latitude[1])
 }

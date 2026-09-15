@@ -4,146 +4,64 @@
 \alias{fit_height}
 \title{Fit tree height from diameter and measured heights}
 \usage{
-## Call signatures
-fit_height(dbh, ht, spcd, group = NULL, form = 'chapman_richards', min_n = 7, units =
-  'imperial')
+fit_height(
+  dbh,
+  ht,
+  spcd,
+  group = NULL,
+  form = 'chapman_richards',
+  min_n = 7
+)
 }
 \arguments{
-\item{dbh}{Required positive finite numeric outside-bark breast-height diameters,
-in inches or centimeters. Length one repeats, otherwise one per tree. Omission is an error.
+\item{dbh}{Diameter at breast height outside bark. Numeric vector,
+inches, greater than zero and at most 400. Required, with no default.}
 
-Missing or nonfinite values give \code{na_input}
-and are omitted from fitting or return missing predictions. Example: \code{example_trees$dbh}.}
+\item{ht}{Total height above ground. Numeric vector, feet.
+Required, with no default. Heights must be greater than zero and at most 500 feet.}
 
-\item{ht}{Required numeric measured total heights above ground, in feet or
-meters. Length one repeats, otherwise one per tree. Positive finite
-values are fitted.
+\item{spcd}{Numeric inventory species code. Numeric
+vector, species codes. Required, with no default.}
 
-Missing or nonfinite heights are omitted, while
-nonpositive heights are omitted with a warning. Example: \code{example_trees_pnw$ht_observed}.}
+\item{group}{Trees in the same group share a local height or taper adjustment. Atomic vector of
+group identifiers. Default: \code{NULL}.}
 
-\item{spcd}{Required numeric Forest Inventory and Analysis tree inventory
-species codes, length one or one per tree. Positive whole numbers within
-R's integer range are accepted. Unitless.
+\item{form}{The equation form chooses the relationship to fit. Character scalar, equation name.
+Default: \code{'chapman_richards'}.}
 
-Omission is an error. Missing
-gives \code{na_input} and invalid codes give \code{unknown_species}.}
-
-\item{group}{Atomic plot or stand labels, length one or one per tree. Default
-\code{NULL} treats fitting observations as one group and uses the common
-fitted relationship when predicting. Missing or empty groups are omitted
-during fitting.
-
-Missing or unseen groups use the common relationship
-during prediction. Unitless. Example: \code{group = example_trees_pnw$plot}.}
-
-\item{form}{One character equation name, \code{'chapman_richards'} (default),
-\code{'curtis'}, \code{'wykoff'}, \code{'naslund'}, or \code{'schumacher'}. Missing or unknown labels are errors.
-Unitless.
-
-Example: \code{form = 'wykoff'}.}
-
-\item{min_n}{One positive whole number within R's integer range. Default \code{7}
-is the minimum retained measurement count for a species-specific fit
-and the minimum total count for fitting. Missing or invalid values are
-errors.
-
-Unitless.}
-
-\item{units}{One character value, \code{'imperial'} (default) or \code{'metric'}. Imperial diameters and
-heights use inches and feet. Metric uses
-centimeters and meters.
-
-Missing or unknown values are errors. The fit is stored in inches and feet. Example: \code{units = 'metric'}.}
+\item{min_n}{The minimum sample size limits which species can receive a separate height fit.
+Numeric scalar, number of measured trees. Default: \code{7}.}
 }
 \value{
-An object of class \code{height_fit}. It retains valid measurements in \code{data}, with diameter
-in inches and height in feet. Other fields contain coefficients, group effects, counts, pooling
-records, and fitted models.
-
-\code{\link[=plot.height_fit]{plot.height_fit()}} uses the retained measurements.
+A height_fit list. The data table has dbh (inches), ht (feet), spcd (species
+code), and group (group identifier). The fixed_effects table has spcd, model_key,
+pooled (logical), and equation coefficients a, b, and c for inputs in inches and feet.
+The variance_components table has spcd, model_key, random_parameter (coefficient name),
+random_effect_sd (coefficient standard deviation), and residual_sd (feet).
+The random_effects table records model_key, group, and effect (local coefficient adjustment).
+The n_by_species table has spcd (species code) and n (measured tree count).
+Other elements retain the equation form, fitted models, model_map, internal_fixed_effects,
+groups_seen, pooled_species, convergence_pooled_species, min_n, and package metadata.
 }
 \description{
-Fit height from diameter by species, optionally including group effects. Return
-coefficients, group differences, fit records, and the data used for fitting.
+Fit tree height from diameter and measured heights
 }
 \details{
-With height \eqn{H} in feet, diameter \eqn{D} in inches, and
-breast height \eqn{H_b = 4.5} feet, the forms are:
-\itemize{
-\item Chapman-Richards: \eqn{H = H_b + a(1 - \exp(-bD))^c}. * Curtis: \eqn{H = H_b + aD/(1+D)^b}. *
-Wykoff: \eqn{H = H_b + \exp(a - b/(D+1))}.
-\item Näslund: \eqn{H = H_b + D^2/(aD+b)^2}. * Schumacher: \eqn{H = H_b + a\exp(-b/D)}.
+Invalid rows are omitted with one warning giving the count and reasons. Diameters
+must be at most 400 inches and total heights at most 500 feet. Species must occur
+in \code{species_reference}.
 }
-
-Positive parameters are fitted on a log scale. This parameterization keeps predicted height
-at or above breast height at zero diameter wherever the form has a defined value or limit.
-The first start uses data-derived asymptote and linearized estimates where available.
-
-Two alternate starts vary scale, rate, and shape. Failure of a species fit after all starts
-uses the pooled model and records the species in \code{convergence_pooled_species}. Failure of
-the pooled fit is an error naming the pooled species and form.
-}
-\section{Fitted height fields}{
-
-The returned \code{height_fit} is a list. \code{form} names the equation. \code{data} is a data frame of
-valid measured rows with numeric \code{dbh} in inches, \code{ht} in feet, integer species code \code{spcd},
-and factor \code{group}.
-
-No missing measurement rows remain. \code{fixed_effects} has integer \code{spcd}, character
-\code{model_key}, logical \code{pooled}, and numeric \code{a}, \code{b}, \code{c}. These are the coefficients of the
-equations in Details, using inches and feet.
-
-\code{c} is missing for forms without a third coefficient.
-
-\code{variance_components} has integer \code{spcd}, character \code{model_key} and
-\code{random_parameter}, numeric \code{random_effect_sd} on the fitted parameter
-scale, and numeric \code{residual_sd} in feet. \code{random_effects} has character
-\code{model_key} and \code{group} plus numeric \code{effect} on that parameter scale.
-\code{n_by_species} has integer \code{spcd} and integer \code{n}, the number of retained
-measurements. Codes, names, flags, and counts are unitless.
-
-\code{groups_seen} lists character group labels. \code{pooled_species} lists integer species codes
-below the count threshold. \code{convergence_pooled_species} lists those whose separate fit
-failed.
-
-\code{model_map} maps species to model keys, and \code{models} holds the fitted R models.
-\code{internal_fixed_effects} holds transformed coefficients by model key. \code{units} is
-\code{'imperial'}, \code{min_n} is the supplied count threshold, and \code{package_version} records the
-package version or is missing when unavailable.
-
-None is a data-frame list column. Keep the complete fitted object for prediction.
-}
-
-\section{Status and missing values}{
- Rows with missing measurements, missing grouping labels, nonpositive
-dimensions, or invalid species are omitted. \code{\link[=status_codes]{status_codes()}} identifies these input diagnoses.
-
-Diagnoses other than \code{na_input} produce warnings. These codes are not returned as a table. Too
-few
-retained heights or failure of the pooled fit stops the call. Species with too few heights
-or failed separate fits use the pooled model.
-
-Inspect the recorded species lists before prediction. No log-volume status is calculated.
-}
-
 \examples{
-## Fit the retained inventory heights
-fit <- fit_height(dbh = example_trees_pnw$dbh,
-                  ht = example_trees_pnw$ht_observed,
-                  spcd = example_trees_pnw$spcd)
+## Load data verbs
+library(dplyr)
 
-## Draw the fitted relationship
-plot(fit)
-}
-\references{
-Chai Z, Tan W, Li Y, Yan L, Yuan H, Li Z (2018).
-"Generalized nonlinear height-diameter models for a \emph{Cryptomeria fortunei}
-plantation in the Pingba region of Guizhou Province, China."
-\emph{Web Ecology}, 18, 29-35.
-\doi{10.5194/we-18-29-2018}.
-}
-\seealso{
-\code{\link[=predict_height]{predict_height()}} to estimate heights, \code{\link[=complete_heights]{complete_heights()}} to fill an inventory,
-\code{\link[=plot.height_fit]{plot.height_fit()}} to inspect measured and fitted heights.
+## Select measured heights
+measured <- example_trees_pnw \%>\%
+  filter(ht_status == 'measured')
+
+## Fit and show measured heights with plot adjustments
+fit_height(dbh = measured$dbh,
+           ht = measured$ht,
+           spcd = measured$spcd,
+           group = measured$plot)
 }

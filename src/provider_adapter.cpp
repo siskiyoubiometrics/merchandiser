@@ -474,7 +474,7 @@ Rcpp::List mc_provider_open(Rcpp::CharacterVector model_ids) {
   return Rcpp::List::create(
     Rcpp::_["pointer"] = pointer,
     Rcpp::_["status"] = model_status,
-    Rcpp::_["units"] = units,
+    Rcpp::_["measurement_system"] = units,
     Rcpp::_["kernel_type"] = kernel_type,
     Rcpp::_["has_dob"] = has_dob,
     Rcpp::_["has_inverse"] = has_inverse,

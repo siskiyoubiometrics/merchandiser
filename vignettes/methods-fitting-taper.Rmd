@@ -7,134 +7,164 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE,
-                      comment = '#>',
-                      message = FALSE,
-                      fig.width = 7,
-                      fig.height = 4)
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 120)
 library(merchandiser)
 library(dplyr)
 ```
 
-`fit_taper()` estimates coefficients for compiled taper forms from repeated stem measurements.
-`as_taper_model()` converts a fit into a model accepted by the stem registry.
+`fit_taper()` estimates coefficients from repeated stem measurements.
+Registered fits supply taper for subsequent stem and log calculations.
 
-## Fitting data and forms
+## Measurements and forms
 
-Required columns are `tree`, `dbh`, `ht`, `h`, and `dib`.
-Tree diameter and total height must remain constant within each tree.
-The shipped `example_stem_measurements` contains modeled diameters from `example_trees`, not independent field measurements.
+The required measurement vectors are `tree_id`, `dbh`, `ht`, `h`, `dib`, and `spcd`. Diameter and total height stay constant within each tree.
+The shipped measurements are modeled from `example_trees` and are synthetic.
 
 ```{r}
-## Select the shipped fitting measurements
+## Select the shipped stem measurements
 measurements <- example_stem_measurements %>%
-  select(tree, dbh, ht, h, dib)
+  select(tree_id, dbh, ht, h, dib, spcd)
 ```
 
 ```{r, echo = FALSE}
 measurements %>%
   slice_head(n = 5) %>%
+  rename(`dbh (inches)` = dbh, `ht (feet)` = ht, `h (feet)` = h,
+         `dib (inches)` = dib) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
 ```{r, echo = FALSE}
-forms <- dplyr::tribble(~form,
-                        ~source,
-                        ~structure,
-                        'kozak_1988',
-                        'Kozak (1988), doi:10.1139/x88-213',
-                        'Variable exponent with reference point',
-                        'kozak_2002',
-                        'Kozak (2004), doi:10.5558/tfc80507-4',
-                        'Variable exponent with tree and height terms',
-                        'max_burkhart',
-                        'Max and Burkhart (1976), doi:10.1093/forestscience/22.3.283',
-                        'Segmented polynomial with fitted join points')
+forms <- tribble(
+  ~form,
+  ~source,
+  ~structure,
+  'kozak_1988',
+  'Kozak (1988), doi:10.1139/x88-213',
+  'Variable exponent with reference point',
+  'kozak_2002',
+  'Kozak (2004), doi:10.5558/tfc80507-4',
+  'Variable exponent with tree and height terms',
+  'max_burkhart',
+  'Max and Burkhart (1976), doi:10.1093/forestscience/22.3.283',
+  'Segmented polynomial with fitted join points'
+)
 knitr::kable(forms)
 ```
 
-The package supplies equation forms without published coefficient vectors.
-`units` describes the input measurements. Fitted coefficients use centimeters and meters.
-
-## Fit and inspect
+Inputs use inches and feet. Fitted coefficients stay on the published equations' metric scale, and the diagnostics are reported in inches and feet.
+The package supplies these forms without published coefficient vectors.
 
 ```{r}
 ## Fit the segmented taper form
-fit <- fit_taper(data = measurements,
-                 form = 'max_burkhart',
-                 units = 'imperial')
+fit <- fit_taper(
+  tree_id = measurements$tree_id,
+  dbh = measurements$dbh,
+  ht = measurements$ht,
+  h = measurements$h,
+  dib = measurements$dib,
+  spcd = measurements$spcd,
+  form = 'max_burkhart'
+)
 ```
 
 ```{r, echo = FALSE}
 fit$fit_statistics$overall %>%
+  rename(`measurements (count)` = n,
+         `root mean squared error (inches)` = rmse,
+         `mean residual (inches)` = bias) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-```{r}
-## Draw fitted diameters and residuals
-plot(fit)
+<details>
+<summary>Taper fit ratios</summary>
+
+```{r, echo = FALSE}
+fit$residual_diagnostics %>%
+  transmute(tree_id, `relative height (unitless)` = relative_height,
+            `observed diameter ratio (unitless)` = observed_dib / dbh,
+            `fitted diameter ratio (unitless)` = fitted_dib / dbh) %>%
+  knitr::kable(digits = 4, row.names = FALSE)
 ```
 
-The fit stores coefficients, fitted values, residuals, and fit statistics.
-`rmse` is root mean squared error, and `bias` is mean observed minus fitted diameter. Both use centimeters.
+</details>
 
-`summary()` reports fit statistics and coefficients. `predict()` evaluates new measurement rows.
+The plot compares observed and fitted diameter ratios over relative height. Both axes are unitless ratios.
 
-Supplying `group` requests a mixed-effects fit.
-The random effect acts on the Kozak scale parameter or the segmented form's `b1` parameter.
-Predictions use population coefficients when a group was absent from the fitting data.
+```{r, echo = FALSE}
+par(ann = FALSE)
+plot(fit)
+par(ann = TRUE)
+title(xlab = 'Relative height (unitless)', ylab = 'Relative diameter (unitless)')
+```
+
+`summary()` returns coefficients and fit statistics. `predict()` returns inside bark diameters in inches.
 
 ```{r}
-## Predict diameters at the supplied measurement heights
+## Predict diameters at the measured heights
 predicted <- measurements %>%
   mutate(fitted_dib = predict(object = fit,
-                              newdata = measurements,
-                              units = 'imperial'))
+                              newdata = measurements))
 ```
 
 ```{r, echo = FALSE}
 predicted %>%
   slice_head(n = 5) %>%
+  rename(`dbh (inches)` = dbh, `ht (feet)` = ht, `h (feet)` = h,
+         `dib (inches)` = dib, `fitted diameter (inches)` = fitted_dib) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
+Supplying `group` requests a mixed effects fit when several groups are present.
+The random effect acts on the Kozak scale parameter or the segmented form's `b1` parameter.
+Unseen groups use population coefficients.
+
 ## Register fitted coefficients
 
-`as_taper_model()` creates a model from population coefficients. `register_taper_model()` makes it available for the current session.
-An explicit `bark_ratio` enables outside-bark calculations for the fitted model.
+`as_taper_model()` creates a model from population coefficients and retains the fitted species scope.
+An explicit bark ratio enables outside bark calculations.
 
 ```{r}
-## Create and register a model from the fitted coefficients
-local_model <- as_taper_model(x = fit,
-                              id = 'example.segmented',
-                              bark_ratio = 0.9)
+## Create the local model
+local_model <- as_taper_model(
+  x = fit,
+  model = 'example.segmented',
+  bark_ratio = 0.9
+)
 
-## Make the model available for stem calculations
-register_taper_model(model = local_model)
-```
+## Register the model for this session
+register_taper_model(x = local_model)
 
-```{r}
-## Calculate volume with the fitted model
-volumes <- example_trees %>%
-  transmute(tree,
-            cubic = stem_volume(dbh = dbh,
-                                ht = ht,
-                                model = local_model$id))
+## Inspect its specification
+local_model$id
+
+## Measure stems with the registered model
+volumes <- stem_volume(dbh = example_trees$dbh,
+                       ht = example_trees$ht,
+                       spcd = example_trees$spcd,
+                       model = local_model$id)
 ```
 
 ```{r, echo = FALSE}
 volumes %>%
+  rename(`volume (cubic feet)` = value) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
 ```{r}
-## Validate and remove the session model
-validate_taper_model(x = local_model)
+## Validate and remove the local model
+local_model$id
 
-## Remove the example registration
-unregister_taper_model(id = local_model$id)
+## Remove the session registration
+unregister_taper_model(model = local_model$id)
+
+## Construct a model directly from the fitted coefficients
+taper_model_from_coefficients(id = 'example.coefficients',
+                              form = fit$form,
+                              coefficients = fit$coefficients,
+                              spcd = fit$spcd)$id
 ```
 
-`taper_model_from_coefficients()` constructs the same compiled model type from a named coefficient vector.
-`new_taper_model()` constructs a model from R callbacks.
+[`new_taper_model()`](../reference/new_taper_model.html) creates models from existing R callbacks.

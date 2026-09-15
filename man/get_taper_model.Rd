@@ -4,100 +4,24 @@
 \alias{get_taper_model}
 \title{Inspect a taper equation and its required inputs}
 \usage{
-## Call signatures
-get_taper_model(id)
+get_taper_model(
+  model
+)
 }
 \arguments{
-\item{id}{Required single nonempty character identifier. No default. Missing or unknown
-values stop the call.
-
-Unitless.}
+\item{model}{The identifier names the taper model in the registry. Character scalar model
+identifier. Required, with no default.}
 }
 \value{
-A \code{taper_model} list with the fields.
+A taper_model list containing id, form, kernel, inputs, spcd, stump_ht,
+bark_ratio (diameter ratio), source (provenance), and internal equation metadata.
+\code{measurement_system} identifies the internal units.
+\code{stump_ht} uses feet for imperial models and meters for metric models.
 }
 \description{
-Return a resolved taper model, including its inputs, units, capabilities, and source record.
+Inspect a taper equation and its required inputs
 }
-\details{
-The source-test attribute describes which identifiers were exercised against
-saved reference results. It is not a rating of regional prediction accuracy. Inspect the
-required inputs and bark conventions before applying an equation to tree measurements.
-}
-\section{Status and missing values}{
-
-No tree status codes are returned. Invalid inputs stop the call. Repair
-the model or identifier before continuing.
-
-A successful check or lookup
-does not establish tree volume.
-}
-
-\section{Taper model fields}{
-
-A \code{taper_model} is a named list. Fields are supplied by the defining function,
-not columns of an inventory. \code{id} is its nonempty character equation name,
-\code{family} is its nonempty character equation family, and \code{units} is either
-\code{'imperial'} or \code{'metric'}.
-
-These labels are unitless. \code{species} is a
-vector of positive whole-number inventory species codes, with \code{integer()}
-meaning unrestricted. Missing codes are errors.
-
-\code{stump_ht} is one finite
-nonnegative height in the equation's feet or meters. \code{bark_ratio} is one
-numeric inside-bark to outside-bark diameter ratio greater than zero and
-at most one, or \code{NA} when no default is supplied.
-
-\code{dib}, \code{dob}, \code{height_at_dib}, and \code{volume} contain equation functions or \code{NULL} when that
-function is absent. For an equation written in R, \code{dib} is required.
-
-\code{inputs} is a list with character vectors \code{required} and \code{optional}, then a list \code{pairs}, in
-that order. For example, \code{list(required = character(), optional = 'bark_ratio', pairs = list())} declares an optional bark ratio. All declared input names must come from the
-equation inputs described on \code{\link[=dib]{dib()}}.
-
-Names cannot be duplicated. A pair is a character vector such as \code{c('upper_ht1', 'upper_d1')}.
-
-\code{source} and \code{notes} are single character strings, default \code{''} when made by
-\code{\link[=new_taper_model]{new_taper_model()}}. Empty text is allowed and missing text is an error. \code{data} holds
-equation coefficients or other fixed equation data.
-
-It cannot be an environment, function, or external pointer. \code{class_version} is the character
-representation version, currently \code{'0.3'}, and must match.
-
-The literal field \code{kernel} describes which equation functions are present. Its \code{type} is
-\code{'r'} or \code{'compiled'}, \code{key} identifies a built-in equation or is \code{NA} for an R function,
-and logical \code{has_dob}, \code{has_inverse}, and \code{has_integral} identify direct calculations. These
-flags are not missing.
-
-The logical \code{oracle_verified} attribute records source-test coverage: \code{TRUE} means checked
-against source-library test cases, \code{FALSE} means not exercised, and \code{NA} means that
-comparison does not apply. It does not rate prediction accuracy for a stand. There are no
-data-frame list columns.
-}
-
-\section{Equation function inputs and returns}{
-
-Diameter callbacks take \code{dbh}, \code{ht}, \code{h}, and \code{aux}, in that order. Height callbacks replace \code{h}
-with \code{dib}. Volume callbacks take \code{dbh}, \code{ht}, \code{lower}, \code{upper}, and \code{aux}.
-
-Measurements arrive as equal-length vectors in the equation's declared units. \code{aux} is a
-named list of declared extra input vectors. A function must return a double vector of the
-same length in diameter, height, or cubic units, respectively.
-
-Missing or invalid outputs fail evaluation. An optional integer \code{status} attribute can
-retain per-row diagnoses. The functions must not change global objects, options, or random
-state.
-}
-
 \examples{
-## Load dplyr
-library(dplyr)
-
-## Inspect the equation assigned to an example tree
-get_taper_model(id = first(x = example_trees$model))
-}
-\seealso{
-\code{\link[=new_taper_model]{new_taper_model()}} to define an equation, \code{\link[=has_taper_model]{has_taper_model()}} to
-check availability, \code{\link[=dib]{dib()}} to calculate diameter.
+## Inspect the model used for an example tree.
+get_taper_model(model = example_trees$model[1])
 }

@@ -4,37 +4,28 @@
 \alias{threads}
 \title{Choose the number of calculation workers}
 \usage{
-## Call signatures
-threads(n = NULL)
+threads(
+  n = NULL
+)
 }
 \arguments{
-\item{n}{One positive whole-number numeric count, no greater than R's
-integer limit, or default \code{NULL} to query without changing the count.
-Missing, infinite, fractional, or zero values are errors. Unitless.}
+\item{n}{The worker count controls how many threads may evaluate trees. Numeric scalar, number
+of threads, a whole number of at least one. Counts above the detected core count
+are clamped with a warning. Default: \code{NULL}.}
 }
 \value{
-One integer count, unitless. Setting returns the previous count,
-and querying returns the current count.
+The current worker count, or the previous worker count when \code{n} is supplied.
 }
 \description{
-Query or set the worker count for compiled calculations. Setting the count returns the
-previous value.
+Choose the number of calculation workers
 }
-\details{
-The initial setting is one unless \code{MERCHANDISER_THREADS} supplies
-a valid count when the package loads. The older \code{TREEVOLUME_THREADS}
-setting is used only when the current setting is unset. Changing the
-worker count does not change product specifications or measurement rules.
-}
-\section{Status and missing values}{
-
-No tree codes are returned. Invalid counts stop the call.
-}
-
 \examples{
-## Inspect the worker count used for inventory calculations
-threads()
-}
-\seealso{
-\code{\link[=with_threads]{with_threads()}} for a temporary setting, \code{\link[=dib]{dib()}} for diameter.
+## Read the current worker setting before changing it.
+previous <- threads()
+
+## Use one worker for a local calculation.
+threads(n = 1)
+
+## Restore the original setting.
+threads(n = previous)
 }

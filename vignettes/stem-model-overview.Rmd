@@ -7,85 +7,105 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE,
-                      comment = '#>',
-                      message = FALSE,
-                      fig.width = 7,
-                      fig.height = 4)
+```{r setup, include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      fig.width = 8, fig.height = 4.5, dpi = 120)
 library(merchandiser)
 library(dplyr)
 ```
 
-Scalar height, diameter, volume, and biomass helpers return results aligned with their input vectors.
-`stem_profile()` expands trees into rows sorted by identifier and height.
-Only length-one inputs recycle. Other nonempty lengths must match.
+Stem measurement results align with input rows and can be joined to tree lists.
+`stem_profile()` expands each tree into ordered height measurements.
+
+## Input lengths
+
+Only scalar inputs recycle. Other nonempty input lengths must match.
 
 ## Heights
 
 ```{r}
-## Fit the retained inventory heights
-fit <- fit_height(dbh = example_trees_pnw$dbh,
-                  ht = example_trees_pnw$ht_observed,
-                  spcd = example_trees_pnw$spcd)
-```
+## Select measured rows
+measured <- example_trees_pnw %>%
+  filter(ht_status == 'measured')
 
-```{r}
-## Complete missing heights with the fitted model
-completed <- example_trees_pnw %>%
+## Fit measured heights
+fit <- fit_height(dbh = measured$dbh,
+                  ht = measured$ht,
+                  spcd = measured$spcd,
+                  group = measured$plot)
+
+## Blank predicted rows before completion
+trees <- example_trees_pnw %>%
+  mutate(ht = if_else(condition = ht_status == 'predicted',
+                      true = NA_real_,
+                      false = ht))
+
+## Complete the missing heights
+completed <- trees %>%
   mutate(ht = complete_heights(dbh = dbh,
-                               ht = ht_observed,
+                               ht = ht,
                                spcd = spcd,
+                               group = plot,
                                fit = fit))
 ```
 
 ```{r, echo = FALSE}
 completed %>%
-  select(tree, ht_observed, ht) %>%
   slice_head(n = 5) %>%
+  transmute(tree_id = tree_id, ht_status, `height (feet)` = ht) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
 ## Stem quantities
 
-`dib()` calculates inside-bark diameter. `height_at_dib()` returns the highest matching height.
-`stem_volume()` evaluates a bounded interval using the model's volume capability.
+Each measurement function returns `value` and `status`. Outside bark calculations need a model capability or a bark ratio.
 
 ```{r}
-## Add diameter, height, and volume calculations
-dimensions <- example_trees %>%
-  transmute(tree,
-            diameter = dib(dbh = dbh, ht = ht, h = 20, model = model),
-            height = height_at_dib(dbh = dbh, ht = ht, dib = 6, model = model),
-            cubic = stem_volume(dbh = dbh, ht = ht, model = model))
+## Calculate dib
+dib_result <- dib(dbh = example_trees$dbh,
+                  ht = example_trees$ht,
+                  spcd = example_trees$spcd,
+                  model = example_trees$model,
+                  h = 20)
+
+## Calculate height at dib
+height_at_dib_result <- height_at_dib(dbh = example_trees$dbh,
+                                      ht = example_trees$ht,
+                                      spcd = example_trees$spcd,
+                                      model = example_trees$model,
+                                      dib = 6)
+
+## Calculate stem volume
+stem_volume_result <- stem_volume(dbh = example_trees$dbh,
+                                  ht = example_trees$ht,
+                                  spcd = example_trees$spcd,
+                                  model = example_trees$model)
 ```
 
 ```{r, echo = FALSE}
-dimensions %>%
+example_trees %>%
+  transmute(tree_id = tree_id, `diameter inside bark (inches)` = dib_result$value,
+            `height at target diameter (feet)` = height_at_dib_result$value,
+            `volume (cubic feet)` = stem_volume_result$value) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-Imperial diameters, heights, and volumes use inches, feet, and cubic feet.
-Metric calls require centimeters and meters and return cubic meters.
-Outside-bark calculations require a model capability or an explicit constant bark ratio.
+Diameters use inches, heights use feet, and volumes use cubic feet. Inverse functions retain the highest matching height.
 
 ## Weight
 
 ```{r}
-## Convert the modeled volumes to green wood and bark weight
-weight <- green_weight(volume = dimensions$cubic,
-                       spcd = example_trees$spcd,
-                       status = TRUE)
+## Convert modeled stem volume to weight
+weight <- green_weight(volume = stem_volume_result$value,
+                       spcd = example_trees$spcd)
 ```
 
 ```{r, echo = FALSE}
 weight %>%
+  rename(`green weight (short tons)` = value) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-Green weight uses species properties and supplied cubic volume.
-The national biomass equations use tree dimensions and ecological divisions to calculate fitted component masses.
-[biomass()](biomass-carbon.html) returns dry mass, green mass, and carbon by component.
+[Green weight](volumes-scaling.html) uses supplied cubic volume and species properties. [Biomass](biomass-carbon.html) estimates dry mass and carbon from tree dimensions.
 
-`status = TRUE` pairs quantities with diagnoses.
-Unsupported quantities remain missing. Model checks verify available operations and species scope, not predictive accuracy.
+Unsupported quantities remain missing with status codes. Model checks establish available operations and species scope, not predictive accuracy.

@@ -1,42 +1,31 @@
 test_that("Clark coefficient inventory is complete and round trips", {
-  path <- system.file(
-    "extdata", "clark_coefficients.csv", package = "merchandiser",
+  path <- system.file("extdata", "clark_coefficients.csv",
+    package = "merchandiser",
     mustWork = TRUE
   )
-  coefficients <- utils::read.csv(
-    path, stringsAsFactors = FALSE, na.strings = ""
-  )
+  coefficients <- utils::read.csv(path, stringsAsFactors = FALSE, na.strings = "")
   expect_equal(nrow(coefficients), 28726L)
-  expect_setequal(
-    unique(coefficients$source_file),
-    c(
-      "r8dib.f", "r8dib.inc", "r8clkcoef.inc",
-      "r8cfo.inc", "r8clist.inc", "r8vlist.f", "r8vlist.inc",
-      "r8init.f", "r8vol2.f", "r9clark.f", "r9coeff.inc", "r9init.f",
-      "r9vol.f", "voleqdef.f"
-    )
-  )
+  expect_setequal(unique(coefficients$source_file), c(
+    "r8dib.f", "r8dib.inc", "r8clkcoef.inc",
+    "r8cfo.inc", "r8clist.inc", "r8vlist.f", "r8vlist.inc", "r8init.f", "r8vol2.f",
+    "r9clark.f",
+    "r9coeff.inc", "r9init.f", "r9vol.f", "voleqdef.f"
+  ))
   expect_true(all(
-    coefficients$upstream_commit ==
-      "38548071d5aa652bb90c7f111f86b427f798a1c9"
+    coefficients$upstream_commit == "38548071d5aa652bb90c7f111f86b427f798a1c9"
   ))
 
   round_trip_path <- tempfile(fileext = ".csv")
   utils::write.csv(coefficients, round_trip_path, row.names = FALSE, na = "")
-  round_trip <- utils::read.csv(
-    round_trip_path, stringsAsFactors = FALSE, na.strings = ""
-  )
+  round_trip <- utils::read.csv(round_trip_path, stringsAsFactors = FALSE, na.strings = "")
   expect_equal(round_trip, coefficients, tolerance = 0)
 })
 
 test_that("compiled Clark tables have their declared literal counts", {
-  coefficients <- utils::read.csv(
-    system.file(
-      "extdata", "clark_coefficients.csv", package = "merchandiser",
-      mustWork = TRUE
-    ),
-    stringsAsFactors = FALSE, na.strings = ""
-  )
+  coefficients <- utils::read.csv(system.file("extdata", "clark_coefficients.csv",
+                                    package = "merchandiser",
+                                    mustWork = TRUE
+                                  ), stringsAsFactors = FALSE, na.strings = "")
   count <- function(file, pattern) {
     source_match <- coefficients$source_file == file
     target_match <- grepl(pattern, coefficients$target, ignore.case = TRUE)

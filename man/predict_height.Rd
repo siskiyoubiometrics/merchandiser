@@ -4,146 +4,62 @@
 \alias{predict_height}
 \title{Predict tree height}
 \usage{
-## Call signatures
-predict_height(fit, dbh, spcd, group = NULL, re_form = 'conditional', interval = FALSE, level
-  = 0.95, nsim = 1000, seed = NULL, units = 'imperial')
+predict_height(
+  fit,
+  dbh,
+  spcd,
+  group = NULL,
+  re_form = 'conditional',
+  interval = FALSE,
+  level = 0.95,
+  nsim = 1000,
+  seed = NULL
+)
 }
 \arguments{
-\item{fit}{Required complete \code{height_fit} from \code{\link[=fit_height]{fit_height()}}. No default.
-Missing or other objects are errors.}
+\item{fit}{The fitted height relationship supplies predictions for these trees. A height_fit
+object. Required, with no default.}
 
-\item{dbh}{Required positive finite numeric outside-bark breast-height diameters,
-in inches or centimeters. Length one repeats, otherwise one per tree. Omission is an error.
+\item{dbh}{Diameter at breast height outside bark. Numeric vector,
+inches, greater than zero and at most 400. Required, with no default.}
 
-Missing or nonfinite values give \code{na_input}
-and are omitted from fitting or return missing predictions. Example: \code{example_trees$dbh}.}
+\item{spcd}{Numeric inventory species code. Numeric
+vector, species codes. Required, with no default.}
 
-\item{spcd}{Required numeric Forest Inventory and Analysis tree inventory
-species codes, length one or one per tree. Positive whole numbers within
-R's integer range are accepted. Unitless.
+\item{group}{Trees in the same group share a local height or taper adjustment. Atomic vector of
+group identifiers. Default: \code{NULL}.}
 
-Omission is an error. Missing
-gives \code{na_input} and invalid codes give \code{unknown_species}.}
+\item{re_form}{The prediction choice includes or leaves out local group adjustments. Character
+scalar, 'conditional' or 'population'. Default: \code{'conditional'}.}
 
-\item{group}{Atomic plot or stand labels, length one or one per tree. Default
-\code{NULL} treats fitting observations as one group and uses the common
-fitted relationship when predicting. Missing or empty groups are omitted
-during fitting.
+\item{interval}{Choose whether to include an interval around each height prediction. Logical
+scalar. Default: \code{FALSE}.}
 
-Missing or unseen groups use the common relationship
-during prediction. Unitless. Example: \code{group = example_trees_pnw$plot}.}
+\item{level}{The interval level sets the share of the prediction distribution covered. Numeric
+scalar, fraction between zero and one. Default: \code{0.95}.}
 
-\item{re_form}{One character value, \code{'conditional'} (default) or \code{'population'}. Conditional
-predictions include an estimated difference for a known
-fitted group. Population predictions use the common relationship.
+\item{nsim}{The simulation count controls the number of draws for prediction intervals. Numeric
+scalar, number of draws, at most 1e6. Default: \code{1000}.}
 
-Missing or unknown labels are errors. Unitless. Example: \code{'population'}.}
-
-\item{interval}{One nonmissing logical value, default \code{FALSE}, returning only
-predicted heights. \code{TRUE} adds simulated limits. Invalid types are
-errors.
-
-Unitless. Example: \code{interval = TRUE}.}
-
-\item{level}{One finite numeric probability strictly between zero and one. The probability
-selects the central prediction interval. Missing is an error.
-
-Unitless.}
-
-\item{nsim}{One positive whole number within R's integer range. Default
-\code{1000} is the simulation count per predicted tree. Missing or invalid
-values are errors.
-
-Unitless.}
-
-\item{seed}{One nonnegative whole number within R's integer range, or \code{NULL}
-(default) to use the current random-number state. A supplied seed makes
-simulations reproducible while restoring the caller's random state. Missing is an error.
-
-Unitless.}
-
-\item{units}{One character value, \code{'imperial'} (default) or \code{'metric'}. Imperial diameters and
-heights use inches and feet. Metric uses
-centimeters and meters.
-
-Missing or unknown values are errors. The fit is stored in inches and feet. Example: \code{units = 'metric'}.}
+\item{seed}{The random seed makes prediction intervals reproducible. Numeric scalar,
+random-number seed. Default: \code{NULL}.}
 }
 \value{
-A numeric height vector when \code{interval = FALSE}. Otherwise, a data
-frame with \code{fit}, \code{lower}, and \code{upper} columns.
+Without intervals, a numeric vector of predicted heights in feet. With intervals, a
+data frame with fit, lower, and upper (predicted height and lower and upper limits, feet).
 }
 \description{
-Predict total height from a fitted height model. Return a numeric vector or a table with
-simulated limits.
+Predict tree height
 }
-\section{Fitted height fields}{
-
-The returned \code{height_fit} is a list. \code{form} names the equation. \code{data} is a data frame of
-valid measured rows with numeric \code{dbh} in inches, \code{ht} in feet, integer species code \code{spcd},
-and factor \code{group}.
-
-No missing measurement rows remain. \code{fixed_effects} has integer \code{spcd}, character
-\code{model_key}, logical \code{pooled}, and numeric \code{a}, \code{b}, \code{c}. These are the coefficients of the
-equations in Details, using inches and feet.
-
-\code{c} is missing for forms without a third coefficient.
-
-\code{variance_components} has integer \code{spcd}, character \code{model_key} and
-\code{random_parameter}, numeric \code{random_effect_sd} on the fitted parameter
-scale, and numeric \code{residual_sd} in feet. \code{random_effects} has character
-\code{model_key} and \code{group} plus numeric \code{effect} on that parameter scale.
-\code{n_by_species} has integer \code{spcd} and integer \code{n}, the number of retained
-measurements. Codes, names, flags, and counts are unitless.
-
-\code{groups_seen} lists character group labels. \code{pooled_species} lists integer species codes
-below the count threshold. \code{convergence_pooled_species} lists those whose separate fit
-failed.
-
-\code{model_map} maps species to model keys, and \code{models} holds the fitted R models.
-\code{internal_fixed_effects} holds transformed coefficients by model key. \code{units} is
-\code{'imperial'}, \code{min_n} is the supplied count threshold, and \code{package_version} records the
-package version or is missing when unavailable.
-
-None is a data-frame list column. Keep the complete fitted object for prediction.
-}
-
-\section{Prediction rules and limits}{
- Conditional prediction uses group differences only when a
-matching fitted model and group are available. An unseen species has no assigned fit and
-returns a missing prediction.
-
-A pooled species uses its assigned pooled model, including a known pooled group difference
-for conditional prediction.
-
-The interval simulation holds fitted coefficients fixed. It draws group variation and
-residual error, truncates simulated heights below breast height, and takes the requested
-central quantiles. It does not include coefficient uncertainty or inventory sampling
-uncertainty.
-}
-
-\section{Status and missing values}{
-
-No status table is returned. \code{na_input} marks missing or nonfinite required values.
-\code{dbh_nonpositive} marks nonpositive diameter. \code{unknown_species} marks invalid or unfitted
-species.
-
-These predictions are missing.
-
-Diagnoses other than \code{na_input} warn. Missing groups use the common relationship and do not by
-themselves
-fail the prediction. Missing predictions do not establish zero volume.
-}
-
 \examples{
-## Fit the retained inventory heights
+## Fit the shipped heights
 fit <- fit_height(dbh = example_trees_pnw$dbh,
-                  ht = example_trees_pnw$ht_observed,
-                  spcd = example_trees_pnw$spcd)
+                  ht = example_trees_pnw$ht,
+                  spcd = example_trees_pnw$spcd,
+                  form = 'curtis')
 
-## Predict heights for the complete example trees
-predict_height(fit = fit, dbh = example_trees$dbh, spcd = example_trees$spcd)
-}
-\seealso{
-\code{\link[=fit_height]{fit_height()}} to estimate a model, \code{\link[=complete_heights]{complete_heights()}} to retain existing heights,
-\code{\link[=plot.height_fit]{plot.height_fit()}} to inspect the fitted relationship.
+## Predict the first example tree's height
+c(`height (feet)` = predict_height(fit = fit,
+                                   dbh = example_trees$dbh[1],
+                                   spcd = example_trees$spcd[1]))
 }

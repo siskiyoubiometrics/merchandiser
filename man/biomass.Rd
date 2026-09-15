@@ -2,193 +2,60 @@
 % Please edit documentation in R/stem-nsvb.R
 \name{biomass}
 \alias{biomass}
-\title{Estimate tree biomass and carbon by component}
+\title{Dry biomass in metric tonnes from tree measurements in inches and feet}
 \usage{
-## Call signatures
-biomass(dbh, ht, spcd, division, system = 'nsvb', id = NULL, ..., units = 'imperial', status =
-  FALSE)
+biomass(
+  dbh,
+  ht,
+  spcd,
+  division = 0,
+  ...
+)
 }
 \arguments{
-\item{dbh}{Required positive finite numeric outside-bark breast-height
-diameter, length one or one per tree. Inches in imperial units or
-centimeters in metric units. Omission is an error.
+\item{dbh}{Diameter at breast height outside bark. Numeric vector,
+inches. Required, with no default.}
 
-Missing gives \code{na_input}. Example: \code{example_trees$dbh}.}
+\item{ht}{Total height above ground. Numeric vector, feet.
+Required, with no default.}
 
-\item{ht}{Required positive finite numeric total height above ground,
-length one or one per tree. Feet or meters. Omission is an error.
+\item{spcd}{Numeric inventory species code. Numeric
+vector, species codes. Required, with no default.}
 
-Missing gives \code{na_input}. Example: \code{example_trees$ht}.}
+\item{division}{The ecological division selects biomass coefficients for the tree. Numeric
+vector, division codes, 0 selects national coefficients. Default: \code{0}.}
 
-\item{spcd}{Required positive whole-number numeric inventory species codes,
-length one or one per tree. Unitless. Missing gives \code{na_input}.
-
-Invalid
-finite codes stop the call, and unrecognized species give \code{unknown_species}. Omission is an
-error.}
-
-\item{division}{Required numeric whole-number ecological code from zero
-through 1999, length one or one per tree. Unitless. Missing gives \code{na_input},
-invalid finite values stop the call.
-
-Province codes are rounded down to
-the broader division for equation selection.}
-
-\item{system}{One character value, \code{'nsvb'} (default), selecting the national
-biomass equations. No other system is supported. Missing or unknown
-labels are errors.
-
-Unitless. Example: \code{system = 'nsvb'}.}
-
-\item{id}{Optional identifiers, length one or one per tree. Default \code{NULL}
-omits the identifier column. Values are retained without uniqueness or
-missing-value validation.
-
-Unitless. Example: \code{example_trees$tree}.}
-
-\item{...}{Named inputs . Each has length one
-or one per tree.
-
-Unknown names and invalid finite values stop the call.}
-
-\item{units}{One character value, \code{'imperial'} (default) or \code{'metric'}. Imperial uses inches,
-feet, and pounds. Metric uses centimeters, meters,
-and kilograms.
-
-Missing or unknown labels are errors. Example: \code{'metric'}.}
-
-\item{status}{One nonmissing logical value, default \code{FALSE}. \code{TRUE} adds
-one integer code column for every quantity and suppresses row warnings. These codes are
-unitless.
-
-Invalid flags stop the call. Example: \code{TRUE}.}
+\item{...}{Additional named inputs supply measurements required by the selected model. Named
+vectors in inches for diameters and feet for heights, none by default.}
 }
 \value{
-A data frame with one row per tree in input order and the fields. Mass units follow
-\code{units}, including the \code{co2e} column.
+One row per input row in input order. All mass columns use metric tonnes:
+\itemize{
+\item \code{dry_aboveground_no_foliage}: dry aboveground mass excluding foliage.
+\item \code{dry_stem_wood}, \code{dry_stem_bark}: dry stem components.
+\item \code{dry_stump_wood}, \code{dry_stump_bark}: dry stump components.
+\item \code{dry_saw_wood}, \code{dry_saw_bark}: dry sawlog components.
+\item \code{dry_topwood_wood}, \code{dry_topwood_bark}: dry topwood components.
+\item \code{dry_tip_wood}, \code{dry_tip_bark}: dry tip components.
+\item \code{dry_branches}, \code{dry_foliage}, \code{dry_top_and_limb}: dry crown components.
+\item \code{carbon}: carbon mass excluding foliage.
+\item \code{tco2e}: carbon dioxide equivalent.
+}
+
+The integer status column describes the row, including rows with invalid inputs.
 }
 \description{
-Estimate biomass components, aboveground carbon, and carbon dioxide equivalent from tree
-measurements and ecological divisions.
+Outputs are metric tonnes and inputs are inches and feet.
 }
-\details{
-The National Scale Volume and Biomass system supplies the national
-biomass equations. Wood, bark, and branch predictions are adjusted so
-their combined mass agrees with the aboveground prediction. Stem
-sections are allocated using the source product-length rules and top
-limits.
-
-Carbon excludes foliage. The green quantities use one
-green-to-dry multiplier from regional or species factors across the dry
-components. They are separate from \code{\link[=green_weight]{green_weight()}}'s volume conversion.
-
-These product limits belong to the biomass calculation. They do not use
-a product table or reproduce the cuts in a merchandising result.
-}
-\section{Tree condition and measurement limits through dots}{
-
-All inputs are numeric, length one or one per tree. Defaults apply when
-omitted, not when explicitly missing, except the length overrides below.
-\describe{
-\item{\code{decay_class}}{Whole number from zero through 5, unitless. Default
-\code{0} describes a live tree. Classes 1 through 5 apply the dead-tree density,
-bark, branch, foliage, and carbon rules.
-
-Missing gives \code{na_input}. }
-\item{\code{cull}}{Percentage from zero through 100. Default \code{0} means no cull
-adjustment. Missing gives \code{na_input}.  This is the biomass
-system's adjustment and is not a located merchandising defect.}
-\item{\code{region}, \code{forest}}{Whole-number geographic codes from zero through
-99. Defaults \code{0} select species-reference green-weight factors instead of
-a forest-specific factor. Missing gives \code{na_input}.
-
-Unitless. }
-\item{\code{primary_top}, \code{secondary_top}}{Positive inside-bark product top
-diameters. Defaults are 6 and 4 inches or 15.24 and 10.16 centimeters.
-Missing gives \code{na_input}. }
-\item{\code{stump_ht}}{Nonnegative stump height above ground. Default is 1 foot
-or 0.3048 meter. Missing gives \code{na_input}. }
-\item{\code{max_log_length}, \code{min_log_length}, \code{trim}}{Positive length overrides
-in feet or meters. Default \code{NA_real_} leaves the source rule unchanged. Nonfinite values also
-leave these overrides unset.
-
-Finite zero or negative
-values are errors, including zero trim. }
-}
-}
-
-\section{Biomass result fields}{
-
-Every quantity is numeric pounds under imperial units or kilograms under
-metric units. The \code{dry_} prefix means oven-dry mass and \code{green_} includes
-moisture. These overlapping totals and components must not all be added.
-
-Failed rows are missing. \describe{
-\item{\code{dry_agb_no_foliage}, \code{green_agb_no_foliage}}{Oven-dry and green aboveground biomass
-excluding foliage, respectively.}
-\item{\code{dry_stem_wood}, \code{green_stem_wood}}{Oven-dry and green whole-stem wood, respectively.}
-\item{\code{dry_stem_bark}, \code{green_stem_bark}}{Oven-dry and green whole-stem bark, respectively.}
-\item{\code{dry_stump_wood}, \code{green_stump_wood}}{Oven-dry and green wood below stump height,
-respectively.}
-\item{\code{dry_stump_bark}, \code{green_stump_bark}}{Oven-dry and green bark below stump height,
-respectively.}
-\item{\code{dry_saw_wood}, \code{green_saw_wood}}{Oven-dry and green wood assigned to the primary
-saw section, respectively.}
-\item{\code{dry_saw_bark}, \code{green_saw_bark}}{Oven-dry and green bark assigned to the primary
-saw section, respectively.}
-\item{\code{dry_topwood_wood}, \code{green_topwood_wood}}{Oven-dry and green wood in the secondary
-merchantable section, respectively.}
-\item{\code{dry_topwood_bark}, \code{green_topwood_bark}}{Oven-dry and green bark in the secondary
-merchantable section, respectively.}
-\item{\code{dry_tip_wood}, \code{green_tip_wood}}{Oven-dry and green wood above the secondary
-merchantable section, respectively.}
-\item{\code{dry_tip_bark}, \code{green_tip_bark}}{Oven-dry and green bark above the secondary
-merchantable section, respectively.}
-\item{\code{dry_branches}, \code{green_branches}}{Oven-dry and green branch biomass, respectively.}
-\item{\code{dry_foliage}, \code{green_foliage}}{Oven-dry and green foliage biomass, respectively.}
-\item{\code{dry_top_and_limb}, \code{green_top_and_limb}}{Oven-dry and green aboveground biomass
-excluding foliage, stump, and primary and secondary merchantable sections,
-respectively.}
-\item{\code{carbon}}{Carbon mass in aboveground biomass excluding foliage.}
-\item{\code{co2e}}{Carbon multiplied by 44/12, in the same pounds or kilograms.
-The separate \code{\link[=co2e]{co2e()}} function instead always returns metric tons.}
-\item{\code{id}}{Optional input identifier, present only when supplied. Unitless.}
-}
-With \code{status = TRUE}, every quantity has an integer, unitless companion
-named by appending \verb{_status}, for example \code{dry_stem_wood_status}. The same
-row code is repeated for every component.
-
-There are no list columns.
-}
-
-\section{Status and missing values}{
-
-\code{ok} means available model output. Missing inputs, nonpositive dimensions, unrecognized species,
-and equation failures leave every component missing. \code{\link[=status_codes]{status_codes()}} identifies these
-diagnoses.
-
-A component can be zero for dead foliage or an absent merchantable section. Component statuses
-do not describe merchandising results.
-}
-
 \examples{
-## Load dplyr
+## Load data verbs
 library(dplyr)
 
-## Estimate biomass for the first example trees
-biomass(dbh = example_trees$dbh,
-        ht = example_trees$ht,
-        spcd = example_trees$spcd,
-        division = 1240) \%>\%
-  select(dry_stem_wood, dry_stem_bark, dry_branches, carbon) \%>\%
-  slice_head(n = 3)
-}
-\references{
-Westfall, J.A. et al. (2024). \emph{A national-scale tree volume,
-biomass, and carbon modeling system for the United States}. General
-Technical Report WO-104. \doi{10.2737/WO-GTR-104}.
-}
-\seealso{
-\code{\link[=biomass_component]{biomass_component()}} for one quantity, \code{\link[=co2e]{co2e()}} for metric tons
-of carbon dioxide equivalent, \code{\link[=nsvb_division_xy]{nsvb_division_xy()}} for a location lookup.
+## Estimate mass with national coefficients
+biomass(dbh = example_trees$dbh[1],
+        ht = example_trees$ht[1],
+        spcd = example_trees$spcd[1]) \%>\%
+  transmute(`dry mass excluding foliage (tonnes)` = dry_aboveground_no_foliage,
+            `carbon (tonnes)` = carbon,
+            `carbon dioxide equivalent (tonnes)` = tco2e)
 }

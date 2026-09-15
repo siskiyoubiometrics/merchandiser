@@ -3,8 +3,8 @@ destination: docs/site
 template:
   bootstrap: 5
 home:
-  title: Log volumes, biomass, and inventory summaries
-  description: Calculate log volumes, biomass, carbon, and expanded inventory summaries from tree measurements.
+  title: Logs, scale, biomass, and carbon
+  description: Turn tree measurements and product specifications into logs and scale.
 navbar:
   structure:
     left: [intro, guides, reference]
@@ -16,158 +16,128 @@ navbar:
     guides:
       text: Guides
       menu:
-        - text: Get started
-          href: articles/get-started.html
-        - text: Defining products
-          href: articles/defining-products.html
-        - text: Recording defect
-          href: articles/defect-recording-conventions.html
-        - text: Fitting and completing heights
-          href: articles/fill-missing-heights.html
-        - text: Taper and stem profiles
-          href: articles/taper-profiles.html
-        - text: Volumes and scaling
-          href: articles/volumes-scaling.html
-        - text: Biomass, carbon, and green weight
-          href: articles/biomass-carbon.html
-        - text: Compiling an inventory
-          href: articles/compiling-inventory.html
-        - text: Bucking choices and prices
-          href: articles/bucking-prices.html
-        - text: Assumptions and status
-          href: articles/assumptions-status.html
-        - text: Taper equation methods
-          href: articles/methods-taper-equations.html
-        - text: Fitting taper equations
-          href: articles/methods-fitting-taper.html
-        - text: Stem model calculations
-          href: articles/stem-model-overview.html
-        - text: Source agreement
-          href: articles/oracle-agreement.html
-        - text: Identifiers and defaults
-          href: articles/identifiers-defaults.html
-    reference:
-      text: Reference
-      href: reference/index.html
+      - text: Get started
+        href: articles/get-started.html
+      - text: Defining products
+        href: articles/defining-products.html
+      - text: Recording defect
+        href: articles/defect-recording-conventions.html
+      - text: Fitting and completing heights
+        href: articles/fill-missing-heights.html
+      - text: Taper and stem profiles
+        href: articles/taper-profiles.html
+      - text: Volumes and green weight
+        href: articles/volumes-scaling.html
+      - text: Scaling rules
+        href: articles/scaling-rules.html
+      - text: Biomass and carbon
+        href: articles/biomass-carbon.html
+      - text: Pacific Northwest tree list
+        href: articles/pacific-northwest.html
+      - text: Southern stands
+        href: articles/southern.html
+      - text: Optimal bucking
+        href: articles/optimal-bucking.html
+      - text: Assumptions and status
+        href: articles/assumptions-status.html
+      - text: Taper equation methods
+        href: articles/methods-taper-equations.html
+      - text: Fitting taper equations
+        href: articles/methods-fitting-taper.html
+      - text: Stem model calculations
+        href: articles/stem-model-overview.html
+      - text: Source agreement
+        href: articles/oracle-agreement.html
+      - text: Identifiers and defaults
+        href: articles/identifiers-defaults.html
 reference:
-  - title: Select logs
-    contents:
-      - merchandise
-      - optimize_bucking
-      - merch_tree_helpers
-      - compare_bucking_prices
-      - result_tables
-      - plot.merch_result
-  - title: Define products
-    contents:
-      - product
-      - products
-      - validate_products
-      - example_products
-      - example_product_names
-      - product_schema
-      - products_from_nvel_rules
-      - nvel_rules
-  - title: Record defect
-    contents:
-      - defect
-      - defects_from_stoppers
-      - defect_pct_from_thirds
-      - apply_defect_pct
-      - validate_defects
-  - title: Fit and complete heights
-    contents:
-      - fit_height
-      - complete_heights
-      - predict_height
-      - plot.height_fit
-  - title: Calculate stem dimensions and volume
-    contents:
-      - dib
-      - dob
-      - height_at_dib
-      - height_at_dob
-      - stem_profile
-      - stem_volume
-      - plot.stem_profile
-      - scaling_rules
-  - title: Estimate biomass and carbon
-    contents:
-      - biomass
-      - biomass_component
-      - carbon_fraction
-      - co2e
-      - green_weight
-      - nsvb_division
-      - nsvb_division_xy
-  - title: Compile an inventory
-    contents:
-      - stand_table
-      - stock_table
-      - product_summary
-      - product_summary_by_tree
-  - title: Fit and register taper models
-    contents:
-      - fit_taper
-      - taper_fit_methods
-      - as_taper_model
-      - taper_model_from_coefficients
-      - taper_models
-      - get_taper_model
-      - has_taper_model
-      - model_capabilities
-      - check_taper_models
-      - new_taper_model
-      - validate_taper_model
-      - register_taper_model
-      - unregister_taper_model
-      - taper_manifest
-      - check_taper_manifest
-  - title: Resolve identifiers and source methods
-    contents:
-      - species_lookup
-      - species_reference
-      - nvel_default_equation
-      - nvel_from_fia_code
-      - nvel_source_revision
-      - flewelling_profiles
-      - clark_profiles
-      - regional_profiles
-      - regional_small_tapers
-      - nsvb_profiles
-  - title: Inspect assumptions and status
-    contents:
-      - assumptions
-      - status_codes
-      - threads
-      - with_threads
-  - title: Example data
-    contents:
-      - example_trees
-      - example_trees_pnw
-      - example_trees_south
-      - example_stem_measurements
-      - merchandiser-package
-  - title: Compatibility names
-    contents:
-      - deprecated-names
-      - product_preset
+- title: Logs and products
+  contents:
+  - merchandise
+  - product
+  - products
+  - products_from_nvel_rules
+- title: Recording defect
+  contents:
+  - defect
+  - validate_defects
+  - defects_from_stoppers
+  - defect_by_thirds
+- title: Height models
+  contents:
+  - fit_height
+  - complete_heights
+  - predict_height
+- title: Stem measurements
+  contents:
+  - stem_profile
+  - dib
+  - dob
+  - height_at_dib
+  - height_at_dob
+- title: Volumes and weight
+  contents:
+  - stem_volume
+  - green_weight
+- title: Biomass and carbon
+  contents:
+  - biomass
+  - carbon_fraction
+  - nsvb_division
+  - nsvb_division_xy
+- title: Taper fitting and models
+  contents:
+  - fit_taper
+  - as_taper_model
+  - taper_model_from_coefficients
+  - new_taper_model
+  - register_taper_model
+  - unregister_taper_model
+  - get_taper_model
+  - taper_models
+  - has_taper_model
+  - check_taper_models
+  - taper_manifest
+- title: Assumptions and computation
+  contents:
+  - assumptions
+  - status_codes
+  - threads
+  - with_threads
+- title: Source library
+  contents:
+  - nvel_default_equation
+  - nvel_from_fia_code
+  - nvel_rules
+  - nvel_source_revision
+- title: Example data and species properties
+  contents:
+  - example_trees
+  - example_trees_pnw
+  - example_trees_south
+  - example_defects_pnw
+  - example_stem_measurements
+  - species_reference
+  - default_taper_models
+  - nsvb_division_polygons
 articles:
-  - title: Guides
-    navbar: ~
-    contents:
-      - get-started
-      - defining-products
-      - defect-recording-conventions
-      - fill-missing-heights
-      - taper-profiles
-      - volumes-scaling
-      - biomass-carbon
-      - compiling-inventory
-      - bucking-prices
-      - assumptions-status
-      - methods-taper-equations
-      - methods-fitting-taper
-      - stem-model-overview
-      - oracle-agreement
-      - identifiers-defaults
+- title: Guides
+  navbar: ~
+  contents:
+  - get-started
+  - defining-products
+  - defect-recording-conventions
+  - fill-missing-heights
+  - taper-profiles
+  - volumes-scaling
+  - scaling-rules
+  - biomass-carbon
+  - pacific-northwest
+  - southern
+  - optimal-bucking
+  - assumptions-status
+  - methods-taper-equations
+  - methods-fitting-taper
+  - stem-model-overview
+  - oracle-agreement
+  - identifiers-defaults

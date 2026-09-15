@@ -3,53 +3,21 @@
 \docType{data}
 \name{example_trees}
 \alias{example_trees}
-\title{Synthetic example trees}
+\title{Example trees for stem calculations}
 \format{
-A data frame without missing values:
+A data frame with the following columns:
 \describe{
-\item{tree}{Integer tree number, unique within this example set.}
-\item{spcd}{Numeric Forest Inventory and Analysis species code, unitless.}
-\item{species}{Character common name, unitless.}
-\item{dbh}{Numeric diameter at breast height outside bark, inches.}
-\item{ht}{Numeric total height above ground, feet.}
-\item{model}{Character registered taper model identifier, unitless,
-\code{F00FW2W202} for Douglas-fir and \code{F03FW2W263} for western hemlock.}
+\item{tree_id}{Tree identifier, unique within the example table.}
+\item{spcd}{Numeric inventory species code.}
+\item{dbh}{Diameter at breast height outside bark, inches.}
+\item{ht}{Total tree height above ground, feet.}
+\item{model}{Registered taper model identifier.}
 }
 }
 \usage{
-## Call signatures
 example_trees
 }
 \description{
-Complete synthetic Douglas-fir and western hemlock measurements with assigned taper models. The
-table supplies inputs for stem volume, biomass, and log calculations.
-}
-\details{
-\code{data-raw/example-trees.R} records the measurements and model assignments.
-}
-\section{Status and missing values}{
-
-The data have no missing measurements or calculation statuses.
-}
-
-\section{Using the supplied measurements}{
-
-The measurements use imperial units. \code{units = 'metric'} declares input units without converting
-these data.
-}
-
-\examples{
-## Load dplyr
-library(dplyr)
-
-## Inspect the shipped measurements
-example_trees \%>\%
-  select(tree, species, dbh, ht) \%>\%
-  slice_head(n = 3)
-}
-\seealso{
-\link{example_trees_pnw} for height completion examples,
-\link{example_trees_south} for stopping-height examples,
-\code{\link[=merchandise]{merchandise()}} to calculate log volume.
+The trees are synthetic and illustrate package calculations.
 }
 \keyword{datasets}

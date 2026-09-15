@@ -6,6 +6,10 @@ linters: linters_with_defaults(
   )
 encoding: "UTF-8"
 exclusions: list(
+    "vignettes/pacific-northwest.Rmd" = list(quotes_linter = Inf),
+    "vignettes/southern.Rmd" = list(quotes_linter = Inf),
+    "vignettes/scaling-rules.Rmd" = list(quotes_linter = Inf),
+    "data-raw/example-products.R" = list(quotes_linter = Inf),
     "tests/fixtures",
     "tests/fixtures-full",
     "vignettes/get-started.Rmd" = list(quotes_linter = Inf),
@@ -16,7 +20,7 @@ exclusions: list(
     "vignettes/volumes-scaling.Rmd" = list(quotes_linter = Inf),
     "vignettes/biomass-carbon.Rmd" = list(quotes_linter = Inf),
     "vignettes/compiling-inventory.Rmd" = list(quotes_linter = Inf),
-    "vignettes/bucking-prices.Rmd" = list(quotes_linter = Inf),
+    "vignettes/optimal-bucking.Rmd" = list(quotes_linter = Inf),
     "vignettes/assumptions-status.Rmd" = list(quotes_linter = Inf),
     "vignettes/methods-taper-equations.Rmd" = list(quotes_linter = Inf),
     "vignettes/methods-fitting-taper.Rmd" = list(quotes_linter = Inf),

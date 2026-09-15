@@ -2,63 +2,36 @@
 % Please edit documentation in R/products.R
 \name{products}
 \alias{products}
-\title{Combine log specifications into a product table}
+\title{Combine products in cutting priority order}
 \usage{
-## Call signatures
-products(...)
+products(
+  ...
+)
 }
 \arguments{
-\item{...}{Zero or more product data frames, each with the fields in
-\link[=product_schema]{Product specification schema}. Required fields cannot be missing.
-
-Omission returns an empty product
-table. Example: \code{products(saw, pulp)}. Supply matching columns, including
-any \code{meta_} fields, because combining dissimilar columns is an error.}
+\item{...}{Supply product rows in the order they should be cut. Data frames from \code{\link[=product]{product()}},
+with the units recorded there, supply at least one product.}
 }
 \value{
-A \code{merch_products} data frame with the columns described in
-\link[=product_schema]{Product specification schema}.
-Labels are character, measurements are numeric, flags are logical, and
-priorities and log limits are integers. Additional \code{meta_} columns retain
-caller notes without changing calculations.
+A \code{merch_products} data frame with the columns and units listed in \code{\link[=product]{product()}}.
+Rows retain the supplied order.
 }
 \description{
-Combine specification rows into a validated product table.
+Cascade uses product order as cutting priority: the first product is offered the stem first.
+Optimization ignores product order.
+Each cull or restriction boundary starts a fresh segment and restarts this order.
 }
-\details{
-Lengths and trim are initially rounded to the nearest inch with
-halves upward. Original supplied lengths are retained for normalization
-when \code{\link[=merchandise]{merchandise()}} selects imperial or metric units. Preserve the
-returned table and its attributes for that later conversion.
-}
-\section{Product specifications}{
-
-See \link[=product_schema]{Product specification schema} for every field, its units,
-defaults, and constraints. A discrete-length list cell can be constructed as
-\code{I(list(c(16, 20)))}. Keep product attributes when passing the table to a run.
-}
-
-\section{Status and missing values}{
-
-These functions return no calculation status codes. Invalid specifications
-stop the call, so correct the named field before selecting logs. Missing
-optional bounds mean no restriction only where the field definition says
-so.
-
-A valid product table does not establish volume. \code{no_feasible_log} from a
-later merchandising call means a valid result with no logs for that tree.
-}
-
 \examples{
-## Load dplyr
-library(dplyr)
+## Define an unpriced product
+saw <- product(product = 'domestic_saw',  ## name, unitless
+               min_length = 16,  ## feet
+               max_length = 40,  ## feet
+               min_sed = 6,  ## inches
+               volume_unit = 'scribner')  ## board feet
 
-## Combine compatible example specifications
-example_products(name = 'pnw') \%>\%
-  products() \%>\%
-  select(product, priority, volume_unit)
-}
-\seealso{
-\code{\link[=product]{product()}} to specify one product,
-\code{\link[=merchandise]{merchandise()}} to select logs using the resulting table.
+## Combine rows in cutting priority order
+specifications <- products(saw = saw)
+
+## Show the product order
+specifications$product
 }

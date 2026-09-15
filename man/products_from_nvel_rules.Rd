@@ -2,255 +2,33 @@
 % Please edit documentation in R/nvel.R
 \name{products_from_nvel_rules}
 \alias{products_from_nvel_rules}
-\title{Turn a source rule record into product specifications}
+\title{Translate a source rule record to product specifications}
 \usage{
-## Call signatures
-products_from_nvel_rules(x)
+products_from_nvel_rules(
+  x
+)
 }
 \arguments{
-\item{x}{Required \code{treevolume_nvel_rules} list from \code{\link[=nvel_rules]{nvel_rules()}}, with
-exactly one value per field listed in the corresponding section. No default. Omission,
-incomplete required merchant values, or more than one record is an error.
-
-Supply imperial source lengths and diameters, because product construction
-initially uses inches and feet.}
+\item{x}{The source rules supply a product specification. A list returned by nvel_rules().
+Required, with no default.}
 }
 \value{
-A list containing \code{products}, \code{stump_ht}, \code{utilization_height}, and
-\code{model_aux}.
+A list with products (the product table, with columns documented in product()),
+stump_ht (feet), and model_aux (named model measurements including bark_ratio when supplied).
 }
 \description{
-Translate a complete source-rule record into product specifications, stump height, a
-utilization cap, and model auxiliaries.
+Continuous product length bounds replace source top segment policies.
+Factor scaling cannot be expressed by the product interface.
 }
-\section{Source rule fields}{
-
-Each field has exactly one value in this translation.
-\describe{
-\item{\code{even_or_odd}}{National Volume Estimator Library \code{EVOD} segment-length code
-(unitless): \code{1} permits
-odd nominal lengths and \code{2} permits only even nominal lengths. Options 11
-through 14 define their own fixed-length behavior. \code{NA} requests the
-library default.
-
-Numeric nonempty vector. Accepted finite values are 1 or 2. Default \code{NA} applies when omitted.
-
-Numeric \code{NA} leaves a source
-default unset. Infinite values are errors. }
-\item{\code{option}}{source library \code{OPT} segmentation code (unitless). Codes 11, 12, 13,
-and 14 use the library's 16-, 20-, 32-, and 40-foot scale conventions. Codes 21 through 24
-select the four nominal-log top-segment rules.
-
-\code{NA}
-requests the library default. Numeric nonempty vector. Accepted finite values are 11 through
-14 or 21 through 24.
-
-Default \code{NA} applies when omitted. Numeric \code{NA} leaves a source
-default unset. Infinite values are errors.
-
-}
-\item{\code{maximum_length}}{source library \code{MAXLEN}, the maximum nominal segment length, in
-the consuming call's height units. Numeric nonempty vector. Accepted finite values are greater
-than zero.
-
-Default \code{NA} applies when omitted. Numeric \code{NA} leaves a source
-default unset. Infinite values are errors.
-
-}
-\item{\code{minimum_length}}{source library \code{MINLEN}, the minimum nominal segment length, in
-the consuming call's height units. Numeric nonempty vector. Accepted finite values are greater
-than zero.
-
-Default \code{NA} applies when omitted. Numeric \code{NA} leaves a source
-default unset. Infinite values are errors.
-
-}
-\item{\code{minimum_top_length}}{source library \code{MINLENT}, the minimum accepted top-log
-length, in the consuming call's height units. Numeric nonempty vector. Accepted finite values
-are greater than zero.
-
-Default \code{NA} applies when omitted. Numeric \code{NA} leaves a source
-default unset. Infinite values are errors.
-
-}
-\item{\code{merchantable_length}}{source library \code{MERCHL}, the minimum length of primary
-product required for the tree to be merchantable, in the consuming call's
-height units. Numeric nonempty vector. Accepted finite values are greater than zero.
-
-Default \code{NA} applies when omitted. Numeric \code{NA} leaves a source
-default unset. Infinite values are errors.
-
-}
-\item{\code{primary_top}}{source library \code{MTOPP}, the primary-product top diameter inside
-bark used for board-foot, cubic, and cord volume, in the consuming call's
-diameter units. Numeric nonempty vector. Accepted finite values are greater than zero.
-
-Default \code{NA} applies when omitted. Numeric \code{NA} leaves a source
-default unset. Infinite values are errors.
-
-}
-\item{\code{secondary_top}}{source library \code{MTOPS}, the secondary-product top diameter inside
-bark used for cubic and cord volume, in the consuming call's diameter
-units. Numeric nonempty vector. Accepted finite values are greater than zero.
-
-Default \code{NA} applies when omitted. Numeric \code{NA} leaves a source
-default unset. Infinite values are errors.
-
-}
-\item{\code{stump}}{source library \code{STUMP}, the groundline-to-stump height, in the consuming
-call's height units. Numeric nonempty vector. Accepted finite values are at least zero.
-
-Default \code{NA} applies when omitted. Numeric \code{NA} leaves a source
-default unset. Infinite values are errors.
-
-}
-\item{\code{trim}}{source library \code{TRIM}, the trim allowance added to each segment, in the
-consuming call's height units. Numeric nonempty vector. Accepted finite values are greater
-than zero.
-
-Default \code{NA} applies when omitted. Numeric \code{NA} leaves a source
-default unset. Infinite values are errors.
-
-}
-\item{\code{bark_ratio}}{The source library bark-ratio auxiliary represented by \code{merchandiser}
-as the unitless constant diameter-inside-bark to diameter-outside-bark
-ratio in \verb{(0, 1]}. \code{NA} leaves bark to the selected model or library
-default. Numeric nonempty vector.
-
-Accepted finite values are greater than zero and at most one. Default \code{NA} applies when omitted.
-Numeric \code{NA} leaves a source
-default unset.
-
-Infinite values are errors. }
-\item{\code{minimum_board_foot_dbh}}{source library \code{MINBFD}, the minimum outside-bark diameter
-at breast height
-for board-foot eligibility, in the consuming call's diameter units. Numeric nonempty vector.
-Accepted finite values are greater than zero.
-
-Default \code{NA} applies when omitted. Numeric \code{NA} leaves a source
-default unset. Infinite values are errors.
-
-}
-\item{\code{scribner}}{source library \code{COR} Scribner-volume mode (unitless): \code{'table'} uses
-the Scribner table, \code{'factor'} uses factors, and \code{'regional'} requests
-the regional library default.
-Nonempty character vector, default \code{'regional'} when omitted.
-Missing elements and unknown labels are errors. Example: \code{scribner = 'regional'}.}
-\item{\code{prod}}{source library two-character product code (unitless), such as \code{'01'} for
-sawtimber or \code{'08'} for a nonsaw product.
-Nonempty character vector, default \code{'01'} when omitted.
-Missing elements and unknown labels are errors. }
-\item{\code{ht_type}}{source library \code{HTTYPE} code (unitless): \code{'F'} denotes a physical
-height, \code{'L'} denotes a height expressed in logs, and \code{''} leaves the
-field unspecified for the consuming call.
-Nonempty character vector, default \code{''} when omitted.
-Missing elements and unknown labels are errors. Example: \code{ht_type = ''}.}
-\item{\code{live}}{source library live/dead status code (unitless): \code{'L'} for live or \code{'D'}
-for dead.
-Nonempty character vector, default \code{'L'} when omitted.
-Missing elements and unknown labels are errors. Example: \code{live = 'L'}.}
-\item{\code{ctype}}{Source call-origin code, unitless. \code{'C'} selects cruise, \code{'I'} selects Forest
-Inventory and Analysis, and \code{'F'} selects Forest Vegetation Simulator. \code{'B'} selects the
-alternate National Scale Volume and Biomass route.
-
-Nonempty character vector, default \code{'C'} when omitted. Missing elements and unknown labels are
-errors. Example: \code{ctype = 'C'}.}
-\item{\code{cull}}{source library \code{CULL}, the whole-tree cull deduction as a percentage from
-0 through 100. Numeric nonempty vector. Accepted finite values are zero through 100.
-
-Default \code{0} applies when omitted. Numeric \code{NA} leaves a source
-default unset. Infinite values are errors.
-
-}
-\item{\code{forest}}{source library two-digit national-forest code represented as an integer
-from 0 through 99 (unitless). Zero means no forest-specific selection. Numeric nonempty
-vector.
-
-Accepted finite values are whole numbers from zero through 99. Default \code{0} applies when omitted.
-Numeric \code{NA} leaves a source
-default unset.
-
-Infinite values are errors. }
-\item{\code{district}}{source library two-digit ranger-district code represented as an
-integer from 0 through 99 (unitless). Zero means no district-specific
-selection. Numeric nonempty vector.
-
-Accepted finite values are whole numbers from zero through 99. Default \code{0} applies when omitted.
-Numeric \code{NA} leaves a source
-default unset.
-
-Infinite values are errors. }
-}
-}
-
-\section{Translation rules}{
-
-The returned product labels are \code{nvel_primary} and \code{nvel_secondary} with
-priorities 1 and 2. Both use inside-bark diameter limits and board-foot
-scaled quantity. The secondary product is marked as the pulp restriction's
-allowed product. That label does not change its board-foot measurement unit.
-
-Option 14 selects the Pacific Northwest scaling convention, options 21 and 22 the allocated-
-section convention, and the other supported options the short-section convention. \code{scribner = 'factor'} selects factors. Other values, including \code{'regional'}, select the table in this
-translator.
-
-The option remains in \code{segmentation_policy}. Minimum and maximum lengths and trim are
-copied. A one-unit length increment is assigned, and \code{even_or_odd = 2} selects even lengths.
-
-The primary tree diameter minimum and both small-end limits come from their matching fields.
-
-\code{prod}, \code{ht_type}, \code{live}, \code{ctype}, \code{cull}, \code{forest}, and \code{district} are
-copied to \code{meta_nvel_} columns. They retain notes and do not apply live-tree,
-cull, or geographic behavior to the merchandising calculation. There is
-no separate percentage deduction for the source \code{cull} field here.
-}
-
-\section{Returned settings}{
-
-\code{products} is the product table described in \link{product_schema}. Numeric \code{stump_ht} is the
-record's stump height. Numeric \code{utilization_height} is \code{stump} plus \code{merchantable_length},
-used as an upper height cap.
-
-The translator uses this field as a height cap, despite its source definition as a minimum
-primary-product length. \code{model_aux} is a list containing numeric
-\code{bark_ratio}, which can be missing. Forward its value only when appropriate for the selected
-equation.
-
-Lengths use the supplied height unit and the ratio is unitless.
-}
-
-\section{Status and missing values}{
-
-No tree codes are returned. Required merchant defaults must be complete. A source-
-version mismatch stops translation.
-
-Missing bark ratio is retained and does not request a model default if explicitly passed
-onward as missing. A translated table is not evidence of volume. \code{no_feasible_log} identifies a
-valid result with no logs in later calculations.
-}
-
 \examples{
-## Record complete example source rules
-rules <- nvel_rules(even_or_odd = 2,
-                    option = 14,
-                    maximum_length = 40,
-                    minimum_length = 8,
-                    minimum_top_length = 8,
-                    merchantable_length = 80,
-                    primary_top = 6,
-                    secondary_top = 4,
-                    stump = 1,
-                    trim = 0.5,
-                    minimum_board_foot_dbh = 1)
-
-## Translate the source record
-translated <- products_from_nvel_rules(x = rules)
-
-## Inspect the translated product specifications
-translated$products
-}
-\seealso{
-\code{\link[=nvel_rules]{nvel_rules()}} to create
-the source record, \code{\link[=product]{product()}} to enter product specifications, \code{\link[=merchandise]{merchandise()}} to calculate the
-translated products.
+## Translate explicit source limits and inspect the result structure
+names(products_from_nvel_rules(x = nvel_rules(even_or_odd = 1,
+                                              option = 14,
+                                              maximum_length = 32,
+                                              minimum_length = 16,
+                                              primary_top = 6,
+                                              secondary_top = 3,
+                                              stump = 1,
+                                              trim = 0.5,
+                                              minimum_board_foot_dbh = 6)))
 }

@@ -4,114 +4,31 @@
 \alias{check_taper_models}
 \title{Check equation assignments and required tree measurements}
 \usage{
-## Call signatures
-check_taper_models(id, spcd = NULL, aux = NULL)
+check_taper_models(
+  model,
+  spcd = NULL,
+  ...
+)
 }
 \arguments{
-\item{id}{Required character vector or factor of equation names. Length
-one repeats, otherwise one per tree. Missing gives \code{na_input}.
+\item{model}{The identifier names the taper model in the registry. Character vector of model
+identifiers. Required, with no default.}
 
-Unitless. Example: \code{example_trees$model}. Omission is an error.}
+\item{spcd}{Numeric inventory species code. Numeric
+vector, species codes. Default: \code{NULL}.}
 
-\item{spcd}{Numeric inventory species codes, length one or one per tree. Default \code{NULL} skips
-the scope check. Missing gives \code{na_input}.
-
-Positive
-whole numbers within integer range are accepted. Unitless.}
-
-\item{aux}{Named list of equation inputs listed in the corresponding section. Default \code{NULL}
-supplies none. Each vector has length one or one per tree.
-Missing supplied values give \code{na_input}.}
+\item{...}{Extra tree measurements allow the model inputs to be checked. Named numeric
+vectors, diameters in inches and heights in feet. No extra measurements by default.}
 }
 \value{
-A data frame of mapping problems, with zero rows when the mapping
-is clean.
+A data frame with row (input row number), id (model identifier), status (integer status
+code), problem (problem name), and input (affected argument name). An empty table means no
+problems were found.
 }
 \description{
-Return diagnoses for unresolved identifiers, species scope, and required auxiliary inputs.
+Check equation assignments and required tree measurements
 }
-\section{Returned problems}{
-
-Integer \code{row} identifies the input row, and character \code{id} retains the equation name. Integer
-\code{code} and character \code{problem} identify the diagnosis. Character \code{input} identifies affected
-fields.
-
-All are unitless. Empty \code{input} means a
-general equation problem.
-
-Several rows can describe the same input tree.
-}
-
-\section{Status and missing values}{
-
-\code{na_input}
-means a missing identifier, species, or supplied equation input. \code{unknown_species} means an
-invalid
-species code. \code{unknown_model} means an unavailable equation.
-
-\code{missing_input} means an omitted required input or incomplete pair. \code{species_out_of_scope} means
-a species outside
-the equation's declared scope.
-
-\code{species_out_of_scope} permits a value later, but review suitability. No rows means these checks
-passed,
-not that volume is known. Invalid field types, out-of-domain equation inputs, and names
-undeclared by every selected model stop the call instead of returning problem rows.
-}
-
-\section{Equation inputs through dots}{
-
-Inputs are used only where declared by the selected equation. Numeric
-inputs accept integers and doubles. Each input has length one or the common
-number of trees, with units following the call. For a particular model,
-\code{get_taper_model(model)$inputs} lists required, optional, and paired inputs.
-
-\describe{
-\item{\code{bark_ratio}}{Numeric ratio of inside-bark to outside-bark diameter,
-strictly greater than zero and at most one. Unitless.
-Omission uses a model ratio where supplied.
-An explicit missing ratio gives \code{na_input}, not the default.}
-\item{\code{upper_ht1}, \code{upper_ht2}}{Positive finite numeric upper measurement
-heights above ground, in feet or meters.
-Omission supplies no measurement. A required missing height gives \code{missing_input}
-when omitted or \code{na_input} when supplied as missing.}
-\item{\code{upper_d1}, \code{upper_d2}}{Positive finite numeric diameters at the
-corresponding upper heights, in inches or centimeters.  Supply each diameter with its paired
-height where the model requires
-a pair. An incomplete pair gives \code{missing_input}.}
-\item{\code{upper_bark}}{Character \code{'ib'} or \code{'ob'} for the upper
-measurements, unitless. Example: \code{'ib'}. Omission uses the model
-convention, which is inside bark for Flewelling upper measurements.
-A missing supplied label gives \code{na_input}.}
-\item{\code{form_class}}{Positive numeric equation form class, unitless.
-Its definition follows the selected equation. Omission
-uses its default only when optional. Missing supplied values give \code{na_input}.}
-\item{\code{site_index}}{Positive numeric site-index height, in feet or meters.
-The equation determines species and reference age.
-Omission uses its defaults only when optional. Missing gives \code{na_input}.}
-\item{\code{basal_area}}{Positive numeric stand basal area, in square feet per
-acre or square meters per hectare.  Omission uses the
-model's defaults only when optional. Missing gives \code{na_input}.}
-\item{\code{decay_class}}{Whole-number class from 1 through 5, unitless.
-This is an equation input only where declared, with no
-universal default. Missing gives \code{na_input}. The separate biomass function
-also accepts zero for a live tree.}
-\item{\code{cull}}{Numeric percentage from zero through 100.
-Omission supplies no override. Missing gives \code{na_input} where declared.
-This does not create located defect records.}
-\item{\code{spcd}}{Positive whole-number Forest Inventory and Analysis tree
-inventory species code within R's integer range, unitless.
-Omission skips the species-scope check. Supplied codes can return \code{na_input}, \code{unknown_species},
-or \code{species_out_of_scope}.}
-}
-}
-
 \examples{
-## Check equations and species before calculation
-check_taper_models(id = example_trees$model, spcd = example_trees$spcd)
-}
-\seealso{
-\code{\link[=has_taper_model]{has_taper_model()}} for
-availability alone, \code{\link[=get_taper_model]{get_taper_model()}} for equation details, \code{\link[=merchandise]{merchandise()}} for log
-selection.
+## Check the example model identifiers.
+check_taper_models(model = example_trees$model)
 }

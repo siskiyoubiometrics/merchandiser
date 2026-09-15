@@ -1,14 +1,13 @@
 test_that("old Region 8 bounded volume follows R8CUBIC geometry", {
   arguments <- list(
-    dbh = 12, ht = 80, model = "814CLKE100", upper_ht1 = 60
+    dbh = 12, ht = 80, model = "814CLKE100", upper_ht1 = 60, spcd = 100
   )
-  analytic <- do.call(stem_volume, c(arguments, list(
-    lower = 1, lower_type = "height", upper = 40, upper_type = "height",
-    status = TRUE
+  analytic <- do.call(.oracle_stem_volume, c(arguments, list(
+    lower = 1, lower_type = "height", upper = 40, upper_type = "height"
   )))
   quadrature <- stats::integrate(
     function(height) {
-      diameter <- do.call(dib, c(arguments, list(h = height)))
+      diameter <- do.call(.oracle_dib, c(arguments, list(h = height)))$value
       pi * diameter^2 / 576
     },
     lower = 1, upper = 40, subdivisions = 2000L, rel.tol = 1e-10
@@ -21,9 +20,13 @@ test_that("old Region 8 bounded volume follows R8CUBIC geometry", {
 
 test_that("Clark public volume honors inside bark for E, O, and 0 variants", {
   ids <- c("811CLKE100", "811CLKO100", "811CLK0100")
-  inside <- stem_volume(12, 80, ids, bark = "inside", status = TRUE)
-  outside <- stem_volume(
-    12, 80, ids, bark = "outside", bark_ratio = .9, status = TRUE
+  inside <- .oracle_stem_volume(
+    dbh = 12, ht = 80, model = ids, spcd = .interface_spcd(ids),
+    inside_bark = TRUE
+  )
+  outside <- .oracle_stem_volume(
+    dbh = 12, ht = 80, model = ids, bark_ratio = 0.9,
+    spcd = .interface_spcd(ids), inside_bark = FALSE
   )
 
   expect_identical(inside$status, integer(3L))
@@ -32,13 +35,19 @@ test_that("Clark public volume honors inside bark for E, O, and 0 variants", {
 })
 
 test_that("Clark exact default bounds are geometric only in the public API", {
-  exact <- stem_volume(12, 80, "900CLKE001")
-  adjacent <- stem_volume(
-    12, 80, "900CLKE001", lower = 1 + 1e-11,
-    lower_type = "height"
-  )
+  exact <- .oracle_stem_volume(
+    dbh = 12, ht = 80, model = "900CLKE001",
+    spcd = .interface_spcd("900CLKE001")
+  )$value
+  adjacent <- .oracle_stem_volume(
+    dbh = 12, ht = 80, model = "900CLKE001", lower = 1 +
+      1e-11,
+    lower_type = "height",
+    spcd = .interface_spcd("900CLKE001")
+  )$value
   record <- merchandiser:::nvel_volume(
-    12, 80, "900CLKE001", status = TRUE
+    12, 80, "900CLKE001",
+    status = TRUE
   )
 
   expect_equal(exact, adjacent, tolerance = 1e-9)
@@ -46,52 +55,62 @@ test_that("Clark exact default bounds are geometric only in the public API", {
   expect_equal(record$vol_total_cu, 25.7, tolerance = 1e-14)
   expect_identical(record$vol_total_cu_status, 0L)
 
-  unscaled <- stem_volume(12, 80, "900CLKE621")
+  unscaled <- .oracle_stem_volume(
+    dbh = 12, ht = 80, model = "900CLKE621",
+    spcd = .interface_spcd("900CLKE621")
+  )$value
   unscaled_record <- merchandiser:::nvel_volume(
-    12, 80, "900CLKE621", status = TRUE
+    12, 80, "900CLKE621",
+    status = TRUE
   )
   expect_equal(
-    unscaled_record$vol_total_cu, round(unscaled * 10) / 10, tolerance = 1e-14
+    unscaled_record$vol_total_cu, round(unscaled * 10) / 10,
+    tolerance = 1e-14
   )
 })
 
 test_that("Clark top-code-1 NVEL stump volume uses unscaled R9CUFT", {
   record <- merchandiser:::nvel_volume(
-    2, 15, "811CLKE100", status = TRUE
+    2, 15, "811CLKE100",
+    status = TRUE
   )
   expect_equal(record$vol_total_cu, .4, tolerance = 1e-15)
   expect_equal(record$vol_stump_cu, .14359763038997606, tolerance = 1e-15)
   expect_identical(record$vol_stump_cu_status, 0L)
 
   variants <- merchandiser:::nvel_volume(
-    12, 80, c("811CLKE100", "811CLKO100", "811CLK0100"), status = TRUE
+    12, 80, c("811CLKE100", "811CLKO100", "811CLK0100"),
+    status = TRUE
   )
   expect_equal(variants$vol_total_cu, c(24.1, 30.1, 30.1), tolerance = 1e-14)
   expect_equal(
-    variants$vol_stump_cu, rep(.86969333096644519, 3L), tolerance = 1e-14
+    variants$vol_stump_cu, rep(.86969333096644519, 3L),
+    tolerance = 1e-14
   )
 
   fallback <- merchandiser:::nvel_volume(
-    c(2, 2), c(30, 130), c("811CLKE330", "811CLKE370"), status = TRUE
+    c(2, 2), c(30, 130), c("811CLKE330", "811CLKE370"),
+    status = TRUE
   )
   expect_equal(
     fallback$vol_stump_cu,
-    c(.034911375375197742, .015957106155581297), tolerance = 1e-15
+    c(.034911375375197742, .015957106155581297),
+    tolerance = 1e-15
   )
   expect_identical(fallback$vol_stump_cu_status, integer(2L))
 })
 
 test_that("Region 4 public ground intervals are additive", {
-  arguments <- list(dbh = 12, ht = 80, model = "400MATW202")
-  ground_tip <- do.call(stem_volume, c(arguments, list(
+  arguments <- list(dbh = 12, ht = 80, model = "400MATW202", spcd = 202)
+  ground_tip <- do.call(.oracle_stem_volume, c(arguments, list(
     lower = 0, lower_type = "height", upper_type = "tip"
-  )))
-  ground_one <- do.call(stem_volume, c(arguments, list(
+  )))$value
+  ground_one <- do.call(.oracle_stem_volume, c(arguments, list(
     lower = 0, lower_type = "height", upper = 1, upper_type = "height"
-  )))
-  one_tip <- do.call(stem_volume, c(arguments, list(
+  )))$value
+  one_tip <- do.call(.oracle_stem_volume, c(arguments, list(
     lower = 1, lower_type = "height", upper_type = "tip"
-  )))
+  )))$value
   record <- do.call(merchandiser:::nvel_volume, c(arguments, list(status = TRUE)))
 
   expect_equal(ground_tip, ground_one + one_tip, tolerance = 1e-12)
@@ -99,24 +118,29 @@ test_that("Region 4 public ground intervals are additive", {
   expect_equal(record$vol_total_cu, 24.959558507873304, tolerance = 1e-12)
   expect_identical(record$vol_total_cu_status, 0L)
 
-  short_ground_tip <- stem_volume(
-    12, 5.5, "400MATW202", lower = 0, lower_type = "height"
-  )
-  short_ground_one <- stem_volume(
-    12, 5.5, "400MATW202", lower = 0, lower_type = "height",
-    upper = 1, upper_type = "height"
-  )
-  short_one_tip <- stem_volume(
-    12, 5.5, "400MATW202", lower = 1, lower_type = "height"
-  )
+  short_ground_tip <- .oracle_stem_volume(
+    dbh = 12, ht = 5.5, model = "400MATW202",
+    lower = 0, lower_type = "height", spcd = .interface_spcd("400MATW202")
+  )$value
+  short_ground_one <- .oracle_stem_volume(
+    dbh = 12, ht = 5.5, model = "400MATW202", lower = 0, lower_type = "height", upper = 1,
+    upper_type = "height", spcd = .interface_spcd("400MATW202")
+  )$value
+  short_one_tip <- .oracle_stem_volume(
+    dbh = 12, ht = 5.5, model = "400MATW202", lower = 1,
+    lower_type = "height", spcd = .interface_spcd("400MATW202")
+  )$value
   short_record <- merchandiser:::nvel_volume(
-    12, 5.5, "400MATW202", status = TRUE
+    12, 5.5, "400MATW202",
+    status = TRUE
   )
   expect_equal(
-    short_ground_tip, short_ground_one + short_one_tip, tolerance = 1e-12
+    short_ground_tip, short_ground_one + short_one_tip,
+    tolerance = 1e-12
   )
   expect_equal(
-    short_record$vol_total_cu, 12^2 * 5.5 * .00272708, tolerance = 1e-14
+    short_record$vol_total_cu, 12^2 * 5.5 * .00272708,
+    tolerance = 1e-14
   )
 })
 
@@ -138,7 +162,7 @@ test_that("Gate 1 dynamic patterns retain their family capabilities", {
   )
 
   expect_identical(
-    vapply(models, `[[`, character(1), "family"),
+    vapply(models, `[[`, character(1), "form"),
     c("clark_r9", "flewelling_3pt", "blm_taper", "behre_taper", "r4_driver")
   )
   expect_true(any(vapply(clark_models, function(model) {

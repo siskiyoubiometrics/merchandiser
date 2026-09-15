@@ -1,0 +1,5 @@
+"stems","products","strategy","threads","seconds","stems_per_second","million_seconds"
+1000,3,"cascade",8,25.399,39.3716288042836,25399
+1000,3,"optimize",8,24.519,40.7846975814674,24519
+1000,10,"cascade",8,24.995,40.0080016003201,24995
+1000,10,"optimize",8,25.44,39.3081761006289,25440

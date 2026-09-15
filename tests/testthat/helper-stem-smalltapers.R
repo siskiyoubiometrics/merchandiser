@@ -1,14 +1,13 @@
 .smalltaper_columns <- c(
   "ROW_ID", "FAMILY", "CALL_KIND", "VOLEQ", "DBHOB", "HTTOT", "HTUP",
-  "STEMDIB", "CALCDIA_REQUESTED", "HT2TOPD_REQUESTED", "ERRFLAG",
-  "CALCDIA_ERRFLAG", "HT2TOPD_ERRFLAG", "DIB", "STEMHT"
+  "STEMDIB", "CALCDIA_REQUESTED", "HT2TOPD_REQUESTED", "ERRFLAG", "CALCDIA_ERRFLAG",
+  "HT2TOPD_ERRFLAG",
+  "DIB", "STEMHT"
 )
 
 .smalltaper_tolerance <- list(
-  diameter_double_rel = 2e-12,
-  diameter_single_rel = 3e-4,
-  height_double_rel = 4e-5,
-  height_single_rel = 2e-3
+  diameter_double_rel = 2e-12, diameter_single_rel = 3e-04, height_double_rel = 4e-05,
+  height_single_rel = 0.002
 )
 
 .read_smalltaper_fixture <- function(path) {
@@ -24,7 +23,8 @@
   name <- paste0(family, ".", precision, ".csv.gz")
   candidates <- c(file.path(root, "full", name), file.path(root, name))
   found <- candidates[file.exists(candidates)]
-  if (length(found)) found[[1L]] else candidates[[1L]]
+  if (length(found))
+    found[[1L]] else candidates[[1L]]
 }
 
 .smalltaper_expected_status <- function(primary, operation) {
@@ -36,27 +36,28 @@
 
 .expect_smalltaper_relative <- function(actual, expected, tolerance) {
   relative <- abs(actual - expected) / pmax(abs(expected), 1e-12)
-  expect_true(
-    all(relative <= tolerance),
-    info = paste("maximum relative difference", max(relative, na.rm = TRUE))
-  )
+  expect_true(all(relative <= tolerance), info = paste(
+    "maximum relative difference", max(relative,
+      na.rm = TRUE
+    )
+  ))
 }
 
-.check_smalltaper_fixture <- function(path, precision, record = FALSE,
-                                      expected_source_domain = NULL,
-                                      expected_below_contract = NULL) {
+.check_smalltaper_fixture <- function(
+  path, precision, record = FALSE, expected_source_domain = NULL,
+  expected_below_contract = NULL
+) {
   fixture <- .read_smalltaper_fixture(path)
 
   diameter <- fixture[
     fixture$CALL_KIND == "PROFILE_PROBE" &
-      fixture$CALCDIA_REQUESTED == "Y", , drop = FALSE
+      fixture$CALCDIA_REQUESTED == "Y", ,
+    drop = FALSE
   ]
-  expected <- .smalltaper_expected_status(
-    diameter$ERRFLAG, diameter$CALCDIA_ERRFLAG
-  )
-  actual <- dib(
-    diameter$DBHOB, diameter$HTTOT, diameter$HTUP, diameter$VOLEQ,
-    status = TRUE
+  expected <- .smalltaper_expected_status(diameter$ERRFLAG, diameter$CALCDIA_ERRFLAG)
+  actual <- .oracle_dib(
+    dbh = diameter$DBHOB, ht = diameter$HTTOT, h = diameter$HTUP, model = diameter$VOLEQ,
+    spcd = .interface_spcd(diameter$VOLEQ)
   )
   rejected <- expected != 0L
   expect_identical(actual$status[rejected], expected[rejected])
@@ -67,31 +68,34 @@
   expect_true(all(actual$status[good] == 0L))
   .expect_smalltaper_relative(
     actual$value[good], diameter$DIB[good],
-    .smalltaper_tolerance[[paste0("diameter_", precision, "_rel")]]
+    .smalltaper_tolerance[[paste0(
+      "diameter_",
+      precision, "_rel"
+    )]]
   )
   if (record) {
     .gate1_record_values(
-      unique(fixture$FAMILY), "DIB", precision,
-      actual$value, diameter$DIB, good,
-      .smalltaper_tolerance[[paste0("diameter_", precision, "_rel")]],
-      list(nonzero_errflag = rejected, nonfinite_oracle = source_nonfinite)
+      unique(fixture$FAMILY), "DIB", precision, actual$value, diameter$DIB,
+      good, .smalltaper_tolerance[[paste0("diameter_", precision, "_rel")]], list(
+        nonzero_errflag = rejected,
+        nonfinite_oracle = source_nonfinite
+      )
     )
   }
 
   inverse <- fixture[
     fixture$CALL_KIND == "PROFILE_PROBE" &
-      fixture$HT2TOPD_REQUESTED == "Y", , drop = FALSE
+      fixture$HT2TOPD_REQUESTED == "Y", ,
+    drop = FALSE
   ]
-  expected <- .smalltaper_expected_status(
-    inverse$ERRFLAG, inverse$HT2TOPD_ERRFLAG
+  expected <- .smalltaper_expected_status(inverse$ERRFLAG, inverse$HT2TOPD_ERRFLAG)
+  port <- .oracle_height_at_dib(
+    dbh = inverse$DBHOB, ht = inverse$HTTOT, dib = inverse$STEMDIB, model = inverse$VOLEQ,
+    spcd = .interface_spcd(inverse$VOLEQ)
   )
-  port <- height_at_dib(
-    inverse$DBHOB, inverse$HTTOT, inverse$STEMDIB, inverse$VOLEQ,
-    status = TRUE
-  )
-  actual <- .with_treevolume_compat("nvel", height_at_dib(
-    inverse$DBHOB, inverse$HTTOT, inverse$STEMDIB, inverse$VOLEQ,
-    status = TRUE
+  actual <- .with_treevolume_compat("nvel", .oracle_height_at_dib(
+    dbh = inverse$DBHOB, ht = inverse$HTTOT,
+    dib = inverse$STEMDIB, model = inverse$VOLEQ, spcd = .interface_spcd(inverse$VOLEQ)
   ))
   rejected <- expected != 0L
   expect_identical(actual$status[rejected], expected[rejected])
@@ -99,10 +103,11 @@
   r12_undispatched <- inverse$FAMILY == "r12_taper" & expected == 0L
   expect_true(all(inverse$STEMHT[r12_undispatched] == 0))
   source_nonfinite <- expected == 0L & !is.finite(inverse$STEMHT)
-  below_contract_family <- inverse$FAMILY %in%
-    c("r1_taper", "blm_taper", "behre_taper")
-  below_contract <- expected == 0L & below_contract_family &
-    is.finite(inverse$STEMHT) & inverse$STEMHT <= 1
+  below_contract_family <- inverse$FAMILY %in% c("r1_taper", "blm_taper", "behre_taper")
+  below_contract <- expected == 0L & below_contract_family & is.finite(
+    inverse$STEMHT
+  ) & inverse$STEMHT <=
+    1
   if (!is.null(expected_below_contract)) {
     expect_identical(sum(below_contract), expected_below_contract)
   }
@@ -111,25 +116,24 @@
     expect_identical(sum(source_domain), expected_source_domain)
   }
   expect_true(all(is.na(actual$value[source_domain])))
-  good <- expected == 0L & !source_nonfinite & !source_domain &
-    !below_contract
+  good <- expected == 0L & !source_nonfinite & !source_domain & !below_contract
   expect_true(all(actual$status[good] == 0L))
   .expect_smalltaper_relative(
     actual$value[good], inverse$STEMHT[good],
-    .smalltaper_tolerance[[paste0("height_", precision, "_rel")]]
+    .smalltaper_tolerance[[paste0(
+      "height_",
+      precision, "_rel"
+    )]]
   )
   port_root <- expected == 0L & port$status %in% c(0L, 102L)
   expect_true(all(is.finite(port$value[port_root])))
   expect_true(all(port$value[port_root] >= 1))
   expect_true(all(port$value[port_root] <= inverse$HTTOT[port_root]))
   if (record) {
-    .gate1_record_values(
-      unique(fixture$FAMILY), "height at DIB", precision,
-      actual$value, inverse$STEMHT, good,
-      .smalltaper_tolerance[[paste0("height_", precision, "_rel")]],
+    .gate1_record_values(unique(fixture$FAMILY), "height at DIB", precision, actual$value,
+      inverse$STEMHT, good, .smalltaper_tolerance[[paste0("height_", precision, "_rel")]],
       list(
-        nonzero_errflag = rejected,
-        nonfinite_oracle = source_nonfinite,
+        nonzero_errflag = rejected, nonfinite_oracle = source_nonfinite,
         source_domain_status = source_domain,
         at_or_below_contract_stump = below_contract
       ),

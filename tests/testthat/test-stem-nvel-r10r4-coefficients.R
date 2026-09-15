@@ -1,27 +1,22 @@
 test_that("Region 10 and Region 4 coefficient literals round trip", {
-  path <- system.file(
-    "extdata", "r10r4_coefficients.csv", package = "merchandiser",
+  path <- system.file("extdata", "r10r4_coefficients.csv",
+    package = "merchandiser",
     mustWork = TRUE
   )
   coefficients <- utils::read.csv(path, stringsAsFactors = FALSE)
   expect_equal(nrow(coefficients), 190L)
-  expect_identical(
-    sort(unique(coefficients$source_file)),
-    c("r10tap.f", "r10vol.f", "r10vol1.f", "r4vol.f")
-  )
+  expect_identical(sort(unique(coefficients$source_file)), c(
+    "r10tap.f", "r10vol.f", "r10vol1.f",
+    "r4vol.f"
+  ))
   expect_identical(sum(coefficients$family == "r10"), 50L)
   expect_identical(sum(coefficients$family == "r4_driver"), 140L)
   expect_true(all(
-    coefficients$upstream_commit ==
-      "38548071d5aa652bb90c7f111f86b427f798a1c9"
+    coefficients$upstream_commit == "38548071d5aa652bb90c7f111f86b427f798a1c9"
   ))
-  expect_true(all(
-    coefficients$source_line_start <= coefficients$source_line_end
-  ))
+  expect_true(all(coefficients$source_line_start <= coefficients$source_line_end))
 
-  parsed <- as.double(gsub(
-    "[[:space:]]", "", gsub("[dD]", "e", coefficients$literal)
-  ))
+  parsed <- as.double(gsub("[[:space:]]", "", gsub("[dD]", "e", coefficients$literal)))
   expect_identical(parsed, coefficients$value_numeric)
 
   r4 <- coefficients[coefficients$family == "r4_driver", ]
@@ -31,7 +26,9 @@ test_that("Region 10 and Region 4 coefficient literals round trip", {
 
 test_that("regional model metadata preserves source provenance", {
   metadata <- utils::read.csv(
-    system.file("extdata", "r10r4_models.csv", package = "merchandiser"),
+    system.file("extdata", "r10r4_models.csv",
+      package = "merchandiser"
+    ),
     stringsAsFactors = FALSE
   )
   expect_identical(nrow(metadata), 58L)
@@ -41,7 +38,9 @@ test_that("regional model metadata preserves source provenance", {
   expect_true(all(has_taper_model(metadata$id)))
 
   sources <- utils::read.csv(
-    system.file("extdata", "r10r4_sources.csv", package = "merchandiser"),
+    system.file("extdata", "r10r4_sources.csv",
+      package = "merchandiser"
+    ),
     stringsAsFactors = FALSE
   )
   expect_identical(nrow(sources), 11L)

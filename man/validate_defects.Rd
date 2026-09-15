@@ -2,155 +2,42 @@
 % Please edit documentation in R/defects.R
 \name{validate_defects}
 \alias{validate_defects}
-\title{Check defect records against tree heights}
+\title{Check defects against tree heights and products}
 \usage{
-## Call signatures
-validate_defects(x, products, ht, id)
+validate_defects(
+  defects,
+  tree_id,
+  ht,
+  products
+)
 }
 \arguments{
-\item{x}{Required data frame with the defect fields. Zero rows are
-accepted. Missing objects and unknown columns are errors.}
+\item{defects}{Supply recorded tree defects. Data frame from \code{\link[=defect]{defect()}}, required.}
 
-\item{products}{Required product data frame described in
-\link[=product_schema]{Product specification schema}. It is checked in its recorded
-unit system, or imperial units if that attribute is absent. Example:
-\code{example_products('pnw')}.
+\item{tree_id}{Identify each tree in the height vector. Unique atomic vector, unitless, required.}
 
-Missing objects are errors.}
+\item{ht}{Supply each tree's total height. Numeric, feet, required.}
 
-\item{ht}{Required numeric total heights, exactly one per \code{id}. Units must
-match the defect heights. Example: \code{example_trees$ht}.
-
-Missing and
-nonfinite heights weaken the location checks as listed in the corresponding section.}
-
-\item{id}{Required unique nonmissing atomic tree identifiers, exactly one
-per tree. Unitless. Example: \code{example_trees$tree}. Unknown defect tree
-identifiers and duplicate tree identifiers are errors.}
+\item{products}{Supply the products allowed in restrictions. Product data frame, required.}
 }
 \value{
-A \code{merch_defects} table with the fields plus integer,
-unitless \code{status}. \code{ok} means no problem was detected for that record.
+The columns from \code{\link[=defect]{defect()}} with integer \code{status} added. Heights remain in feet,
+\code{percent} remains percent, and \code{status} is a unitless code from \code{\link[=status_codes]{status_codes()}}.
 }
 \description{
-Validate defect bounds, fields, and identifiers against the supplied trees. Return
-normalized records with a status for each row.
+Check each record before using it to select logs.
 }
-\details{
-Records are sorted by input tree order, lower height, upper height,
-effect order, and record identifier. Effect order is break, cull, fork,
-pulp, exclude, sweep, crook, then rot. Missing identifiers are assigned
-after sorting record contents.
-
-Products are validated, but this function
-does not check tree eligibility for a pulp product or curvature order.
-}
-\section{Defect table fields}{
-
-A defect table has one row per recorded condition. Heights are measured
-above ground in feet for imperial calculations or meters for metric
-calculations. Construction does not convert units.
-
-Each field has one
-value per row. Required columns must be present even in an empty table. \describe{
-\item{\code{id}}{Required atomic tree identifier, such as \code{'example-1'}.
-Missing identifiers are errors. Identifiers repeat for several records on
-the same tree and must match the inventory. Unitless.}
-\item{\code{from}}{Required numeric lower height, such as \code{10}. It must be
-finite and between zero and total height when checked against a tree.
-Missing values prevent a reliable interval check.}
-\item{\code{to}}{Required numeric upper height, such as \code{20}. For intervals,
-it must exceed \code{from} and not exceed total height. For \code{'fork'} or
-\code{'break'}, supply \code{NA_real_} or the same height as \code{from}. Validation
-retains these as single-height records.}
-\item{\code{effect}}{Required character treatment, with no default. Choose
-\code{'cull'}, \code{'pulp'}, \code{'exclude'}, \code{'rot'}, \code{'sweep'}, \code{'crook'},
-\code{'fork'}, or \code{'break'}, for example \code{'sweep'}. Missing or unknown
-values receive \code{unknown_defect_effect} when validated. Unitless.}
-\item{\code{defect_id}}{Character record label, unitless. Omission or \code{NA}
-requests an identifier during validation, such as \code{'auto:000001'}.
-Supplied identifiers must be unique within each tree. Exact duplicate
-records with missing identifiers are errors.}
-\item{\code{percent}}{Numeric percentage from zero through 100, such as \code{15}.
-Default \code{NA_real_}. Required for rot and must be missing for other effects.
-Invalid percentages receive \code{defect_percent_out_of_range} during validation.}
-\item{\code{category}}{Character sweep or crook category, such as \code{'moderate'}. Default
-\code{NA_character_}. It must be nonempty for sweep or crook and
-missing for other effects.
-
-The later merchandising call checks it against
-its ordered curvature categories. Unitless.}
-\item{\code{pathology}}{Character field note, such as \code{'conk'}. Default
-\code{NA_character_}, meaning no note. It changes no treatment. Unitless.}
-\item{\code{source_record_id}}{Character field-record reference, such as
-\code{'sheet-1'}. Default \code{NA_character_}, meaning no reference. Unitless.}
-}
-There are no list columns.
-
-Factor labels are accepted for text fields. Numeric measurements may be integers or doubles.
-}
-
-\section{How restrictions and deductions work}{
-
-An interval includes its lower height and stops just before its upper
-height. A log ending at the lower height does not overlap the interval.
-A log starting at that height does. Tests use physical log length,
-including trim.
-
-A cull section excludes volume and restarts product selection above it. A pulp restriction
-permits only the product marked \code{accepts_pulp_restriction = TRUE}. An exclude restriction
-rejects overlapping logs without providing that restart.
-
-Rot reduces volume in the affected section, with overlapping percentages combined by taking
-the greatest percentage. The log deduction is weighted by modeled inside-bark volume. Sweep
-and crook restrict product eligibility without assigning a percentage deduction.
-
-A fork restricts the stem above it to pulp within the utilization limit. A break ends log
-selection at its height.
-}
-
-\section{Status and missing values}{
-
-Construction
-checks field types and lengths but does not produce status codes.
-
-Use validation before interpreting a record as a usable restriction. Validation returns
-integer \code{status} for each record. \code{ok} passes the checks that were possible.
-
-\code{defect_height_out_of_range} identifies heights outside the tree, and \code{defect_interval_invalid}
-identifies invalid
-interval or point
-bounds. \code{defect_percent_out_of_range} identifies invalid or misplaced percentages.
-\code{unknown_defect_effect} identifies an unknown
-effect, and \code{unknown_curvature_category} identifies a missing, empty, or misplaced curvature
-category.
-
-Correct nonzero records before using them. The later merchandising call also checks
-categories against its ordered scale.
-
-Validation with a missing or nonfinite tree height cannot establish that record heights are
-inside the tree. Supply a usable tree height and validate again. Some such rows can retain
-\code{ok}, so this is a known limitation of the validator.
-
-Missing quantities are not zero volume. \code{no_feasible_log} in a later merchandising result
-denotes a
-valid result with no logs.
-}
-
 \examples{
-## Load dplyr
-library(dplyr)
+## Check the first mapped cull with an explicit product
+checked <- validate_defects(defects = head(example_defects_pnw, n = 1),
+                            products = product(product = 'pulp',  ## name, unitless
+                                               min_length = 8,  ## feet
+                                               max_length = 40,  ## feet
+                                               min_sed = 3,  ## inches
+                                               volume_unit = 'cubic'),  ## cubic feet
+                            ht = example_trees_pnw$ht,
+                            tree_id = example_trees_pnw$tree_id)
 
-## Record a cull interval on the first shipped tree
-record <- defect(id = first(x = example_trees$tree), from = 10, to = 20, effect = 'cull')
-
-## Check bounds against its total height
-validate_defects(x = record,
-                 products = example_products(name = 'pnw'),
-                 ht = first(x = example_trees$ht),
-                 id = first(x = example_trees$tree))
-}
-\seealso{
-\code{\link[=defect]{defect()}} to enter a record, \code{\link[=merchandise]{merchandise()}} to check
-whether logs meet these restrictions.
+## Show the validation status
+checked$status
 }

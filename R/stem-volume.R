@@ -1,28 +1,69 @@
+.stem_section_bounds <- function(from, to, from_dib, from_dob, to_dib, to_dob) {
+  lower <- Filter(Negate(is.null), list(height = from, dib = from_dib, dob = from_dob))
+  upper <- Filter(Negate(is.null), list(height = to, dib = to_dib, dob = to_dob))
+  if (length(lower) > 1L)
+    stop("Supply at most one of from, from_dib, and from_dob.", call. = FALSE)
+  if (length(upper) > 1L)
+    stop("Supply at most one of to, to_dib, and to_dob.", call. = FALSE)
+  supplied <- Filter(Negate(is.null), list(
+    from = from,
+    to = to,
+    from_dib = from_dib,
+    from_dob = from_dob,
+    to_dib = to_dib,
+    to_dob = to_dob
+  ))
+  for (name in names(supplied)) {
+    if (!is.numeric(supplied[[name]]))
+      stop(name, " must be numeric.", call. = FALSE)
+  }
+  list(
+    lower = if (length(lower)) lower[[1L]] else 0,
+    lower_type = if (length(lower)) names(lower) else "stump",
+    upper = if (length(upper)) upper[[1L]] else 0,
+    upper_type = if (length(upper)) names(upper) else "tip"
+  )
+}
+
 .bound_type_choices <- c("height", "dib", "dob", "stump", "tip")
 
-.prepare_volume_call <- function(dbh, ht, model, lower, lower_type, upper,
-                                 upper_type, stump_ht, aux) {
+.bound_argument_name <- function(prefix, type) {
+  if (length(type) == 1L && type %in% c("dib", "dob"))
+    paste0(prefix, "_", type) else prefix
+}
+
+.prepare_volume_call <- function(
+  dbh, ht, model, lower, lower_type, upper,
+  upper_type, stump_ht,
+  aux
+) {
   values <- list(
-    dbh = dbh, ht = ht, model = model, lower = lower,
-    lower_type = lower_type, upper = upper, upper_type = upper_type
+    dbh = dbh, ht = ht, model = model, lower = lower, lower_type = lower_type,
+    upper = upper, upper_type = upper_type
   )
   numeric_names <- c("dbh", "ht", "lower", "upper")
   if (!is.null(stump_ht)) {
     values$stump_ht <- stump_ht
     numeric_names <- c(numeric_names, "stump_ht")
   }
-  prepared <- .prepare_vectors(
-    values,
+  prepared <- .prepare_vectors(values,
     numeric_names = numeric_names,
-    character_names = c("model", "lower_type", "upper_type"),
-    aux = aux
+    character_names = c(
+      "model",
+      "lower_type", "upper_type"
+    ), aux = aux, aliases = c(
+      lower = .bound_argument_name("from", lower_type),
+      upper = .bound_argument_name("to", upper_type)
+    )
   )
-  if (anyNA(prepared$values$lower_type) ||
-        any(!prepared$values$lower_type %in% .bound_type_choices)) {
+  if (anyNA(prepared$values$lower_type) || any(
+    !prepared$values$lower_type %in% .bound_type_choices
+  )) {
     stop("lower_type contains an unknown value.", call. = FALSE)
   }
-  if (anyNA(prepared$values$upper_type) ||
-        any(!prepared$values$upper_type %in% .bound_type_choices)) {
+  if (anyNA(prepared$values$upper_type) || any(
+    !prepared$values$upper_type %in% .bound_type_choices
+  )) {
     stop("upper_type contains an unknown value.", call. = FALSE)
   }
   required <- c("dbh", "ht", "model")
@@ -31,47 +72,48 @@
   }
   status <- .input_status(prepared$size, prepared$values, required)
   bound_needs_value <- function(type) type %in% c("height", "dib", "dob")
-  missing_lower <- bound_needs_value(prepared$values$lower_type) &
-    !is.finite(prepared$values$lower)
-  missing_upper <- bound_needs_value(prepared$values$upper_type) &
-    !is.finite(prepared$values$upper)
+  missing_lower <- bound_needs_value(prepared$values$lower_type) & !is.finite(
+    prepared$values$lower
+  )
+  missing_upper <- bound_needs_value(prepared$values$upper_type) & !is.finite(
+    prepared$values$upper
+  )
   status <- .assign_status(status, missing_lower | missing_upper, 1L)
-  status <- .assign_status(status, prepared$values$dbh <= 0, 2L)
-  status <- .assign_status(status, prepared$values$ht <= 0, 3L)
+  status <- .assign_status(status, prepared$values$dbh <= 0 | prepared$values$dbh > 400, 2L)
+  status <- .assign_status(status, prepared$values$ht <= 0 | prepared$values$ht > 500, 3L)
   lower_height <- prepared$values$lower_type == "height"
   upper_height <- prepared$values$upper_type == "height"
-  status <- .assign_status(
-    status,
-    lower_height & (prepared$values$lower < 0 | prepared$values$lower > prepared$values$ht),
-    4L
-  )
-  status <- .assign_status(
-    status,
-    upper_height & (prepared$values$upper < 0 | prepared$values$upper > prepared$values$ht),
-    4L
-  )
+  status <- .assign_status(status, lower_height & (prepared$values$lower < 0 |
+                                                     prepared$values$lower >
+                                                       prepared$values$ht), 4L)
+  status <- .assign_status(status, upper_height & (prepared$values$upper < 0 |
+                                                     prepared$values$upper >
+                                                       prepared$values$ht), 4L)
   diameter_bound <- prepared$values$lower_type %in% c("dib", "dob") &
-    prepared$values$lower <= 0
-  diameter_bound <- diameter_bound |
-    (prepared$values$upper_type %in% c("dib", "dob") & prepared$values$upper <= 0)
+    prepared$values$lower <=
+      0
+  diameter_bound <- diameter_bound | (prepared$values$upper_type %in% c(
+    "dib",
+    "dob"
+  ) & prepared$values$upper <=
+    0)
   status <- .assign_status(status, diameter_bound, 5L)
   if (!is.null(stump_ht)) {
-    status <- .assign_status(
-      status,
-      prepared$values$stump_ht < 0 | prepared$values$stump_ht > prepared$values$ht,
-      4L
-    )
+    status <- .assign_status(status, prepared$values$stump_ht < 0 |
+                               prepared$values$stump_ht >
+                                 prepared$values$ht, 4L)
   }
   resolved <- .resolve_models(prepared$values$model, prepared$aux, status)
   c(prepared, list(resolved = resolved))
 }
 
 .resolve_one_bound <- function(type, value, model, dbh, ht, stump, aux, rows) {
-  result <- list(
-    value = rep(NA_real_, length(type)),
-    status = integer(length(type)),
-    details = rep(NA_character_, length(type))
-  )
+  result <- list(value = rep(NA_real_, length(type)), status = integer(length(
+    type
+  )), details = rep(
+    NA_character_,
+    length(type)
+  ))
   height_rows <- type == "height"
   stump_rows <- type == "stump"
   tip_rows <- type == "tip"
@@ -84,7 +126,8 @@
       next
     }
     inverted <- .inverse_group(
-      model, basis, dbh[selected], ht[selected], value[selected], aux, rows[selected]
+      model, basis, dbh[selected], ht[selected], value[selected],
+      aux, rows[selected]
     )
     result$value[selected] <- inverted$value
     result$status[selected] <- inverted$status
@@ -93,29 +136,35 @@
   result
 }
 
-.resolve_group_bounds <- function(call, model, rows, units) {
-  native_dbh <- .diameter_to_native(call$values$dbh[rows], units, model$units)
-  native_ht <- .height_to_native(call$values$ht[rows], units, model$units)
+.resolve_group_bounds <- function(call, model, rows, measurement_system) {
+  native_dbh <-
+    .diameter_to_native(call$values$dbh[rows], measurement_system, model$measurement_system)
+  native_ht <-
+    .height_to_native(call$values$ht[rows], measurement_system, model$measurement_system)
   lower_value <- call$values$lower[rows]
   upper_value <- call$values$upper[rows]
   lower_diameter <- call$values$lower_type[rows] %in% c("dib", "dob")
   upper_diameter <- call$values$upper_type[rows] %in% c("dib", "dob")
   lower_value[lower_diameter] <- .diameter_to_native(
-    lower_value[lower_diameter], units, model$units
+    lower_value[lower_diameter],
+    measurement_system, model$measurement_system
   )
   upper_value[upper_diameter] <- .diameter_to_native(
-    upper_value[upper_diameter], units, model$units
+    upper_value[upper_diameter],
+    measurement_system, model$measurement_system
   )
   lower_height <- call$values$lower_type[rows] == "height"
   upper_height <- call$values$upper_type[rows] == "height"
   lower_value[lower_height] <- .height_to_native(
-    lower_value[lower_height], units, model$units
+    lower_value[lower_height], measurement_system,
+    model$measurement_system
   )
   upper_value[upper_height] <- .height_to_native(
-    upper_value[upper_height], units, model$units
+    upper_value[upper_height], measurement_system,
+    model$measurement_system
   )
   stump <- if (!is.null(call$values$stump_ht)) {
-    .height_to_native(call$values$stump_ht[rows], units, model$units)
+    .height_to_native(call$values$stump_ht[rows], measurement_system, model$measurement_system)
   } else {
     rep(model$stump_ht, length(rows))
   }
@@ -130,17 +179,18 @@
   list(dbh = native_dbh, ht = native_ht, stump = stump, lower = lower, upper = upper)
 }
 
-.gauss_legendre_integral <- function(model, basis, dbh, ht, lower, upper,
-                                     aux, rows) {
+.gauss_legendre_integral <- function(model, basis, dbh, ht, lower, upper, aux, rows) {
   nodes <- c(
-    -0.9061798459386640, -0.5384693101056831, 0,
-    0.5384693101056831, 0.9061798459386640
+    -0.9061798459386640, -0.5384693101056831, 0, 0.5384693101056831,
+    0.9061798459386640
   )
   weights <- c(
     0.2369268850561891, 0.4786286704993665, 0.5688888888888889,
-    0.4786286704993665, 0.2369268850561891
+    0.4786286704993665,
+    0.2369268850561891
   )
-  segment_size <- if (identical(model$units, "imperial")) 1 else 0.3048
+  segment_size <- if (identical(model$measurement_system, "imperial"))
+    1 else 0.3048
   all_h <- all_weight <- numeric()
   map <- integer()
   for (tree in seq_along(dbh)) {
@@ -160,14 +210,18 @@
     }
   }
   evaluated <- .evaluate_profile_native(
-    model, basis, dbh[map], ht[map], all_h, aux, rows[map]
+    model, basis, dbh[map], ht[map], all_h, aux,
+    rows[map]
   )
   result <- list(
-    value = rep(NA_real_, length(dbh)),
-    status = integer(length(dbh)),
-    details = rep(NA_character_, length(dbh))
+    value = rep(NA_real_, length(dbh)), status = integer(length(dbh)),
+    details = rep(
+      NA_character_,
+      length(dbh)
+    )
   )
-  divisor <- if (identical(model$units, "imperial")) 576 else 40000
+  divisor <- if (identical(model$measurement_system, "imperial"))
+    576 else 40000
   area_volume <- pi * evaluated$value^2 / divisor * all_weight
   for (tree in seq_along(dbh)) {
     selected <- map == tree
@@ -186,51 +240,44 @@
 .analytic_integral <- function(model, dbh, ht, lower, upper, aux, rows) {
   if (identical(model$kernel$type, "compiled")) {
     bark <- .model_bark_ratio(model, aux, rows, require = FALSE)$value
-    return(.compiled_result(
-      model, 3L, dbh, ht, lower, upper, bark, aux, rows
-    ))
+    return(.compiled_result(model, 3L, dbh, ht, lower, upper, bark, aux, rows))
   }
-  .callback_result(
-    model$volume,
-    list(
-      dbh = dbh, ht = ht, lower = lower, upper = upper,
-      aux = .subset_aux(aux, rows, model)
-    ),
-    length(dbh)
-  )
+  .callback_result(model$volume, list(
+    dbh = dbh, ht = ht, lower = lower,
+    upper = upper, aux = .subset_aux(
+      aux,
+      rows, model
+    )
+  ), length(dbh))
 }
 
-.integrate_group <- function(model, basis, dbh, ht, lower, upper, aux, rows,
-                             operation = NULL) {
+.integrate_group <- function(
+  model, basis, dbh, ht, lower, upper, aux, rows,
+  operation = NULL
+) {
   direct_dob <- identical(basis, "dob") && isTRUE(model$kernel$has_dob)
   if (identical(model$kernel$type, "compiled")) {
-    bark <- .model_bark_ratio(
-      model, aux, rows, require = identical(basis, "dob") && !direct_dob
-    )$value
-    return(.compiled_result(
-      model, if (is.null(operation)) {
-        if (identical(basis, "dib")) 3L else 8L
-      } else {
-        as.integer(operation)
-      },
-      dbh, ht, lower, upper, bark, aux, rows
-    ))
+    bark <- .model_bark_ratio(model, aux, rows, require = identical(basis, "dob") &&
+                                !direct_dob)$value
+    return(.compiled_result(model, if (is.null(operation)) {
+      if (identical(basis, "dib")) 3L else 8L
+    } else {
+      as.integer(operation)
+    }, dbh, ht, lower, upper, bark, aux, rows))
   }
   if (identical(basis, "dib") && isTRUE(model$kernel$has_integral)) {
     return(.analytic_integral(model, dbh, ht, lower, upper, aux, rows))
   }
-  if (identical(basis, "dob") && !direct_dob &&
-        isTRUE(model$kernel$has_integral)) {
+  if (identical(basis, "dob") && !direct_dob && isTRUE(model$kernel$has_integral)) {
     bark <- .model_bark_ratio(model, aux, rows, require = TRUE)
-    result <- list(
-      value = rep(NA_real_, length(dbh)),
-      status = ifelse(bark$invalid, 53L, 0L),
-      details = rep(NA_character_, length(dbh))
-    )
+    result <- list(value = rep(NA_real_, length(dbh)), status = ifelse(bark$invalid, 53L,
+                     0L
+                   ), details = rep(NA_character_, length(dbh)))
     good <- which(!bark$invalid)
     if (length(good)) {
       inside <- .analytic_integral(
-        model, dbh[good], ht[good], lower[good], upper[good], aux, rows[good]
+        model, dbh[good], ht[good], lower[good], upper[good],
+        aux, rows[good]
       )
       result$value[good] <- inside$value / bark$value[good]^2
       result$status[good] <- inside$status
@@ -241,19 +288,22 @@
   .gauss_legendre_integral(model, basis, dbh, ht, lower, upper, aux, rows)
 }
 
-.stem_volume_impl <- function(dbh, ht, model, lower, lower_type, upper,
-                              upper_type, bark, stump_ht, aux, units, status,
-                              function_name = "stem_volume",
-                              operation = NULL) {
-  units <- .validate_units(units)
+.stem_volume_impl <- function(
+  dbh, ht, model, lower, lower_type, upper, upper_type,
+  bark, stump_ht,
+  aux, measurement_system, status, function_name = "stem_volume", operation = NULL
+) {
+  measurement_system <- .validate_units(measurement_system)
   status_requested <- .validate_status(status)
   bark <- .scalar_character(bark, "bark", c("inside", "outside"))
   generation <- .registry_enter()
   on.exit(.registry_exit(generation), add = TRUE)
   call <- .prepare_volume_call(
-    dbh, ht, model, lower, lower_type, upper, upper_type, stump_ht, aux
+    dbh, ht, model, lower, lower_type, upper, upper_type,
+    stump_ht,
+    aux
   )
-  call$aux <- .set_aux_caller_units(call$aux, units)
+  call$aux <- .set_aux_caller_units(call$aux, measurement_system)
   result_status <- call$resolved$status
   details <- call$resolved$details
   output <- rep(NA_real_, call$size)
@@ -267,19 +317,16 @@
     if (!length(rows)) {
       next
     }
-    bounds <- .resolve_group_bounds(call, model_object, rows, units)
-    lower_merged <- .merge_kernel_result(
-      result_status, details, rows, bounds$lower
-    )
+    bounds <- .resolve_group_bounds(call, model_object, rows, measurement_system)
+    lower_merged <- .merge_kernel_result(result_status, details, rows, bounds$lower)
     result_status <- lower_merged$status
     details <- lower_merged$details
-    upper_merged <- .merge_kernel_result(
-      result_status, details, rows, bounds$upper
-    )
+    upper_merged <- .merge_kernel_result(result_status, details, rows, bounds$upper)
     result_status <- upper_merged$status
     details <- upper_merged$details
     empty <- is.finite(bounds$lower$value) & is.finite(bounds$upper$value) &
-      bounds$lower$value >= bounds$upper$value
+      bounds$lower$value >=
+        bounds$upper$value
     result_status[rows[empty]] <- 6L
     eligible <- result_status[rows] %in% c(0L, 52L, 102L)
     if (!any(eligible)) {
@@ -287,221 +334,111 @@
     }
     selected_rows <- rows[eligible]
     integrated <- .integrate_group(
-      model_object,
-      if (identical(bark, "inside")) "dib" else "dob",
-      bounds$dbh[eligible], bounds$ht[eligible], bounds$lower$value[eligible],
+      model_object, if (identical(bark, "inside"))
+        "dib" else "dob", bounds$dbh[eligible], bounds$ht[eligible],
+      bounds$lower$value[eligible],
       bounds$upper$value[eligible], call$aux, selected_rows, operation
     )
-    merged <- .merge_kernel_result(
-      result_status, details, selected_rows, integrated
-    )
+    merged <- .merge_kernel_result(result_status, details, selected_rows, integrated)
     result_status <- merged$status
     details <- merged$details
     output[selected_rows] <- .volume_from_native(
-      integrated$value, units, model_object$units
+      integrated$value, measurement_system,
+      model_object$measurement_system
     )
   }
   output[!result_status %in% c(0L, 52L, 102L)] <- NA_real_
   .status_result(output, result_status, status_requested, details, function_name)
 }
 
-#' Calculate stem volume between heights or diameter limits
+#' Cubic volume of a stem section
 #'
-#' Calculate inside- or outside-bark volume between height or diameter bounds. Return one
-#' volume per tree, optionally paired with calculation status.
-#'
-#' @param dbh Required positive finite numeric diameter at breast height
-#'   outside bark, in inches for imperial units or centimeters for metric
-#'   units. Length one repeats, otherwise supply one value per tree. Omission
-#'   is an error.
-#'
-#' Missing or nonfinite values give `na_input` and a missing result. Example: `example_trees$dbh`.
-#' @param ht Required positive finite numeric total height above ground, in
-#'   feet for imperial units or meters for metric units. Length one repeats,
-#'   otherwise supply one value per tree. Omission is an error.
-#'
-#' Missing or
-#'   nonfinite values give `na_input`. Example: `example_trees$ht`.
-#' @param model Required character vector or factor of equation identifiers,
-#'   length one or one per tree. Unitless. Omission is an error, missing values
-#'   give `na_input`, and unknown identifiers give `unknown_model`.
-#'
-#' Example:
-#'   `example_trees$model`. No replacement equation is chosen here.
-#' @param ... Uniquely named equation inputs listed in the corresponding section. Each has length
-#'   one or one per tree.
-#'
-#' Omit optional inputs to use the selected equation's
-#'   defaults. Unknown names, invalid types, and invalid finite values stop
-#'   the call. Missing supplied inputs give `na_input`, and an omitted required
-#'   input gives `missing_input`.
-#' @param units One character value, `'imperial'` (default) or `'metric'`. Omission selects inches,
-#'   feet, and cubic feet. Metric selects centimeters,
-#'   meters, and cubic meters.
-#'
-#' Missing and unknown values are errors. Example: `units = 'metric'`.
-#' @param status One nonmissing logical value, default `FALSE`. `TRUE` returns
-#'   numeric `value` and integer `status` columns and suppresses row warnings. Both columns have
-#' one row per tree.
-#'
-#' The code is unitless. Invalid types
-#'   or missing flags stop the call. Example: `status = TRUE`.
-#' @param lower,upper Numeric boundary values, length one or one per tree. Defaults are `0` for
-#'   both. Values are ignored for `'stump'` and `'tip'`.
-#'
-#' For `'height'`, use feet or meters from zero through total height. For
-#'   diameter bounds, use positive inches or centimeters. Missing active
-#'   values give `na_input`.
-#'
-#'
-#' @param lower_type,upper_type Character boundary types, length one or one
-#'   per tree. Choices are `'height'`, `'dib'`, `'dob'`, `'stump'`, and
-#'   `'tip'`. Defaults are `'stump'` below and `'tip'` above.
-#'
-#' They select
-#'   ground-relative height, inside-bark diameter, outside-bark diameter,
-#'   equation stump convention, or total height. Missing or unknown types
-#'   stop the call. Unitless.
-#'
-#'
-#' @param bark One character value, `'inside'` (default) or `'outside'`,
-#'   selecting the volume's bark basis. Missing or unknown labels are errors. Unitless.
-#'
-#' Example: `bark = 'outside'`.
-#' @param stump_ht Numeric stump override, length one or one per tree, in
-#'   feet or meters. Default `NULL` uses each equation's stump convention.
-#'   Supplied values must be finite and from zero through total height.
-#'   Missing gives `na_input` even when the selected bounds do not use stump.
-#'
-#'
-#' @details Diameter bounds become the highest corresponding crossing. The lower resolved height
-#' must be strictly below the upper height. Equal bounds return missing volume with `empty_bounds`.
-#'
-#' This differs from an
-#'   empty section deliberately assigned zero in a merchandising result. No product, trim, scale,
-#' defect deduction, or price is inferred.
-#' @section Numerical methods:
-#' Use the equation's volume calculation where supplied. Other equations
-#' are integrated with five-point Gauss-Legendre quadrature, an area-weighted
-#' numerical sum over sections no longer than one foot. Source equations can
-#' use separate diameter and volume relationships, so volume need not equal
-#' a numerical integral of the displayed diameter curve.
-#' @return Numeric cubic feet or cubic meters per input tree. With
-#'   `status = TRUE`, return numeric `value` in those units and integer
-#'   unitless `status`. Failed quantities remain missing.
-#' @section Equation inputs through dots:
-#' Inputs are used only where declared by the selected equation. Numeric
-#' inputs accept integers and doubles. Each input has length one or the common
-#' number of trees, with units following the call. For a particular model,
-#' `get_taper_model(model)$inputs` lists required, optional, and paired inputs.
-#'
-#' \describe{
-#' \item{`bark_ratio`}{Numeric ratio of inside-bark to outside-bark diameter,
-#' strictly greater than zero and at most one. Unitless.
-#' Omission uses a model ratio where supplied.
-#' An explicit missing ratio gives `na_input`, not the default.}
-#' \item{`upper_ht1`, `upper_ht2`}{Positive finite numeric upper measurement
-#' heights above ground, in feet or meters.
-#' Omission supplies no measurement. A required missing height gives `missing_input`
-#' when omitted or `na_input` when supplied as missing.}
-#' \item{`upper_d1`, `upper_d2`}{Positive finite numeric diameters at the
-#' corresponding upper heights, in inches or centimeters.  Supply each diameter with its paired
-#' height where the model requires
-#' a pair. An incomplete pair gives `missing_input`.}
-#' \item{`upper_bark`}{Character `'ib'` or `'ob'` for the upper
-#' measurements, unitless. Example: `'ib'`. Omission uses the model
-#' convention, which is inside bark for Flewelling upper measurements.
-#' A missing supplied label gives `na_input`.}
-#' \item{`form_class`}{Positive numeric equation form class, unitless.
-#'  Its definition follows the selected equation. Omission
-#' uses its default only when optional. Missing supplied values give `na_input`.}
-#' \item{`site_index`}{Positive numeric site-index height, in feet or meters.
-#'  The equation determines species and reference age.
-#' Omission uses its defaults only when optional. Missing gives `na_input`.}
-#' \item{`basal_area`}{Positive numeric stand basal area, in square feet per
-#' acre or square meters per hectare.  Omission uses the
-#' model's defaults only when optional. Missing gives `na_input`.}
-#' \item{`decay_class`}{Whole-number class from 1 through 5, unitless.
-#'  This is an equation input only where declared, with no
-#' universal default. Missing gives `na_input`. The separate biomass function
-#' also accepts zero for a live tree.}
-#' \item{`cull`}{Numeric percentage from zero through 100.
-#' Omission supplies no override. Missing gives `na_input` where declared.
-#' This does not create located defect records.}
-#' \item{`spcd`}{Positive whole-number Forest Inventory and Analysis tree
-#' inventory species code within R's integer range, unitless.
-#' Omission skips the species-scope check. Supplied codes can return `na_input`, `unknown_species`,
-#' or `species_out_of_scope`.}
-#' }
-#' @section Status and missing values:
-#' Structural errors stop the call. Row failures return missing values unless
-#' a retained-value case is explicitly identified below. `na_input` is silent
-#' with `status = FALSE`, while other nonzero codes produce warnings.
-#' \describe{
-#' \item{`ok`}{Calculation completed. The value is usable within the selected equation's scope.}
-#' \item{`na_input`}{A required value is missing or nonfinite. Supply the measurement
-#'   before using this row.}
-#' \item{`dbh_nonpositive`}{Tree diameter is not positive. Correct the diameter and rerun.}
-#' \item{`ht_nonpositive`}{Total height is not positive. Correct the height and rerun.}
-#' \item{`unknown_species`}{The supplied species code is invalid or unrecognized for this
-#'   operation. Correct it.}
-#' \item{`unknown_model`}{No equation was found. Check the identifier or register the
-#'   local equation.}
-#' \item{`missing_input`}{An equation requires an omitted input or complete measurement
-#'   pair. Supply it and rerun.}
-#' \item{`species_out_of_scope`}{A value is retained for a species outside the declared
-#'   scope. Review equation suitability before reporting.}
-#' \item{`capability_missing`}{The requested calculation is unavailable, often because
-#'   outside-bark information is absent. Supply a supported bark ratio or choose another
-#'   equation.}
-#' \item{`kernel_error`}{The equation calculation failed to
-#'   evaluate. The result is missing. Check the
-#'   tree and equation separately.}
-#' \item{`h_out_of_range`}{A height is below ground or above total height. Check height
-#'   units and bounds.}
-#' \item{`diameter_nonpositive`}{The target diameter is not positive. Supply a positive
-#'   target or use the tip bound for volume.}
-#' \item{`empty_bounds`}{The lower height is not below the upper height. Correct the
-#'   interval. The missing result is not a measured zero volume.}
-#' \item{`above_tip`}{The requested diameter is smaller than the modeled tip diameter.
-#'   Revise the target.}
-#' \item{`below_stump`}{The requested diameter exceeds the modeled diameter at stump.
-#'   Revise the target or stump convention.}
-#' \item{`not_unique`}{The profile has another diameter crossing below the returned
-#'   height. The highest crossing is retained. Review whether it matches the intended
-#'   utilization limit.}
-#' \item{`no_convergence`}{The numerical search did not converge. Review the target and
-#'   profile before using the tree.}
-#' }
-#' Source equation errors retain their library diagnosis. Those values are
-#' unavailable.
-#'
-#' Check the selected equation and its inputs. Zero volume or diameter can be a modeled boundary
-#' value. These functions
-#' do not select logs, so a zero is not evidence of merchantable zero volume.
-#'
-#' @seealso [stem_profile()] for volumes at several heights, [merchandise()]
-#'   for volume under product specifications, [height_at_dib()] for a height.
-#' @export
+#' @param dbh Diameter at breast height outside bark. Numeric vector,
+#'   inches, greater than zero and at most 400. Required, with no default.
+#' @param ht Total height above ground. Numeric vector, feet.
+#'   Required, with no default. Heights must be greater than zero and at most 500 feet.
+#' @param spcd Numeric inventory species code. Numeric
+#'   vector, species codes. Required, with no default.
+#' @param model Registered taper model identifier. Character vector of
+#'   registered model identifiers. Default: \code{NULL}.
+#'   model NULL selects the shipped default for the species, see [default_taper_models].
+#'   Species without a default return status 404.
+#' @param from Start height above ground. Numeric vector, feet. Default `NULL` uses `stump_ht`.
+#' @param to End height above ground. Numeric vector, feet. Default `NULL` uses the tree tip.
+#' @param from_dib Inside bark diameter at the start. Numeric vector, inches, default `NULL`.
+#' @param from_dob Outside bark diameter at the start. Numeric vector, inches, default `NULL`.
+#' @param to_dib Inside bark diameter at the end. Numeric vector, inches, default `NULL`.
+#' @param to_dob Outside bark diameter at the end. Numeric vector, inches, default `NULL`.
+#'   Diameter bounds use [height_at_dib()] or [height_at_dob()], including their status conventions.
+#'   Supply at most one start argument and at most one end argument.
+#' @param inside_bark Choose whether the measurement excludes the bark. Logical scalar, unitless,
+#'   default TRUE excludes bark.
+#' @param stump_ht Stump height above ground. Numeric
+#'   vector, feet. Default: \code{1}.
+#' @param ... Additional named inputs supply measurements required by the selected model. Named
+#'   vectors in inches for diameters and feet for heights, none by default.
+#' @return A data frame with value (solid volume, cubic feet) and status (integer result code),
+#'   one row per input row.
 #' @usage
-#'
-#' ## Call signatures
-#' stem_volume(dbh, ht, model, lower = 0, lower_type = 'stump', upper = 0, upper_type = 'tip',
-#'   bark = 'inside', stump_ht = NULL, ..., units = 'imperial', status = FALSE)
+#' stem_volume(
+#'   dbh,
+#'   ht,
+#'   spcd,
+#'   model = NULL,
+#'   from = NULL,
+#'   to = NULL,
+#'   from_dib = NULL,
+#'   from_dob = NULL,
+#'   to_dib = NULL,
+#'   to_dob = NULL,
+#'   inside_bark = TRUE,
+#'   stump_ht = 1,
+#'   ...
+#' )
+#' @export
 #' @examples
-#' ## Estimate volume between supplied height limits
-#' stem_volume(dbh = example_trees$dbh,
-#'             ht = example_trees$ht,
-#'             model = example_trees$model,
-#'             lower = 10,
-#'             lower_type = 'height',
-#'             upper = 40,
-#'             upper_type = 'height')
-stem_volume <- function(dbh, ht, model, lower = 0, lower_type = "stump",
-                        upper = 0, upper_type = "tip", bark = "inside",
-                        stump_ht = NULL, ..., units = "imperial", status = FALSE) {
-  .stem_volume_impl(
-    dbh, ht, model, lower, lower_type, upper, upper_type, bark, stump_ht,
-    list(...), units, status
-  )
+#' ## Load data verbs
+#' library(dplyr)
+#'
+#' ## Measure the whole stem inside bark.
+#' stem_volume(dbh = example_trees$dbh[1],
+#'             ht = example_trees$ht[1],
+#'             spcd = example_trees$spcd[1]) %>%
+#'   rename(`volume (cubic feet)` = value)
+stem_volume <- function(
+  dbh,
+  ht,
+  spcd,
+  model = NULL,
+  from = NULL,
+  to = NULL,
+  from_dib = NULL,
+  from_dob = NULL,
+  to_dib = NULL,
+  to_dob = NULL,
+  inside_bark = TRUE,
+  stump_ht = 1,
+  ...
+) {
+  if (!is.logical(inside_bark) || length(inside_bark) != 1 || is.na(inside_bark)) {
+    stop("inside_bark must be TRUE or FALSE.", call. = FALSE)
+  }
+  if (!is.numeric(stump_ht))
+    stop("stump_ht must be numeric.", call. = FALSE)
+  bounds <- .stem_section_bounds(from, to, from_dib, from_dob, to_dib, to_dob)
+  input <- .mc_stem_inputs(spcd, model, list(...), !inside_bark)
+  .public_status(.stem_volume_impl(
+    dbh,
+    ht,
+    input$model,
+    bounds$lower,
+    bounds$lower_type,
+    bounds$upper,
+    bounds$upper_type,
+    if (inside_bark) "inside" else "outside",
+    stump_ht,
+    input$aux,
+    "imperial",
+    TRUE
+  ))
 }
