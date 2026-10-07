@@ -2,33 +2,37 @@
 % Please edit documentation in R/nvel.R
 \name{products_from_nvel_rules}
 \alias{products_from_nvel_rules}
-\title{Translate a source rule record to product specifications}
+\title{Convert explicit source rules to products}
 \usage{
 products_from_nvel_rules(
   x
 )
 }
 \arguments{
-\item{x}{The source rules supply a product specification. A list returned by nvel_rules().
-Required, with no default.}
+\item{x}{Validated list returned by \code{\link[=nvel_rules]{nvel_rules()}} with explicit finite length, diameter,
+stump, and trim fields. Required, without a default. Missing source defaults cannot be
+translated without an equation-specific lookup.}
 }
 \value{
-A list with products (the product table, with columns documented in product()),
-stump_ht (feet), and model_aux (named model measurements including bark_ratio when supplied).
+A list with \code{products} (two \code{\link[=product]{product()}} rows named \code{nvel_primary} and
+\code{nvel_secondary}, scaled in Scribner board feet), \code{stump_ht} (feet), and \code{model_aux} (list
+containing \code{bark_ratio}, an inside-to-outside diameter ratio). Product columns and units are
+those of \code{\link[=product]{product()}}. Continuous product bounds do not reproduce every source top-segment
+rule.
 }
 \description{
-Continuous product length bounds replace source top segment policies.
-Factor scaling cannot be expressed by the product interface.
+Translate a complete source rule record into explicit product rows. Use the result when the
+source rule fields have already been resolved for an equation.
 }
 \examples{
-## Translate explicit source limits and inspect the result structure
-names(products_from_nvel_rules(x = nvel_rules(even_or_odd = 1,
-                                              option = 14,
-                                              maximum_length = 32,
-                                              minimum_length = 16,
-                                              primary_top = 6,
-                                              secondary_top = 3,
-                                              stump = 1,
-                                              trim = 0.5,
-                                              minimum_board_foot_dbh = 6)))
+## Translate complete source rules and inspect the stump height in feet
+products_from_nvel_rules(x = nvel_rules(even_or_odd = 1,
+                                        option = 11,
+                                        maximum_length = 32,
+                                        minimum_length = 16,
+                                        primary_top = 6,
+                                        secondary_top = 4,
+                                        stump = 1,
+                                        trim = 0.5,
+                                        minimum_board_foot_dbh = 1))$stump_ht
 }

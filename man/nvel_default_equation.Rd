@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-defaults.R
 \name{nvel_default_equation}
 \alias{nvel_default_equation}
-\title{Look up a source equation from species and geographic codes}
+\title{Look up a source library equation identifier}
 \usage{
 nvel_default_equation(
   region,
@@ -13,34 +13,40 @@ nvel_default_equation(
 )
 }
 \arguments{
-\item{region}{The Forest Service region selects the source defaults. Numeric vector,
-whole-number region codes. Required, with no default.}
+\item{region}{Forest Service region code as whole-number numeric values from 1 through 10.
+Required, without a default. Selects the source lookup table.}
 
-\item{forest}{The national forest code selects local source rules. Numeric vector, whole-number
-forest codes. Required, with no default.}
+\item{forest}{Forest code as whole-number numeric values from 0 through 99. Required, without
+a default. Used with region and district in the source lookup.}
 
-\item{district}{The ranger district code selects local source rules. Numeric vector,
-whole-number district codes. Required, with no default.}
+\item{district}{District code as whole-number numeric values from 0 through 99. Required,
+without a default. Used with region and forest in the source lookup.}
 
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Required, with no default.}
+\item{spcd}{Species code as numeric whole numbers from 1 through 9999. Required, without a
+default. The resulting source identifier may not be implemented by this package.}
 
-\item{variant}{Select the geographic variant for default equation lookup. Character vector,
-unitless, default \code{NULL}. Missing and blank values request the source geographic mapping.
-The source uses regional branches rather than one complete choice list.}
+\item{variant}{Geographic variant as a character vector, or \code{NULL}. Defaults to \code{NULL}, using
+the source default. Values are trimmed and normalized to uppercase. Accepted variants by
+region are \code{1}: EM, IE, CI, \code{5}: CA, SO, WS, NC, \code{6}: BM, EC, SO, WC, PN, NC, IE, CA, OC, OP,
+\code{7}: WC, NC, SO, PN, CA, OC, OP, \code{8}: SN, and \code{9}: LS, CS, NE, SN. Other regions accept
+only an unspecified variant.}
 }
 \value{
-A character vector of source equation identifiers in input order.   Identifiers are
-unitless. A selected source equation can be unsupported   by the package, so check
-availability before computing.
+A character vector of source equation identifiers in input order, with missing values
+where no identifier is available. A returned identifier is not a guarantee that the package
+implements it. Check with \code{\link[=has_taper_model]{has_taper_model()}}.
 }
 \description{
-Look up a source equation from species and geographic codes
+Select a source equation from location and species codes. Use the identifier to check
+whether that source assignment is implemented.
 }
 \examples{
-## Find the source default for the Pacific Northwest example species.
-nvel_default_equation(region = 6,
-                      forest = 12,
-                      district = 0,
-                      spcd = example_trees$spcd[1])
+## Look up a source equation for a shipped species
+model <- nvel_default_equation(region = 6,
+                               forest = 0,
+                               district = 0,
+                               spcd = example_trees$spcd[1])
+
+## Check whether the returned equation is implemented
+has_taper_model(model = model)
 }

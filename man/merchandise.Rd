@@ -2,7 +2,7 @@
 % Please edit documentation in R/merchandise.R
 \name{merchandise}
 \alias{merchandise}
-\title{Cut and scale logs from trees}
+\title{Select and scale logs from measured trees}
 \usage{
 merchandise(
   tree_id,
@@ -22,124 +22,115 @@ merchandise(
 )
 }
 \arguments{
-\item{tree_id}{Identify the tree every result row came from. Required atomic vector, unitless.
-This identifier links every result row to its input tree. Values must be unique and nonmissing.}
+\item{tree_id}{Tree identifiers as a unique, nonmissing atomic vector. Required, with no
+default. Identifiers link logs, residuals, defects, and status to the supplied trees.}
 
-\item{dbh}{Supply diameter at breast height outside bark. Numeric, inches, required.
-Must be greater than zero and at most 400.}
+\item{dbh}{Outside bark diameter at breast height, in inches. Accepts numeric values greater
+than zero and no greater than 400. Required, with no default. Invalid measurement rows
+return missing results with a status.}
 
-\item{ht}{Supply total tree height above ground. Numeric, feet, required.
-Must be greater than zero and at most 500.}
+\item{ht}{Total height above ground, in feet. Accepts numeric values greater than zero and no
+greater than 500. Required, with no default. Measurement heights and section bounds must
+fall within the tree.}
 
-\item{spcd}{Identify each tree's species. Numeric inventory species code,
-unitless, required.}
+\item{spcd}{Species identifier as a numeric vector of positive whole-number codes. Required,
+with no default. The species must be recognized for species properties and within the
+selected equation's scope.}
 
-\item{products}{Supply mill specifications. Their order sets cascade priority only. Made with
-\code{\link[=products]{products()}}, required. Its measurement units are documented in \code{\link[=product]{product()}}.}
+\item{products}{Validated product rows from \code{\link[=product]{product()}} or \code{\link[=products]{products()}}. Required, with no
+default. Names must be unique, and row order supplies priority for the default cascade
+strategy.}
 
-\item{model}{Choose the taper equation for each tree. Character model identifier, unitless,
-default \code{NULL} selects by species. One model may be repeated for all trees.}
+\item{model}{Taper equation identifier as a character vector. Defaults to \code{NULL}, selecting
+the stored species default. A supplied identifier overrides that choice. Scalar identifiers
+recycle across trees.}
 
-\item{taper_map}{Assign equations to species. Data frame with numeric \code{spcd} and character
-\code{model}, unitless, default \code{NULL} uses the package defaults. Explicit \code{model} takes precedence.}
+\item{taper_map}{Species-to-model assignments as a data frame with unique numeric \code{spcd} and
+character \code{model} columns. Defaults to \code{NULL}, using shipped defaults. Missing mapped
+species receive a status rather than falling back. Explicit \code{model} takes precedence, but a
+supplied map is still validated.}
 
-\item{age}{Supply tree age for products with age limits. Numeric, years, default \code{NULL}.
-Products without age limits do not use this input.}
+\item{age}{Tree age in years as a nonnegative numeric vector. Defaults to \code{NULL}, leaving age
+unspecified. Required when any product has an age limit.}
 
-\item{pruned_ht}{Record clear wood from ground to this height. Numeric, feet, default \code{NULL}
-records no pruned section. A product requiring pruning must fit entirely below this height.}
+\item{pruned_ht}{Pruned height above ground, in feet, as finite nonnegative numeric values no
+greater than total height. Defaults to \code{NULL}. Required when a product has \code{requires_pruned = TRUE}.}
 
-\item{defects}{Supply sections that change cutting. Data frame from \code{\link[=defect]{defect()}}, with heights
-in feet and sweep in percent, default \code{NULL} records no defects.}
+\item{defects}{Located defect records with the columns returned by \code{\link[=defect]{defect()}}. Defaults to
+\code{NULL}, adding no defects. Records must use the same tree identifier type and valid product
+names for restrictions.}
 
-\item{stump_ht}{Leave this height below the first log. Numeric, feet, default \code{1}.}
+\item{stump_ht}{Stump height above ground, in feet. Accepts finite, nonnegative numeric values
+below total height. Defaults to \code{1}. Cutting starts above this height, subject to located
+defects. The stump remains in the residual record.}
 
-\item{strategy}{Choose how to select cuts. Character, unitless, default \code{'cascade'} takes
-the longest feasible log in supplied product order at each step.
-\code{'optimize'} maximizes total value with any eligible product at each cut position.
-Product order has no effect on optimization, and every product must have a positive price.
-Equal values prefer fewer logs, then longer logs lower on the stem.
-Remaining ties prefer lower physical ends, then product names in byte order.
-Value differences within eight machine epsilons of the larger total are treated as ties.}
+\item{strategy}{Log selection strategy as one character string. Accepts \code{'cascade'} (the
+default) or \code{'optimize'}. Cascade follows product order. Optimization requires finite
+positive prices for every product and selects the greatest total value within each segment.}
 
-\item{quiet}{Silence the message about default equations. Logical, unitless, default \code{FALSE}.}
+\item{quiet}{Whether to suppress aggregated status warnings. Accepts one \code{TRUE} or \code{FALSE},
+without a missing value. Defaults to \code{FALSE}. Recorded status rows remain available when
+warnings are suppressed.}
 
-\item{...}{Supply named auxiliary measurements required by the taper model. Every value is
-numeric, inches for diameters and feet for heights, except \code{upper_bark}. Default no
-auxiliary inputs.
-Supported inputs depend on the model:
-\itemize{
-\item \code{bark_ratio}: inside to outside diameter ratio.
-\item \code{upper_ht1}, \code{upper_d1}, \code{upper_ht2}, \code{upper_d2}: paired upper measurements.
-\item \code{upper_bark}: the one character input, \code{'ib'} or \code{'ob'}.
-\item \code{form_class}: unitless.
-\item \code{site_index}: feet.
-\item \code{basal_area}: square feet per acre.
-\item \code{decay_class}: whole-number class.
-\item \code{cull}: percent.
-}
-
-Inspect \code{\link[=get_taper_model]{get_taper_model()}} for defaults.}
+\item{...}{Additional named inputs accepted by the selected model, with none supplied by
+default. Numeric inputs must be finite: positive \code{upper_ht1}, \code{upper_ht2}, and \code{site_index}
+use feet, positive \code{upper_d1} and \code{upper_d2} use inches, and positive \code{basal_area} uses
+square feet per acre. \code{form_class} accepts positive numbers. \code{bark_ratio} is inside diameter
+divided by outside diameter, greater than zero and no greater than one. \code{decay_class}
+accepts whole numbers from 0 through 5 and \code{cull} accepts percentages from 0 through 100.
+\code{upper_bark} accepts \code{'ib'} or \code{'ob'}. Upper heights and diameters must be supplied in
+pairs. Only inputs declared by the selected model are accepted.}
 }
 \value{
-A \code{merch_result} list with four data frames and \code{call}, the inputs needed to replay it.
-Every table starts with \code{tree_id}, retaining the input identifier type.
-
-\code{logs} contains:
+A \code{merch_result} list containing:
 \itemize{
-\item \code{log}: number within the tree.
-\item \code{product}: product name.
-\item \code{start_height}, \code{end_height}: physical cut heights in feet.
-\item \code{length}: nominal feet.
-\item \code{scaling_length}: rounded feet.
-\item \code{sed}, \code{led}: physical small and large end diameters in inches.
-\item \code{scaling_diameter}: inches used by the scale rule.
-\item \code{inside_bark}: logical diameter basis.
-\item \code{scale}: quantity in \code{volume_unit}.
-\item \code{volume_unit}: measurement name.
-\item \code{value}: present when a product is priced, in the price's unit.
-Unpriced log values are missing.
+\item \code{logs}: \code{tree_id} (identifier), \code{log} (sequence within tree), \code{product} (label),
+\code{start_height} and \code{end_height} (physical ends, feet), \code{length} (nominal feet),
+\code{scaling_length} (rounded feet), \code{sed} and \code{led} (physical end diameters, inches),
+\code{scaling_diameter} (board foot scaling diameter inside bark, inches, otherwise missing),
+\code{inside_bark} (eligibility basis), \code{scale} (quantity in \code{volume_unit}), and
+\code{volume_unit} (rule label). When any product is priced, \code{value} gives currency amounts
+and is missing for unpriced products. Scale units are board feet, cubic feet, cords,
+or green short tons according to the rule. Do not total unlike units.
+\item \code{residuals}: \code{tree_id}, \code{start_height}, \code{end_height} (feet), and \code{cause}.
+Causes include stump, trim, top, end, cull, restricted, short_remainder,
+diameter_limit, and no_entry_product.
+\item \code{status}: reported conditions only, with \code{tree_id}, \code{status} (integer code),
+\code{name}, and \code{description}. A clean run has no rows.
+\item \code{assumptions}: the columns and units documented in \code{\link[=assumptions]{assumptions()}}.
+\item \code{call}: validated inputs and selected models needed to reproduce the calculation.
 }
-
-\code{scaling_length} is nominal length rounded down to the product's \code{length_round}, in feet.
-Source board foot rules scale that length in whole or even feet according to \code{length_round}.
-Cubic, green weight, and cord scales measure the nominal body from the start
-to the nominal end.
-Their \code{scaling_length} is reported for the mill's records only.
-
-\code{sed} and \code{led} are measured at the physical ends on the product's bark basis, recorded by
-\code{inside_bark}. Product diameter limits are tested against those measurements.
-\code{scaling_diameter} is the inside bark diameter used by the source board foot rule, rounded
-as that rule rounds it. It is \code{NA} for cubic, green weight, and cord products.
-
-\code{residuals} has \code{start_height}, \code{end_height} (feet above ground), and \code{cause} (text).
-
-\code{status} has only nonzero tree codes in \code{status}, with \code{name} and \code{description} (text).
-An empty status table means all trees completed cleanly.
-
-\code{assumptions} has \code{assumption}, \code{spcd}, \code{model}, \code{value}, \code{unit}, \code{basis},
-\code{product}, and \code{source}.
-Codes and labels are unitless, and \code{unit} describes each numeric value.
 }
 \description{
-Select logs by product order or maximize their total value within each usable stem segment.
-Cull and restriction boundaries restart the product order and log counts.
+Select logs within available stem sections using explicit product dimensions and eligibility
+limits. The default cascade follows product order. Optimization maximizes priced log value
+within the candidate lengths and segment boundaries. Physical end diameters include trim,
+but scale uses the nominal body and records trim as residual.
 }
 \details{
-Invalid stump heights return status 411 on their tree. Invalid pruning heights return
-status 408. Negative, nonfinite, and above-tree values are invalid, and stumps must
-be strictly below the tree height. Orphan defects are dropped before validation.
+Optimization ties favor fewer
+logs, then longer lower logs and lower physical ends. Remaining ties compare serialized
+start heights, ends, cut kinds, nominal lengths, and product names in byte order. Values
+within eight machine epsilons times the larger absolute value are treated as ties. Log
+counts restart at cull and restriction boundaries. Independently capped products multiply
+the possible states, and off-grid preparation rejects more than 50,000 cut positions.
 }
 \examples{
-## Cut and scale the shipped trees with an explicit product
-merchandise(tree_id = example_trees$tree_id,
-            dbh = example_trees$dbh,
-            ht = example_trees$ht,
-            spcd = example_trees$spcd,
-            products = product(product = 'domestic_saw',  ## name, unitless
-                               min_length = 16,  ## feet
-                               max_length = 40,  ## feet
-                               trim = 1,  ## feet
-                               min_sed = 6,  ## inches
-                               volume_unit = 'scribner'))  ## board feet
+## Define an unpriced cubic-foot product
+saw <- product(product = 'saw',  ## product label
+               min_length = 16,  ## feet
+               max_length = 32,  ## feet
+               min_sed = 6,  ## inches inside bark
+               volume_unit = 'cubic')  ## cubic feet
+
+## Select logs from the shipped trees
+result <- merchandise(tree_id = example_trees$tree_id,
+                      dbh = example_trees$dbh,
+                      ht = example_trees$ht,
+                      spcd = example_trees$spcd,
+                      products = saw,
+                      model = example_trees$model)
+
+## Inspect selected logs
+head(result$logs)
 }

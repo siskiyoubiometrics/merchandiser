@@ -1,32 +1,31 @@
-#' Record a section that changes log selection
+#' Record a located stem defect
 #'
-#' Record culls, product restrictions, stem ends, and sweep as heights above ground.
-#' The records change available stem sections and product eligibility.
+#' Describe a cull, usable-stem end, product restriction, or sweep interval. Construction checks
+#'   field types. Use [validate_defects()] to check heights and product relationships.
 #'
-#' @details
-#' Culls remove intervals, and restrictions allow only their named product.
-#' Both split the stem and restart product log counts.
-#' Cascade also restarts cutting priority.
-#' An end stops cutting at its lower height.
-#' Sweep rejects overlapping logs above the product's percentage limit.
-#' @param tree_id Identify the tree each record belongs to. Atomic vector, unitless, required.
-#'   This identifier ties every log, residual, and status row back to its tree and is the only
-#'   link between a log and its tree.
-#' @param start_height Set the lower height of the affected section. Numeric, feet above ground,
-#'   required.
-#' @param end_height Set the upper height of the affected section. Numeric, feet above ground,
-#'   required.
-#'   `NA` means the tree top. For an end, use `NA` or the same height as `start_height`.
-#' @param effect Describe how the section changes cutting. Character, unitless, required.
-#'   Use `'cull'`, `'restrict'`, `'end'`, or `'sweep'`.
-#' @param product Name the only product allowed in a restriction. Character, unitless,
-#'   default `NULL`. Required for a restriction and unused for other effects.
-#' @param percent Record the sweep, crook, or spike knot severity. Numeric, percent from zero
-#'   through 100, default `NULL`. Required for sweep and unused for other effects.
-#' @return A `merch_defects` data frame with `tree_id` (input identifier), `start_height` and
-#'   `end_height`
-#'   (feet above ground), `effect` and `product` (text), and `percent` (percent).
-#' @export
+#' @param tree_id Identifiers linking each defect to an input tree. Accepts a nonmissing atomic
+#'   vector. Required, with no default. Its type must match the tree list when records are
+#'   validated.
+#' @param start_height Lower height of the affected interval, in feet above ground. Accepts
+#'   numeric values. Required, with no default. Validation requires a nonnegative height within
+#'   the tree.
+#' @param end_height Upper height of the affected interval, in feet above ground. Accepts numeric
+#'   values or `NA`. Required, with no default. Missing values extend intervals to the tip. An
+#'   end effect accepts missing or equal starting and ending heights. Other intervals require a
+#'   higher end.
+#' @param effect Effect on cutting as a character vector. Accepts `'cull'` to remove wood,
+#'   `'end'` to stop cutting, `'restrict'` to allow only a named product, or `'sweep'` to compare
+#'   severity with product limits. Required, with no default.
+#' @param product Required product label for a restriction, as a character vector. Defaults to
+#'   `NULL`, represented by missing values. Must match a supplied specification for restrict
+#'   effects and remain missing for other effects.
+#' @param percent Sweep severity, in percent, as numeric values from 0 through 100. Defaults to
+#'   `NULL`, represented by missing values. Required for sweep effects and must remain missing
+#'   for other effects. It affects eligibility, not a scale deduction.
+#' @return A `merch_defects` data frame with `tree_id` (identifier), `start_height` and
+#'   `end_height` (feet above ground), `effect` (cutting effect), `product` (restriction label,
+#'   otherwise missing), and `percent` (sweep percentage, otherwise missing). Scalars recycle to
+#'   the record count.
 #' @usage
 #' defect(
 #'   tree_id,
@@ -36,19 +35,13 @@
 #'   product = NULL,
 #'   percent = NULL
 #' )
+#' @export
 #' @examples
-#' ## Load data verbs
-#' library(dplyr)
-#'
-#' ## Record a product restriction
+#' ## Record a cull on the first example tree
 #' defect(tree_id = example_trees$tree_id[1],
-#'        start_height = 40,
-#'        end_height = NA,
-#'        effect = 'restrict',
-#'        product = 'pulp') %>%
-#'   rename(`start_height (feet)` = start_height,
-#'          `end_height (feet)` = end_height,
-#'          `percent (%)` = percent)
+#'        start_height = 1,
+#'        end_height = 8,
+#'        effect = 'cull')
 defect <- function(
   tree_id,
   start_height,
@@ -93,16 +86,26 @@ defect <- function(
   defect(tree_id[FALSE], numeric(), numeric(), character())
 }
 
-#' Check defects against tree heights and products
+#' Check defect heights and product restrictions
 #'
-#' Check each record before using it to select logs.
-#' @param defects Supply recorded tree defects. Data frame from [defect()], required.
-#' @param products Supply the products allowed in restrictions. Product data frame, required.
-#' @param ht Supply each tree's total height. Numeric, feet, required.
-#' @param tree_id Identify each tree in the height vector. Unique atomic vector, unitless, required.
-#' @return The columns from [defect()] with integer `status` added. Heights remain in feet,
-#'   `percent` remains percent, and `status` is a unitless code from [status_codes()].
-#' @export
+#' Validate records against tree heights and product names. Exact duplicates are removed with a
+#'   message, and overlapping valid culls are merged.
+#'
+#' @param defects Defect records with the columns returned by [defect()]. Required, without a
+#'   default. Invalid records are retained with a status rather than silently used for cutting.
+#' @param tree_id Unique tree identifiers corresponding to `ht`. Accepts a nonmissing atomic
+#'   vector of the same identifier type as the defects. Required, without a default.
+#' @param ht Total tree heights above ground, in feet. Accepts one numeric value for each tree
+#'   identifier. Required, without a default. Used to resolve missing interval ends and check
+#'   physical bounds.
+#' @param products Validated product rows from [product()] or [products()]. Required, with no
+#'   default. Names must be unique, and row order supplies priority for the default cascade
+#'   strategy.
+#' @return A `merch_defects` data frame with `tree_id` (identifier), `start_height` and
+#'   `end_height` (feet above ground), `effect` (cutting effect), `product` (restriction label,
+#'   otherwise missing), and `percent` (sweep percentage, otherwise missing). Scalars recycle to
+#'   the record count. An integer `status` column reports each validation condition. See
+#'   [status_codes()] for descriptions.
 #' @usage
 #' validate_defects(
 #'   defects,
@@ -110,19 +113,30 @@ defect <- function(
 #'   ht,
 #'   products
 #' )
+#' @export
 #' @examples
-#' ## Check the first mapped cull with an explicit product
-#' checked <- validate_defects(defects = head(example_defects_pnw, n = 1),
-#'                             products = product(product = 'pulp',  ## name, unitless
-#'                                                min_length = 8,  ## feet
-#'                                                max_length = 40,  ## feet
-#'                                                min_sed = 3,  ## inches
-#'                                                volume_unit = 'cubic'),  ## cubic feet
-#'                             ht = example_trees_pnw$ht,
-#'                             tree_id = example_trees_pnw$tree_id)
+#' ## Define an unpriced cubic-foot product
+#' saw <- product(product = 'saw',  ## product label
+#'                min_length = 16,  ## feet
+#'                max_length = 32,  ## feet
+#'                min_sed = 6,  ## inches inside bark
+#'                volume_unit = 'cubic')  ## cubic feet
 #'
-#' ## Show the validation status
-#' checked$status
+#' ## Define the product named by the shipped restrictions
+#' pulp <- product(product = 'pulp',  ## product label
+#'                 min_length = 8,  ## feet
+#'                 max_length = 20,  ## feet
+#'                 min_sed = 3,  ## inches inside bark
+#'                 volume_unit = 'green_ton')  ## green short tons
+#'
+#' ## Validate shipped defects against their matching trees
+#' checked <- validate_defects(defects = example_defects_pnw,
+#'                             tree_id = example_trees_pnw$tree_id,
+#'                             ht = example_trees_pnw$ht,
+#'                             products = products(saw, pulp))
+#'
+#' ## Inspect validated records
+#' head(checked)
 validate_defects <- function(
   defects,
   tree_id,
@@ -202,28 +216,40 @@ validate_defects <- function(
   x
 }
 
-#' Convert southern stopping heights to defect records
+#' Convert stopper heights to located defects
 #'
-#' Translate a saw stop, pulp stop, jump butt, or whole pulp tree into located records.
-#' @inheritParams defect
-#' @param ht Supply each tree's total height. Numeric, feet, required.
-#' @param saw_stop Stop saw products at this height and allow only `topwood_product` above it.
-#'   Numeric, feet, default `NULL` records no stop. Missing heights also record no stop.
-#' @param pulp_stop End the usable stem at this height. Numeric, feet, default `NULL` records
-#'   no stop. Missing heights also record no stop.
-#' @param jump_butt Remove the wood between the stump and this height. Numeric, feet,
-#'   default `NULL` records no cull. Missing heights also record no cull.
-#' @param pulp_tree Restrict the whole tree to `topwood_product`. Logical, unitless,
-#'   default `FALSE`.
-#' @param stump_ht Set the lower height of a jump butt cull. Numeric, feet, default `1`.
-#' @param topwood_product Name the product allowed above a saw stop or on a whole pulp tree.
-#'   Character scalar, unitless, required.
-#' @return A `merch_defects` data frame with the columns and units listed in [defect()].
-#'   A saw stop becomes `restrict`, a pulp stop becomes `end`, and a jump butt becomes `cull`.
-#' @details
-#' Heights must be finite and at most 500 feet. Total height must be positive. Other
-#'   heights must be nonnegative. Optional missing stopping heights record no stop.
-#' @export
+#' Translate saw stops to restrictions, pulp stops to usable-stem ends, and jump butts to culls.
+#'   Supplied stops must remain above the stump, within the tree, and in increasing physical
+#'   order.
+#'
+#' @param tree_id Identifiers linking each defect to an input tree. Accepts a nonmissing atomic
+#'   vector. Required, with no default. Its type must match the tree list when records are
+#'   validated.
+#' @param ht Total height above ground, in feet. Accepts numeric values greater than zero and no
+#'   greater than 500. Required, with no default. Measurement heights and section bounds must
+#'   fall within the tree.
+#' @param topwood_product Product allowed above a saw stop or on a whole pulp tree, as a nonempty
+#'   character scalar. Required, without a default. The label must match the product used in
+#'   subsequent merchandising.
+#' @param saw_stop Height above which only `topwood_product` is allowed, in feet. Accepts
+#'   positive numeric values or missing values. Defaults to `NULL`, adding no saw restriction.
+#'   Must follow any jump butt and precede any pulp stop.
+#' @param pulp_stop Height ending the usable stem, in feet. Accepts positive numeric values or
+#'   missing values. Defaults to `NULL`, adding no end record. Must lie above other supplied
+#'   stops and no higher than total height.
+#' @param jump_butt Upper height of an unusable butt section, in feet. Accepts positive numeric
+#'   values or missing values. Defaults to `NULL`, adding no butt cull. A cull spans from
+#'   `stump_ht` to this height.
+#' @param pulp_tree Whether the entire tree is restricted to `topwood_product`. Accepts `TRUE` or
+#'   `FALSE` per tree, without missing values. Defaults to `FALSE`. Cannot accompany a saw stop
+#'   or jump butt for the same tree.
+#' @param stump_ht Stump height above ground, in feet. Accepts finite, nonnegative numeric values
+#'   below total height. Defaults to `1`. A jump-butt cull starts here, and supplied stopping
+#'   heights must lie above it.
+#' @return A `merch_defects` data frame with `tree_id` (identifier), `start_height` and
+#'   `end_height` (feet above ground), `effect` (cutting effect), `product` (restriction label,
+#'   otherwise missing), and `percent` (sweep percentage, otherwise missing). Scalars recycle to
+#'   the record count.
 #' @usage
 #' defects_from_stoppers(
 #'   tree_id,
@@ -235,19 +261,18 @@ validate_defects <- function(
 #'   pulp_tree = FALSE,
 #'   stump_ht = 1
 #' )
+#' @export
 #' @examples
-#' ## Convert the shipped stopping heights
-#' records <- defects_from_stoppers(
-#'   tree_id = example_trees_south$tree_id,
-#'   ht = example_trees_south$ht,
-#'   topwood_product = "pulpwood",
-#'   saw_stop = example_trees_south$saw_stop,
-#'   pulp_stop = example_trees_south$pulp_stop,
-#'   jump_butt = example_trees_south$jump_butt
-#' )
+#' ## Convert the southern list's stopping heights
+#' converted <- defects_from_stoppers(tree_id = example_trees_south$tree_id,
+#'                                    ht = example_trees_south$ht,
+#'                                    topwood_product = 'pulp',
+#'                                    saw_stop = example_trees_south$saw_stop,
+#'                                    pulp_stop = example_trees_south$pulp_stop,
+#'                                    jump_butt = example_trees_south$jump_butt)
 #'
-#' ## Show the converted effects
-#' head(records$effect, n = 3)
+#' ## Inspect the resulting defect intervals
+#' head(converted)
 defects_from_stoppers <- function(
   tree_id,
   ht,
@@ -320,17 +345,48 @@ defects_from_stoppers <- function(
   result
 }
 
-#' Weight stem-third defect percentages by volume
+#' Combine defect percentages by stem-volume thirds
 #'
-#' Convert percentages recorded by stem third into one whole-tree percentage.
-#' The package does not apply this percentage inside [merchandise()]. Application to volume is a
-#'   separate script calculation.
-#' @inheritParams stem_volume
-#' @param lower Record the defect in the lower third. Numeric, percent, required.
-#' @param middle Record the defect in the middle third. Numeric, percent, required.
-#' @param upper Record the defect in the upper third. Numeric, percent, required.
-#' @return A data frame with `value` (whole-tree percent) and `status` (unitless integer code).
-#' @export
+#'
+#' Combine lower, middle, and upper defect percentages using inside bark volume weights. Use
+#' the returned percentage in a separate deduction calculation, with diameters in inches and
+#' heights in feet. The thirds divide total height from ground to tip, and merchandise()
+#' does not apply the returned percentage. Scalar inputs recycle across trees, and invalid rows
+#' retain their
+#' input position and a status.
+#'
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Invalid measurement rows
+#'   return missing results with a status.
+#' @param ht Total height above ground, in feet. Accepts numeric values greater than zero and no
+#'   greater than 500. Required, with no default. Measurement heights and section bounds must
+#'   fall within the tree.
+#' @param spcd Species identifier as a numeric vector of positive whole-number codes. Required,
+#'   with no default. The species must be recognized for species properties and within the
+#'   selected equation's scope.
+#' @param lower Defect in the lower third of total tree height, in percent. Accepts numeric
+#'   values from 0 through 100, or missing values. Required, with no default. The contribution is
+#'   weighted by inside bark volume in that third.
+#' @param middle Defect in the middle third of total tree height, in percent. Accepts numeric
+#'   values from 0 through 100, or missing values. Required, with no default. The contribution is
+#'   weighted by inside bark volume in that third.
+#' @param upper Defect in the upper third of total tree height, in percent. Accepts numeric
+#'   values from 0 through 100, or missing values. Required, with no default. The contribution is
+#'   weighted by inside bark volume in that third.
+#' @param model Taper equation identifier as a character vector. Defaults to `NULL`, selecting
+#'   the stored species default. A supplied identifier overrides that choice. Scalar identifiers
+#'   recycle across trees.
+#' @param ... Additional named inputs accepted by the selected model, with none supplied by
+#'   default. Numeric inputs must be finite: positive `upper_ht1`, `upper_ht2`, and `site_index`
+#'   use feet, positive `upper_d1` and `upper_d2` use inches, and positive `basal_area` uses
+#'   square feet per acre. `form_class` accepts positive numbers. `bark_ratio` is inside diameter
+#'   divided by outside diameter, greater than zero and no greater than one. `decay_class`
+#'   accepts whole numbers from 0 through 5 and `cull` accepts percentages from 0 through 100.
+#'   `upper_bark` accepts `'ib'` or `'ob'`. Upper heights and diameters must be supplied in
+#'   pairs. Only inputs declared by the selected model are accepted.
+#' @return A data frame in input order with `value` (whole-tree defect, percent) and `status`
+#'   (integer code described by [status_codes()]). Missing results remain in the table.
+#'   Nonfatal section statuses are not propagated to this percentage result.
 #' @usage
 #' defect_by_thirds(
 #'   dbh,
@@ -342,19 +398,16 @@ defects_from_stoppers <- function(
 #'   model = NULL,
 #'   ...
 #' )
+#' @export
 #' @examples
-#' ## Load data verbs
-#' library(dplyr)
-#'
-#' ## Calculate a separate whole-tree percentage for an example tree.
+#' ## Measure the first shipped tree with its stored equation
 #' defect_by_thirds(dbh = example_trees$dbh[1],
-#'                        ht = example_trees$ht[1],
-#'                        spcd = example_trees$spcd[1],
-#'                        model = example_trees$model[1],
-#'                        lower = 10,
-#'                        middle = 0,
-#'                        upper = 0) %>%
-#'   rename(`defect (percent)` = value)
+#'                  ht = example_trees$ht[1],
+#'                  spcd = example_trees$spcd[1],
+#'                  lower = 10,
+#'                  middle = 5,
+#'                  upper = 0,
+#'                  model = example_trees$model[1])
 defect_by_thirds <- function(
   dbh,
   ht,

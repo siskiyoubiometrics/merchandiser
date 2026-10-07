@@ -2,23 +2,25 @@
 % Please edit documentation in R/stem-registry.R
 \name{has_taper_model}
 \alias{has_taper_model}
-\title{Check whether taper equations are available}
+\title{Check availability of taper equation identifiers}
 \usage{
 has_taper_model(
   model
 )
 }
 \arguments{
-\item{model}{The identifier names the taper model in the registry. Character vector of model
-identifiers. Required, with no default.}
+\item{model}{Equation identifiers as a character vector. Required, without a default. Missing,
+empty, and unrecognized identifiers return \code{FALSE}.}
 }
 \value{
-A logical vector, TRUE where a registered taper model is available.
+A vector of \code{TRUE} or \code{FALSE} values in identifier order. This indicates availability,
+not suitability for a particular tree.
 }
 \description{
-Check whether taper equations are available
+Check whether identifiers resolve to models without testing the submitted tree measurements or
+species scope. Use it to check stored identifiers before selecting an equation.
 }
 \examples{
-## Check availability of the example trees' models.
+## Check the stored equations for the shipped trees
 has_taper_model(model = example_trees$model)
 }

@@ -1,97 +1,170 @@
 ---
 title: 'Biomass and carbon'
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    md_extensions: -smart
 vignette: >
   %\VignetteIndexEntry{Biomass and carbon}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE, echo = FALSE}
+```{r, echo = FALSE, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
-                      fig.width = 8, fig.height = 4.5, dpi = 120)
+                      dev.args = list(bg = 'white'), fig.width = 8, fig.height = 4.5, dpi = 120)
 library(merchandiser)
 library(dplyr)
 ```
 
-`biomass()` returns dry biomass, carbon, and carbon dioxide equivalent in metric tonnes from inputs in inches and feet.
-Component columns support tree and stand mass summaries.
+`biomass()` estimates dry biomass and carbon in metric tonnes from tree diameters in inches and total heights in feet. Use it to attach tree mass estimates to a measured or completed tree list, independently of product specifications. National coefficients apply when no location code is supplied, and results retain the input order for joining tree identifiers.
 
-## National coefficients
+## Which mass total should be used?
 
-The default uses national coefficients. Each output row corresponds to its input tree.
+The aboveground total excludes foliage and contains stem wood, stem bark, and branches. Roots are not estimated. Foliage is returned separately, so it can be retained as a separate component or added to that total when an aboveground total including foliage is needed.
+
+Stem wood and bark are also partitioned into stump, sawlog, topwood, and tip components. Those component columns overlap the whole-stem columns. Likewise, `dry_top_and_limb` combines tip wood, tip bark, and branches, so it must not be added to a total that already contains them.
+
 
 ```{r}
-## Calculate biomass for the shipped tree list
-mass <- example_trees_pnw %>%
-  mutate(biomass(dbh = dbh,
-                 ht = ht,
-                 spcd = spcd))
+## Attach the calculation and data tools
+library(merchandiser)
+library(dplyr)
 ```
+
+```{r}
+## Select the tree with a stored taper equation
+tree <- example_trees %>%
+  filter(tree_id == 5)
+```
+
+
+```{r}
+## Estimate the tree's mass without product specifications
+mass <- biomass(dbh = tree$dbh,
+                ht = tree$ht,
+                spcd = tree$spcd)
+```
+
 
 ```{r, echo = FALSE}
 mass %>%
-  slice_head(n = 6) %>%
-  transmute(tree_id = tree_id, `stem wood (tonnes)` = dry_stem_wood,
-            `stem bark (tonnes)` = dry_stem_bark, `branches (tonnes)` = dry_branches,
-            `foliage (tonnes)` = dry_foliage, `carbon (tonnes)` = carbon,
-            `carbon dioxide equivalent (tonnes)` = tco2e, status) %>%
+  select(`aboveground excluding foliage (tonnes)` = dry_aboveground_no_foliage,
+         `stem wood (tonnes)` = dry_stem_wood, `stem bark (tonnes)` = dry_stem_bark,
+         `branches (tonnes)` = dry_branches, `foliage (tonnes)` = dry_foliage) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-The component curves summarize mass by diameter class for each species.
-
-```{r, echo = FALSE, fig.width = 9}
-components <- mass %>%
-  mutate(diameter_class = floor(dbh / 2) * 2) %>%
-  group_by(spcd, diameter_class) %>%
-  summarize(across(c(dry_stem_wood, dry_stem_bark, dry_branches, dry_foliage), mean),
-            .groups = 'drop')
-components %>%
-  rename(`diameter class lower bound (inches)` = diameter_class,
-         `mean stem wood (tonnes)` = dry_stem_wood,
-         `mean stem bark (tonnes)` = dry_stem_bark,
-         `mean branches (tonnes)` = dry_branches,
-         `mean foliage (tonnes)` = dry_foliage) %>%
-  knitr::kable(digits = 3, row.names = FALSE)
-```
-
-```{r, echo = FALSE, fig.width = 9}
-par(mfrow = c(1, 2), mar = c(4, 4, 1, 1))
-colors <- c('#0072B2', '#E69F00', '#009E73', '#CC79A7')
-for (code in unique(components$spcd)) {
-  z <- components %>% filter(spcd == code)
-  matplot(z$diameter_class, z[3:6], type = 'l', lty = 1, lwd = 2, col = colors,
-          xlab = 'Diameter class lower bound (inches)', ylab = 'Mean dry mass (tonnes)')
-  legend('topleft', legend = c(paste('Species', code), 'Stem wood', 'Stem bark',
-                               'Branches', 'Foliage'),
-         col = c(NA, colors), lty = c(NA, rep(1, 4)), bty = 'n', cex = 0.8)
-}
-```
-
-`dry_aboveground_no_foliage` excludes foliage. Stem totals overlap stump, saw, topwood, and tip columns, so those columns are not additive.
-Carbon excludes foliage. `tco2e` converts carbon to carbon dioxide equivalent.
-
-Invalid inputs retain their rows with missing masses and a status code.
-
-## Carbon fraction
-
-`carbon_fraction()` returns the live tree carbon fraction of dry mass, with a source attribute.
-
-```{r}
-## Look up the example species fractions
-fractions <- example_trees %>%
-  distinct(spcd) %>%
-  mutate(carbon_fraction = carbon_fraction(spcd = spcd))
-```
 
 ```{r, echo = FALSE}
-fractions %>%
-  rename(`carbon fraction (unitless)` = carbon_fraction) %>%
+above_text <- format(round(mass$dry_aboveground_no_foliage, 3), trim = TRUE)
+```
+
+The tree's aboveground dry mass excluding foliage is `r above_text` tonnes, the sum of its stem wood, stem bark, and branches.
+
+The component boundaries use the biomass calculation's own stem assumptions. They do not read a merchandising result or its selected logs. Changing a product's length therefore does not change this tree-level estimate. Optional component limits are documented in the function reference when a different partition is required.
+
+## How is carbon calculated?
+
+`carbon_fraction()` returns the species fraction of dry mass used by the biomass calculation, with its source recorded as an attribute. Multiplying the aboveground mass excluding foliage by that fraction gives carbon mass. The carbon dioxide equivalent column converts carbon mass by the molecular mass ratio used in the calculation.
+
+
+```{r}
+## Inspect the species carbon fraction and its source
+fraction <- carbon_fraction(spcd = tree$spcd)
+
+```
+
+
+
+```{r, echo = FALSE}
+data.frame(`carbon / dry mass (fraction)` = as.numeric(fraction), check.names = FALSE) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-## Optional location lookup
+The fraction for this species is `r fraction`, applied to dry aboveground mass excluding foliage. Its source attribute identifies the Forest Service National Volume Estimator Library table and source routine.
 
-[`nsvb_division()`](../reference/nsvb_division.html) returns county ecological codes. [`nsvb_division_xy()`](../reference/nsvb_division_xy.html) returns coordinate assignments and status, using the shipped boundaries.
-Use county codes directly, or the coordinate result's `value` column, as the optional coefficient selector.
+
+```{r}
+## Check carbon against the returned dry mass
+carbon_check <- mass %>%
+  mutate(calculated_carbon = dry_aboveground_no_foliage * fraction)
+```
+
+
+```{r, echo = FALSE}
+carbon_check %>%
+  select(`carbon (tonnes)` = carbon, `calculated carbon (tonnes)` = calculated_carbon,
+         `carbon dioxide equivalent (tonnes)` = tco2e) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+carbon_text <- format(round(mass$carbon, 3), trim = TRUE)
+```
+
+The calculated and returned carbon masses agree at `r carbon_text` tonnes. Foliage carbon is not included in either value.
+
+The result also includes a status for each input row. Invalid measurements leave missing mass values in their original positions, preserving alignment with the submitted list. The function does not attach identifiers automatically.
+
+## How do components vary across a tree list?
+
+The same function accepts vectors, returning rows in input order. Bind those rows to the original list before grouping by stand or species. The figure separates components that can be added together and leaves foliage visible as a separate series.
+
+
+```{r}
+## Calculate masses for the shipped range of tree dimensions
+trees <- example_trees %>%
+  bind_cols(biomass(dbh = example_trees$dbh,
+                    ht = example_trees$ht,
+                    spcd = example_trees$spcd))
+```
+
+
+
+
+```{r, echo = FALSE}
+trees %>%
+  select(tree_id, `species code` = spcd, `diameter (inches)` = dbh,
+         `stem wood (tonnes)` = dry_stem_wood, `stem bark (tonnes)` = dry_stem_bark,
+         `branches (tonnes)` = dry_branches, `foliage (tonnes)` = dry_foliage) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The first tree contributes `r format(round(trees$dry_stem_wood[1], 3), trim = TRUE)` tonnes to the stem-wood series in the figure.
+
+```{r, echo = FALSE}
+components <- c('dry_stem_wood', 'dry_stem_bark', 'dry_branches', 'dry_foliage')
+colors <- c('#0072B2', '#E69F00', '#009E73', '#CC79A7')
+matplot(trees$dbh, as.matrix(trees[components]), type = 'b', pch = 16,
+        lty = 1, col = colors, xlab = 'Diameter at breast height (inches)',
+        ylab = 'Dry mass (metric tonnes)')
+legend('topleft', legend = c('Stem wood', 'Stem bark', 'Branches', 'Foliage'),
+       col = colors, pch = 16, lty = 1, bty = 'n')
+bark_text <- format(round(trees$dry_stem_bark[1], 3), trim = TRUE)
+```
+
+The smallest example tree has `r bark_text` tonnes of dry stem bark. These points combine the shipped species and heights, so the connecting lines are not a fitted diameter-only relationship.
+
+## How can location select coefficients?
+
+The optional `division` argument accepts an ecological division code. `nsvb_division()` looks it up from numeric state and county codes, and `nsvb_division_xy()` looks it up from coordinates. The coordinate lookup defaults to longitude and latitude. Using another coordinate reference system through `crs` requires the sf package, listed under Suggests.
+
+
+```{r}
+## Look up coefficients using explicit state and county codes
+county <- nsvb_division(state = 41, county = 5)
+
+## Look up the shipped coordinates directly
+location <- nsvb_division_xy(x = example_trees_pnw$longitude[1],
+                             y = example_trees_pnw$latitude[1])
+```
+
+
+```{r, echo = FALSE}
+bind_rows(county = county, coordinates = location, .id = 'lookup') %>%
+  rename(`division code` = value) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The coordinate lookup returns division `r location$value`. Check its status before passing the returned code to `biomass()`, since an unrecognized location is not a national-coefficient request.

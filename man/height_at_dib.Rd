@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-compute.R
 \name{height_at_dib}
 \alias{height_at_dib}
-\title{Height to a diameter inside bark}
+\title{Locate a specified inside bark diameter}
 \usage{
 height_at_dib(
   dbh,
@@ -14,42 +14,53 @@ height_at_dib(
 )
 }
 \arguments{
-\item{dbh}{Diameter at breast height outside bark. Numeric vector,
-inches, greater than zero and at most 400. Required, with no default.}
+\item{dbh}{Outside bark diameter at breast height, in inches. Accepts numeric values greater
+than zero and no greater than 400. Required, with no default. Invalid measurement rows
+return missing results with a status.}
 
-\item{ht}{Total height above ground. Numeric vector, feet.
-Required, with no default.}
+\item{ht}{Total height above ground, in feet. Accepts numeric values greater than zero and no
+greater than 500. Required, with no default. Measurement heights and section bounds must
+fall within the tree.}
 
-\item{dib}{The target diameter identifies the point to locate on the stem. Numeric vector,
-inches, greater than zero and at most 400. Required, with no default.}
+\item{dib}{Target diameter on the named bark basis, in inches. Accepts positive numeric
+values. Required, with no default. The default compatibility setting selects the highest
+crossing when the profile reaches the diameter more than once. Source compatibility
+can reproduce a different source inverse result.}
 
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Required, with no default.}
+\item{spcd}{Species identifier as a numeric vector of positive whole-number codes. Required,
+with no default. The species must be recognized for species properties and within the
+selected equation's scope.}
 
-\item{model}{Registered taper model identifier. Character vector of
-registered model identifiers. Default: \code{NULL}.
-model NULL selects the shipped default for the species, see \link{default_taper_models}.
-Species without a default return status 404.}
+\item{model}{Taper equation identifier as a character vector. Defaults to \code{NULL}, selecting
+the stored species default. A supplied identifier overrides that choice. Scalar identifiers
+recycle across trees.}
 
-\item{...}{Additional named inputs supply measurements required by the selected model. Named
-vectors in inches for diameters and feet for heights, none by default.}
+\item{...}{Additional named inputs accepted by the selected model, with none supplied by
+default. Numeric inputs must be finite: positive \code{upper_ht1}, \code{upper_ht2}, and \code{site_index}
+use feet, positive \code{upper_d1} and \code{upper_d2} use inches, and positive \code{basal_area} uses
+square feet per acre. \code{form_class} accepts positive numbers. \code{bark_ratio} is inside diameter
+divided by outside diameter, greater than zero and no greater than one. \code{decay_class}
+accepts whole numbers from 1 through 5 and \code{cull} accepts percentages from 0 through 100.
+\code{upper_bark} accepts \code{'ib'} or \code{'ob'}. Upper heights and diameters must be supplied in
+pairs. Only inputs declared by the selected model are accepted.}
 }
 \value{
-A data frame with value (height above ground, feet) and status (integer result code),
-one row per input row.
+A data frame in input order with \code{value} (height above ground, feet) and \code{status}
+(integer code described by \code{\link[=status_codes]{status_codes()}}). Missing results remain in the table. Status
+102 can accompany a retained value when multiple profile crossings exist.
 }
 \description{
-Height to a diameter inside bark
+Locate the height in feet corresponding to an inside bark diameter in inches. Use the result
+to set a stem-section boundary under the selected taper equation. The default compatibility
+setting selects the highest crossing, while source compatibility can reproduce a different
+source result. Scalar inputs recycle across trees, and invalid rows retain their input
+position and a status.
 }
 \examples{
-## Load data verbs
-library(dplyr)
-
-## Find the height of a six-inch inside-bark diameter.
+## Measure the first shipped tree with its stored equation
 height_at_dib(dbh = example_trees$dbh[1],
               ht = example_trees$ht[1],
-              dib = 6,
               spcd = example_trees$spcd[1],
-              model = example_trees$model[1]) \%>\%
-  rename(`height (feet)` = value)
+              dib = 6,
+              model = example_trees$model[1])
 }

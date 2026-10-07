@@ -56,24 +56,47 @@
   invisible(coefficients)
 }
 
-#' Create a taper model from a coefficient set
+#' Construct a taper model from metric coefficients
 #'
-#' @param id The identifier names the taper model in the registry. Character scalar model
-#'   identifier. Required, with no default.
-#' @param form The equation form chooses the relationship to fit. Character scalar, equation name.
-#'   Required, with no default.
-#' @param coefficients The coefficients supply the published taper equation values. Named numeric
-#'   vector. Required, with no default.
-#' @param spcd The species codes limit the trees this model covers. Numeric vector of species
-#'   codes. Default: \code{integer()}.
-#' @param stump_ht Stump height above ground. Numeric
-#'   scalar, feet. Default: \code{1}.
-#' @param bark_ratio The bark ratio estimates inside diameter from outside diameter when needed.
-#'   Numeric scalar, inside diameter divided by outside diameter. Default: \code{NA_real_}.
-#' @param source The source records where the model came from. Character scalar, provenance text.
-#'   Default: \code{NULL}.
-#' @return A taper_model object with the supplied coefficients and provenance, ready for
-#'   register_taper_model().
+#' Create an unregistered model from an existing coefficient vector. Supply coefficients on the
+#'   equation's metric scale and use inches and feet in public measurements.
+#'
+#' @details
+#'   Max-Burkhart
+#'   coefficients are `b1`, `b2`, `b3`, `b4`, `a1`, `a2`, with `0 < a2 < a1 < 1`. Kozak 1988 uses
+#'   `a0`, `a1`, `a2`, `b1` through `b5`, and `p`, with positive `a0` and `a2` and `0 < p < 1`.
+#'   Kozak 2002 uses `a0`, `a1`, `a2`, and `b1` through `b6`, with positive `a0`.
+#'
+#' @param id Identifier for the new equation as a nonempty character scalar. Required, with no
+#'   default. Private registrations require a namespaced identifier containing a dot, such as
+#'   `'local.profile'`.
+#' @param form Equation form as one character string. Accepts `'max_burkhart'`, `'kozak_1988'`,
+#'   or `'kozak_2002'`. Required, without a default. The form determines coefficient names,
+#'   order, and constraints.
+#' @param coefficients Coefficients for the selected equation form as a finite named numeric
+#'   vector in the form's required order. Required, with no default. Coefficients use centimeters
+#'   for diameters and meters for heights, while public calls use inches and feet.
+#' @param spcd Species scope as numeric positive whole-number codes. Defaults to `integer()`,
+#'   imposing no species restriction. A scoped model reports a condition when called for another
+#'   species.
+#' @param stump_ht Default stump height above ground, in feet. Accepts one finite nonnegative
+#'   number. Defaults to `1`. Stored in the model's internal height units without changing public
+#'   input units.
+#' @param bark_ratio Inside bark diameter divided by outside bark diameter. Accepts a single
+#'   finite number greater than zero and no greater than one, or `NA`. Defaults to `NA_real_`,
+#'   leaving the ratio unspecified. Enables a constant-ratio outside bark calculation where
+#'   needed.
+#' @param source Provenance for the equation as a single character string. Defaults to `NULL`,
+#'   using the form citation where available. Stored with the model for later inspection.
+#' @return A `taper_model` list containing `id` (identifier), `form` (equation form),
+#' `kernel` (implementation and capability metadata), `dib`, `dob`, `height_at_dib`,
+#' and `volume` (callbacks or absent optional callbacks), `inputs` (required, optional,
+#' and paired auxiliary names), `measurement_system` (internal units), `spcd` (species
+#' scope), `stump_ht` (feet for imperial models or meters for metric models),
+#' `bark_ratio` (inside-to-outside diameter ratio), `source` (provenance), `notes`,
+#' `data` (equation data or coefficients), and `class_version`. The optional
+#' `oracle_verified` attribute records source-fixture verification. Public calls
+#' continue to accept inches and feet regardless of stored coefficient units.
 #' @usage
 #' taper_model_from_coefficients(
 #'   id,
@@ -86,24 +109,22 @@
 #' )
 #' @export
 #' @examples
-#' ## Obtain coefficients from the shipped synthetic stem measurements.
-#' fitted <- fit_taper(
-#'   tree_id = example_stem_measurements$tree_id,
-#'   dbh = example_stem_measurements$dbh,
-#'   ht = example_stem_measurements$ht,
-#'   h = example_stem_measurements$h,
-#'   dib = example_stem_measurements$dib,
-#'   spcd = example_stem_measurements$spcd,
-#'   form = 'max_burkhart'
-#' )
+#' ## Use the shipped stem measurements
+#' measurements <- example_stem_measurements
 #'
-#' ## Create a model from that coefficient set.
-#' local_model <- taper_model_from_coefficients(id = 'example.coefficients',
-#'                                              form = 'max_burkhart',
-#'                                              coefficients = fitted$coefficients)
+#' ## Fit coefficients to the measured profiles
+#' fit <- fit_taper(tree_id = measurements$tree_id,
+#'                  dbh = measurements$dbh,
+#'                  ht = measurements$ht,
+#'                  h = measurements$h,
+#'                  dib = measurements$dib,
+#'                  spcd = measurements$spcd)
 #'
-#' ## Inspect the local model
-#' print(local_model)
+#' ## Inspect a model reconstructed from the fitted metric coefficients
+#' taper_model_from_coefficients(id = 'local.coefficients',
+#'                               form = fit$form,
+#'                               coefficients = fit$coefficients,
+#'                               spcd = fit$spcd)
 taper_model_from_coefficients <- function(
   id,
   form,
@@ -759,39 +780,62 @@ taper_model_from_coefficients <- function(
   fit
 }
 
-#' Fit a taper model to stem-analysis data
+#' Fit taper coefficients to repeated stem measurements
 #'
-#' @param tree_id Identify each measurement's tree. Atomic vector, unitless, required.
-#' @param dbh Diameter at breast height outside bark. Numeric vector, inches, required.
-#' @param ht Total tree height above ground. Numeric vector, feet, required.
-#' @param h Measurement height above ground. Numeric vector, feet, required.
-#' @param dib Measured inside bark diameter. Numeric vector, inches, required.
-#' @param spcd Species code of each measurement's tree. Numeric vector, required.
-#'   The fitted species scope is the sorted unique set of measured codes.
-#' @param form Equation form to fit. Character scalar, default `'max_burkhart'`.
-#'   Choices are `'max_burkhart'`, `'kozak_1988'`, and `'kozak_2002'`.
-#' @param group Trees in the same group share a local height or taper adjustment. Atomic vector of
-#'   group identifiers. Default: \code{NULL}.
-#' @param weights The weights control the contribution of each measured diameter to the fit.
-#'   Numeric vector, relative weights. Default: \code{NULL}.
-#' @param start Starting coefficients give the fitting routine an initial estimate. Named numeric
-#'   vector. Default: \code{NULL}.
-#' @return A `taper_fit` object with coefficients, form, species scope, fitting method,
-#'   convergence details, the fitted model, and these diagnostic tables.
-#'   `residual_diagnostics` has `tree_id` (identifier), `dbh`, `observed_dib`,
-#'   `fitted_dib`, `population_fitted_dib`, and `residual` (inches), `ht` and `h`
-#'   (feet), `relative_height` (height fraction), and `standardized_residual`
-#'   (unitless). Optional `group` retains the supplied group identifiers.
-#'   `fit_statistics$overall` has `n` (measurement count), `rmse` (root mean squared
-#'   error, inches), and `bias` (mean residual, inches).
-#'   `fit_statistics$by_relative_height` adds `relative_height_class` (height-fraction
-#'   interval) to those columns. `random_effects` has `group` (identifier) and `effect`
-#'   (adjustment on the fitted parameter's internal scale).
-#'   `data_metric` is the internal metric copy the fit uses for prediction. It has
-#'   `tree_id`, `dbh`, `dib` (centimeters), `ht`, `h` (meters), and
-#'   `weight` (relative weight), with optional `group` and `p_fixed`
-#'   (relative inflection height). Published equations retain their native metric
-#'   coefficients. Inputs, predictions, and diagnostics use inches and feet.
+#' Estimate population or grouped taper relationships from measured inside bark diameters. Public
+#'   inputs and residual diagnostics use inches and feet. Fitting stores coefficients in
+#'   centimeters and meters. Invalid measurements are omitted with a warning.
+#'
+#' @param tree_id Tree identifiers repeated for measurements from the same tree, as an atomic
+#'   vector. Required, without a default. Breast-height diameter and total height must remain
+#'   constant within each identifier.
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Invalid measurement rows
+#'   are omitted with a warning.
+#' @param ht Total height above ground, in feet. Accepts numeric values greater than zero and no
+#'   greater than 500. Required, with no default. Heights must be constant within each tree
+#'   identifier, and its measurement heights cannot exceed this total.
+#' @param h Measurement height above ground, in feet. Accepts numeric values from zero through
+#'   total height, inclusive. Required, with no default.
+#' @param dib Observed inside bark diameter at `h`, in inches. Accepts numeric values from zero
+#'   through 400. Required, without a default. Nonfinite or invalid measurement rows are omitted
+#'   with a warning.
+#' @param spcd Species identifiers as numeric positive whole-number codes present in
+#'   species_reference. Required, without a default. Retained observations determine the fitted
+#'   model's species scope. Unrecognized species rows are omitted with a warning.
+#' @param form Equation form as one character string. Accepts `'max_burkhart'`, `'kozak_1988'`,
+#'   or `'kozak_2002'`. Defaults to `'max_burkhart'`. The form determines coefficient names,
+#'   order, and constraints.
+#' @param group Group identifiers matching measurement rows, as an atomic vector. Defaults to
+#'   `NULL` for an ordinary nonlinear fit. Multiple groups request a mixed effects fit, with a
+#'   random effect on `b1` for the segmented form or the Kozak scale parameter. A single group
+#'   falls back with a warning.
+#' @param weights Relative observation weights as positive finite numeric values matching
+#'   measurements. Defaults to `NULL`, assigning equal weight. Larger weights increase a
+#'   measurement's contribution to fitting.
+#' @param start Starting coefficients as a finite named numeric vector matching the selected
+#'   form, or `NULL`. Defaults to `NULL`, using the built-in starting search. Starts must satisfy
+#'   the form's coefficient constraints.
+#' @return A `taper_fit` list containing:
+#' * `form`, `coefficients` (metric equation scale), `spcd` (species scope),
+#'   `n_trees`, `n_measurements` (counts), `groups_seen`, `method`, `measurement_system`,
+#'   `input_measurement_system`, and `package_version`.
+#' * `fit_statistics`: `overall` and `by_relative_height` summaries with observation
+#'   count `n`, diameter root mean squared error `rmse`, and mean residual `bias`
+#'   in inches, plus `relative_height_class` (relative-height interval) for the latter table.
+#' * `residual_diagnostics`: `tree_id`, `dbh` (inches), `ht` and `h` (feet),
+#'   `relative_height` (height fraction), `observed_dib`, `fitted_dib`,
+#'   `population_fitted_dib`, `residual` (inches), `standardized_residual`
+#'   (residual divided by its standard deviation), `spcd`, and optional `group`.
+#' * `random_effects`: `group` and `effect` on the internal coefficient scale.
+#' * `convergence`: optimizer outcome, attempt counts, and stop messages.
+#' * `model`, `internal_coefficients`, and `random_parameter`: fitted object and
+#'   its internal parameterization.
+#' * `data_metric`: retained `tree_id`, `dbh` and `dib` (centimeters), `ht` and `h`
+#'   (meters), `species` (numeric code), `weight` (relative fitting weight), and optional
+#'   `group` (identifier) or `p_fixed` (reference-height fraction).
+#' The plot method compares observed and fitted relative diameters. Predictions
+#' return inches and use population coefficients for unseen groups.
 #' @usage
 #' fit_taper(
 #'   tree_id,
@@ -805,31 +849,18 @@ taper_model_from_coefficients <- function(
 #'   weights = NULL,
 #'   start = NULL
 #' )
-#' @details
-#' Invalid rows are omitted with one warning giving the count and reasons. Diameters
-#'   must be at most 400 inches and total heights at most 500 feet. Species must occur
-#'   in `species_reference`. Taper measurement heights must lie within the tree.
 #' @export
 #' @examples
-#' ## Load data verbs
-#' library(dplyr)
+#' ## Fit a profile to the shipped stem measurements
+#' fit <- fit_taper(tree_id = example_stem_measurements$tree_id,
+#'                  dbh = example_stem_measurements$dbh,
+#'                  ht = example_stem_measurements$ht,
+#'                  h = example_stem_measurements$h,
+#'                  dib = example_stem_measurements$dib,
+#'                  spcd = example_stem_measurements$spcd)
 #'
-#' ## Fit the shipped synthetic stem measurements
-#' fit <- fit_taper(
-#'   tree_id = example_stem_measurements$tree_id,
-#'   dbh = example_stem_measurements$dbh,
-#'   ht = example_stem_measurements$ht,
-#'   h = example_stem_measurements$h,
-#'   dib = example_stem_measurements$dib,
-#'   spcd = example_stem_measurements$spcd,
-#'   form = 'max_burkhart'
-#' )
-#'
-#' ## Show fit statistics with units
-#' fit$fit_statistics$overall %>%
-#'   rename(`measurements (count)` = n,
-#'          `root mean squared error (inches)` = rmse,
-#'          `mean residual (inches)` = bias)
+#' ## Inspect diameter errors in inches
+#' fit$fit_statistics$overall
 fit_taper <- function(
   tree_id,
   dbh,
@@ -1127,17 +1158,34 @@ plot.taper_fit <- function(x, ...) {
   invisible(x)
 }
 
-#' Use a fitted taper relationship in stem calculations
+#' Convert a taper fit to a usable model
 #'
-#' @param x The fitted taper relationship supplies the model coefficients. A taper_fit object.
-#'   Required, with no default.
-#' @param model Identifier to assign to the fitted model. Character scalar, required.
-#' @param stump_ht Stump height above ground. Numeric scalar, feet, default `1`.
-#' @param bark_ratio Inside to outside diameter ratio. Numeric scalar, default `NA_real_`.
-#' @param source Model provenance. Character scalar, default `NULL` uses the equation citation
-#'   and fitted note. The fitted species scope is retained.
-#' @return A taper_model object with fitted coefficients and provenance, ready for
-#'   register_taper_model().
+#' Create a model from fitted population coefficients, retaining the fitted species scope.
+#'   Registration is a separate step.
+#'
+#' @param x Fitted relationship returned by [fit_taper()]. Required, without a default. The
+#'   converted model uses population coefficients rather than group-specific adjustments.
+#' @param model Identifier for the new equation as a nonempty character scalar. Required, with no
+#'   default. Private registrations require a namespaced identifier containing a dot, such as
+#'   `'local.profile'`.
+#' @param stump_ht Default stump height above ground, in feet. Accepts one finite nonnegative
+#'   number. Defaults to `1`. Stored in the model's internal height units without changing public
+#'   input units.
+#' @param bark_ratio Inside bark diameter divided by outside bark diameter. Accepts a single
+#'   finite number greater than zero and no greater than one, or `NA`. Defaults to `NA_real_`,
+#'   leaving the ratio unspecified. Enables a constant-ratio outside bark calculation where
+#'   needed.
+#' @param source Provenance for the equation as a single character string. Defaults to `NULL`,
+#'   using the form citation where available. Stored with the model for later inspection.
+#' @return A `taper_model` list containing `id` (identifier), `form` (equation form),
+#' `kernel` (implementation and capability metadata), `dib`, `dob`, `height_at_dib`,
+#' and `volume` (callbacks or absent optional callbacks), `inputs` (required, optional,
+#' and paired auxiliary names), `measurement_system` (internal units), `spcd` (species
+#' scope), `stump_ht` (feet for imperial models or meters for metric models),
+#' `bark_ratio` (inside-to-outside diameter ratio), `source` (provenance), `notes`,
+#' `data` (equation data or coefficients), and `class_version`. The optional
+#' `oracle_verified` attribute records source-fixture verification. Public calls
+#' continue to accept inches and feet regardless of stored coefficient units.
 #' @usage
 #' as_taper_model(
 #'   x,
@@ -1148,25 +1196,16 @@ plot.taper_fit <- function(x, ...) {
 #' )
 #' @export
 #' @examples
-#' ## Fit the shipped synthetic stem measurements.
-#' fitted <- fit_taper(
-#'   tree_id = example_stem_measurements$tree_id,
-#'   dbh = example_stem_measurements$dbh,
-#'   ht = example_stem_measurements$ht,
-#'   h = example_stem_measurements$h,
-#'   dib = example_stem_measurements$dib,
-#'   spcd = example_stem_measurements$spcd,
-#'   form = 'max_burkhart'
-#' )
+#' ## Fit a profile to the shipped stem measurements
+#' fit <- fit_taper(tree_id = example_stem_measurements$tree_id,
+#'                  dbh = example_stem_measurements$dbh,
+#'                  ht = example_stem_measurements$ht,
+#'                  h = example_stem_measurements$h,
+#'                  dib = example_stem_measurements$dib,
+#'                  spcd = example_stem_measurements$spcd)
 #'
-#' ## Prepare the fitted relationship for registration.
-#' local_model <- as_taper_model(
-#'   x = fitted,
-#'   model = 'example.fitted'
-#' )
-#'
-#' ## Inspect the local model
-#' print(local_model)
+#' ## Inspect the model created from population coefficients
+#' print(as_taper_model(x = fit, model = 'local.profile'))
 as_taper_model <- function(
   x,
   model,

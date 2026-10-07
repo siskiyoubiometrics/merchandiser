@@ -2,32 +2,36 @@
 % Please edit documentation in R/stem-registry.R
 \name{register_taper_model}
 \alias{register_taper_model}
-\title{Make a local taper equation available for this analysis}
+\title{Register a private taper model for the session}
 \usage{
 register_taper_model(
   x
 )
 }
 \arguments{
-\item{x}{The taper specification supplies the equation to register. A taper_model object.
-Required, with no default.}
+\item{x}{Model returned by \code{\link[=new_taper_model]{new_taper_model()}}, \code{\link[=as_taper_model]{as_taper_model()}}, or
+\code{\link[=taper_model_from_coefficients]{taper_model_from_coefficients()}}. Required, without a default. Its identifier and callback
+behavior are validated before registration.}
 }
 \value{
-The validated taper_model object, invisibly, after registration.
+The validated \code{taper_model} described in \code{\link[=new_taper_model]{new_taper_model()}}, invisibly. The session
+registry is updated after validation.
 }
 \description{
-Make a local taper equation available for this analysis
+Validate and register a model for use in stem calculations. Private identifiers must contain a
+dot. Existing registrations cannot be replaced without first removing the private
+registration.
 }
 \examples{
-## Copy an example tree's model
+## Copy the first shipped tree's equation under a private identifier
 local_model <- get_taper_model(model = example_trees$model[1])
 
-## Name the local copy
-local_model$id <- 'example.register'
+## Assign a private identifier to the copied model
+local_model$id <- 'local.example'
 
-## Register the copy
-register_taper_model(x = local_model)
+## Register and inspect the private copy
+print(register_taper_model(x = local_model))
 
-## Remove and report the local registration
-print(unregister_taper_model(model = local_model$id))
+## Remove the temporary registration
+unregister_taper_model(model = local_model$id)
 }

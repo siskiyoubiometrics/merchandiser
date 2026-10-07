@@ -4,26 +4,32 @@
   runtime
 })
 
-#' Choose the number of calculation workers
+#' Inspect or set the calculation thread limit
 #'
-#' @param n The worker count controls how many threads may evaluate trees. Numeric scalar, number
-#'   of threads, a whole number of at least one. Counts above the detected core count
-#'   are clamped with a warning. Default: \code{NULL}.
-#' @return The current worker count, or the previous worker count when `n` is supplied.
+#' Control the worker limit used by parallel tree calculations. Initialization reads
+#'   MERCHANDISER_THREADS, then TREEVOLUME_THREADS, and otherwise starts with one worker.
+#'
+#' @param n Requested thread count as one finite whole number of at least one. Defaults to `NULL`
+#'   to report the current count. Larger requests are limited to the available cores, and builds
+#'   without parallel support use one.
+#' @return With `n = NULL`, the current integer thread limit. With a count supplied, the previous
+#'   limit after setting the new one. Counts are limited to available cores, and nonparallel
+#'   builds use one worker.
 #' @usage
 #' threads(
 #'   n = NULL
 #' )
 #' @export
 #' @examples
-#' ## Read the current worker setting before changing it.
-#' previous <- threads()
+#' ## Inspect the active calculation limit
+#' threads()
 #'
-#' ## Use one worker for a local calculation.
-#' threads(n = 1)
-#'
-#' ## Restore the original setting.
-#' threads(n = previous)
+#' ## Measure the example trees under a temporary single-worker limit
+#' with_threads(n = 1,
+#'              code = dib(dbh = example_trees$dbh,
+#'                         ht = example_trees$ht,
+#'                         h = 20,
+#'                         spcd = example_trees$spcd))
 threads <- function(n = NULL) {
   if (is.null(n)) {
     return(.tv_runtime$threads)
@@ -48,14 +54,18 @@ threads <- function(n = NULL) {
   as.integer(n)
 }
 
-#' Evaluate code with a temporary merchandiser thread count
+#' Evaluate a calculation with a temporary thread limit
 #'
-#' @param n The worker count controls how many threads may evaluate trees. Numeric scalar, number
-#'   of threads, a whole number of at least one. Counts above the detected core count
-#'   are clamped with a warning. Required, with no default.
-#' @param code The expression runs with the requested worker count and then restores the previous
-#'   count. Unevaluated R expression. Required, with no default.
-#' @return The value of code, with the previous worker count restored afterward.
+#' Set a worker limit for one expression and restore the previous setting afterward, including
+#'   when evaluation fails. Use this wrapper to limit workers within a larger script.
+#'
+#' @param n Requested thread count as one finite whole number of at least one. Required, without
+#'   a default. Larger requests are limited to the available cores, and builds without parallel
+#'   support use one.
+#' @param code Expression to evaluate under the temporary limit. Required, without a default.
+#'   Evaluation occurs in the calling environment.
+#' @return The value returned by `code`, with its visibility preserved. The prior thread setting
+#'   is restored.
 #' @usage
 #' with_threads(
 #'   n,
@@ -63,17 +73,12 @@ threads <- function(n = NULL) {
 #' )
 #' @export
 #' @examples
-#' ## Load data verbs
-#' library(dplyr)
-#'
-#' ## Measure an example stem with temporary workers
-#' with_threads(n = 4,
-#'              code = dib(dbh = example_trees$dbh[1],
-#'                         ht = example_trees$ht[1],
+#' ## Measure the example trees under a temporary single-worker limit
+#' with_threads(n = 1,
+#'              code = dib(dbh = example_trees$dbh,
+#'                         ht = example_trees$ht,
 #'                         h = 20,
-#'                         spcd = example_trees$spcd[1],
-#'                         model = example_trees$model[1])) %>%
-#'   rename(`diameter inside bark (inches)` = value)
+#'                         spcd = example_trees$spcd))
 with_threads <- function(n, code) {
   if (is.null(n))
     stop("n must be one integer of at least one.", call. = FALSE)

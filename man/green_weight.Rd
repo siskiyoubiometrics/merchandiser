@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-green_weight.R
 \name{green_weight}
 \alias{green_weight}
-\title{Convert cubic volume to merchandising weight}
+\title{Convert solid stem volume to merchandising weight}
 \usage{
 green_weight(
   volume,
@@ -18,58 +18,61 @@ green_weight(
 )
 }
 \arguments{
-\item{volume}{The cubic volume is the amount of solid wood to weigh. Numeric vector, cubic
-feet. Required, with no default.}
+\item{volume}{Solid stem volume, in cubic feet, as a nonnegative numeric vector. Required,
+without a default. \code{inside_bark} identifies whether the supplied volume contains bark.}
 
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Required, with no default.}
+\item{spcd}{Species identifiers as numeric positive whole-number codes recognized by the
+species-property lookup. Required, without a default. A recognized species is still required
+when wood or bark properties are overridden.}
 
-\item{inside_bark}{The bark flag says whether the supplied volume excludes bark. Logical,
-TRUE for volume inside bark and FALSE for volume including bark. Default: \code{TRUE}.}
+\item{inside_bark}{Basis of the supplied solid volume, as \code{TRUE} or \code{FALSE} per row. Defaults
+to \code{TRUE} for wood volume excluding bark. With \code{FALSE}, bark volume is separated using the
+bark-to-wood volume ratio. Missing values produce missing results with status.}
 
-\item{component}{The component selects the part of the tree to measure. Character scalar,
-'stem', 'wood', or 'bark'. Default: \code{'stem'}.}
+\item{component}{Mass component as a character vector. Accepts \code{'stem'}, \code{'wood'}, or
+\code{'bark'}. Defaults to \code{'stem'}, including wood and attached bark even when the volume input
+is inside bark.}
 
-\item{moisture}{The moisture choice selects green or dry merchandising weight. Character
-scalar, 'green' or 'dry'. Default: \code{'green'}.}
+\item{moisture}{Mass basis as a character vector. Accepts \code{'green'} or \code{'dry'}. Defaults to
+\code{'green'}, adding moisture to dry wood and bark mass. \code{'dry'} excludes moisture but retains
+the selected components.}
 
-\item{specific_gravity}{The wood specific gravity replaces the species table value. Numeric
-vector, ratio to water density. Default: \code{NULL}.}
+\item{specific_gravity}{Wood specific gravity as finite numeric values greater than zero and
+no greater than two. Defaults to \code{NULL}, using species properties. Overrides apply only to
+the wood component.}
 
-\item{moisture_pct}{The wood moisture replaces the species table value. Numeric vector, percent
-of dry mass. Default: \code{NULL}.}
+\item{moisture_pct}{Wood moisture as percent of dry mass, from 0 through 300. Defaults to
+\code{NULL}, using species properties. Used only for green mass.}
 
-\item{bark_specific_gravity}{The bark specific gravity replaces the species table value.
-Numeric vector, ratio to water density. Default: \code{NULL}.}
+\item{bark_specific_gravity}{Bark specific gravity as finite numeric values greater than zero
+and no greater than two. Defaults to \code{NULL}, using species properties. Overrides apply to
+the bark component.}
 
-\item{bark_moisture_pct}{The bark moisture replaces the species table value. Numeric vector,
-percent of dry mass. Default: \code{NULL}.}
+\item{bark_moisture_pct}{Bark moisture as percent of dry mass, from 0 through 300. Defaults to
+\code{NULL}, using species properties. Used only for green mass.}
 
-\item{bark_volume_pct}{The bark volume replaces the species table value. Numeric vector,
-percent of inside-bark wood volume. Default: \code{NULL}.}
+\item{bark_volume_pct}{Bark volume as percent of inside bark wood volume, from 0 through 100.
+Defaults to \code{NULL}, using species properties. Determines attached bark volume or separates
+an outside bark volume.}
 }
 \value{
-A data frame with value (merchandising weight, short tons) and status
-(integer result code), one row per input row.
+A data frame in input order with \code{value} (short tons on the selected component and
+moisture basis) and \code{status} (integer result code). Scalar inputs recycle across rows.
 }
 \description{
-Convert cubic volume to merchandising weight
-}
-\details{
-Specific gravities must be at most 2. Wood and bark moisture percentages must be at
-most 300. Bark volume percentage must be at most 100.
+Convert solid wood volume to wood, bark, or combined stem weight using species properties and
+optional overrides. This function returns short tons for merchandising, rather than biomass
+carbon.
 }
 \examples{
-## Load data verbs
-library(dplyr)
-
-## Measure the first example stem
+## Calculate solid volume before converting to weight
 volume <- stem_volume(dbh = example_trees$dbh[1],
                       ht = example_trees$ht[1],
-                      spcd = example_trees$spcd[1])
+                      spcd = example_trees$spcd[1],
+                      model = example_trees$model[1])
 
-## Convert volume using its species properties
+## Inspect green stem weight including attached bark
 green_weight(volume = volume$value,
-             spcd = example_trees$spcd[1]) \%>\%
-  rename(`green weight (short tons)` = value)
+             spcd = example_trees$spcd[1],
+             inside_bark = TRUE)
 }

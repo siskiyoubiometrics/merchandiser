@@ -9,29 +9,46 @@ products(
 )
 }
 \arguments{
-\item{...}{Supply product rows in the order they should be cut. Data frames from \code{\link[=product]{product()}},
-with the units recorded there, supply at least one product.}
+\item{...}{One or more product rows or tables from \code{\link[=product]{product()}}. Required, without a default.
+Rows are combined in argument order, with duplicate product names rejected.}
 }
 \value{
-A \code{merch_products} data frame with the columns and units listed in \code{\link[=product]{product()}}.
-Rows retain the supplied order.
+A multiple-row \code{merch_products} data frame with all specification fields:
+\itemize{
+\item \code{product}: label. \code{spcd}: list column of allowed numeric codes.
+\item \code{min_dbh}, \code{max_dbh}: outside bark diameter limits, inches.
+\item \code{min_age}, \code{max_age}: age limits, years. \code{requires_pruned}: pruning requirement.
+\item \code{min_length}, \code{max_length}, \code{length_round}, \code{trim}: lengths, feet.
+\item \code{min_sed}, \code{max_sed}, \code{min_led}, \code{max_led}: end diameter limits, inches.
+\item \code{inside_bark}: diameter basis. \code{max_sweep}: percent. \code{max_logs}: count per segment.
+\item \code{volume_unit}: scale rule. \code{split_scale}: split-scaling choice. \code{round}: rounding choice.
+\item \code{cord_solid_fraction}: solid-to-stacked volume fraction.
+\item \code{price}: currency amount. \code{price_per}: scale units per price.
+}
 }
 \description{
-Cascade uses product order as cutting priority: the first product is offered the stem first.
-Optimization ignores product order.
-Each cull or restriction boundary starts a fresh segment and restarts this order.
+Combine validated product rows into a specification. Under the default cascade strategy,
+earlier rows receive the first opportunity to use each available stem section.
 }
 \examples{
-## Define an unpriced product
-saw <- product(product = 'domestic_saw',  ## name, unitless
+## Define an unpriced cubic-foot product
+saw <- product(product = 'saw',  ## product label
                min_length = 16,  ## feet
-               max_length = 40,  ## feet
-               min_sed = 6,  ## inches
-               volume_unit = 'scribner')  ## board feet
+               max_length = 32,  ## feet
+               min_sed = 6,  ## inches inside bark
+               volume_unit = 'cubic')  ## cubic feet
 
-## Combine rows in cutting priority order
-specifications <- products(saw = saw)
+## Combine the specification before cutting
+specifications <- products(saw)
 
-## Show the product order
-specifications$product
+## Select logs from the shipped trees
+result <- merchandise(tree_id = example_trees$tree_id,
+                      dbh = example_trees$dbh,
+                      ht = example_trees$ht,
+                      spcd = example_trees$spcd,
+                      products = specifications,
+                      model = example_trees$model)
+
+## Inspect selected products
+head(result$logs)
 }

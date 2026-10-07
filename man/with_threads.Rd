@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-threads.R
 \name{with_threads}
 \alias{with_threads}
-\title{Evaluate code with a temporary merchandiser thread count}
+\title{Evaluate a calculation with a temporary thread limit}
 \usage{
 with_threads(
   n,
@@ -10,29 +10,26 @@ with_threads(
 )
 }
 \arguments{
-\item{n}{The worker count controls how many threads may evaluate trees. Numeric scalar, number
-of threads, a whole number of at least one. Counts above the detected core count
-are clamped with a warning. Required, with no default.}
+\item{n}{Requested thread count as one finite whole number of at least one. Required, without
+a default. Larger requests are limited to the available cores, and builds without parallel
+support use one.}
 
-\item{code}{The expression runs with the requested worker count and then restores the previous
-count. Unevaluated R expression. Required, with no default.}
+\item{code}{Expression to evaluate under the temporary limit. Required, without a default.
+Evaluation occurs in the calling environment.}
 }
 \value{
-The value of code, with the previous worker count restored afterward.
+The value returned by \code{code}, with its visibility preserved. The prior thread setting
+is restored.
 }
 \description{
-Evaluate code with a temporary merchandiser thread count
+Set a worker limit for one expression and restore the previous setting afterward, including
+when evaluation fails. Use this wrapper to limit workers within a larger script.
 }
 \examples{
-## Load data verbs
-library(dplyr)
-
-## Measure an example stem with temporary workers
-with_threads(n = 4,
-             code = dib(dbh = example_trees$dbh[1],
-                        ht = example_trees$ht[1],
+## Measure the example trees under a temporary single-worker limit
+with_threads(n = 1,
+             code = dib(dbh = example_trees$dbh,
+                        ht = example_trees$ht,
                         h = 20,
-                        spcd = example_trees$spcd[1],
-                        model = example_trees$model[1])) \%>\%
-  rename(`diameter inside bark (inches)` = value)
+                        spcd = example_trees$spcd))
 }

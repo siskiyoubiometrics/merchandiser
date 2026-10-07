@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-registry.R
 \name{check_taper_models}
 \alias{check_taper_models}
-\title{Check equation assignments and required tree measurements}
+\title{Check model identifiers, scope, and required inputs}
 \usage{
 check_taper_models(
   model,
@@ -11,24 +11,32 @@ check_taper_models(
 )
 }
 \arguments{
-\item{model}{The identifier names the taper model in the registry. Character vector of model
-identifiers. Required, with no default.}
+\item{model}{Equation identifiers as a character vector. Required, without a default. Scalar
+identifiers recycle to the supplied species or auxiliary input count.}
 
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Default: \code{NULL}.}
+\item{spcd}{Numeric species codes to check against model scope, or \code{NULL}. Defaults to \code{NULL},
+omitting scope checks. Other model and auxiliary checks still run.}
 
-\item{...}{Extra tree measurements allow the model inputs to be checked. Named numeric
-vectors, diameters in inches and heights in feet. No extra measurements by default.}
+\item{...}{Additional named inputs accepted by the selected model, with none supplied by
+default. Numeric inputs must be finite: positive \code{upper_ht1}, \code{upper_ht2}, and \code{site_index}
+use feet, positive \code{upper_d1} and \code{upper_d2} use inches, and positive \code{basal_area} uses
+square feet per acre. \code{form_class} accepts positive numbers. \code{bark_ratio} is inside diameter
+divided by outside diameter, greater than zero and no greater than one. \code{decay_class}
+accepts whole numbers from 1 through 5 and \code{cull} accepts percentages from 0 through 100.
+\code{upper_bark} accepts \code{'ib'} or \code{'ob'}. Upper heights and diameters must be supplied in
+pairs. Only inputs declared by the selected model are accepted.}
 }
 \value{
-A data frame with row (input row number), id (model identifier), status (integer status
-code), problem (problem name), and input (affected argument name). An empty table means no
-problems were found.
+A data frame containing problem rows only, with \code{row} (input position), \code{id} (model
+identifier), \code{status} (integer code), \code{problem} (description), and \code{input} (related input
+name). An empty table means no checked problem was found.
 }
 \description{
-Check equation assignments and required tree measurements
+Diagnose unavailable equations, incompatible species, missing auxiliary measurements, and
+invalid auxiliary values. This does not assess statistical fit accuracy.
 }
 \examples{
-## Check the example model identifiers.
-check_taper_models(model = example_trees$model)
+## Check the equations and species stored with the example trees
+check_taper_models(model = example_trees$model,
+                   spcd = example_trees$spcd)
 }

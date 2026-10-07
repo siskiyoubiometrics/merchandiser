@@ -16,12 +16,17 @@ A data frame with the following columns:
 default_taper_models
 }
 \description{
-Species-specific models are selected from Region 6, then Region 8, then Region 9 lookups.
+Species defaults retain a source equation with matching species scope.
 A default must resolve to exactly that species and require no extra measurements.
 Species without an accepted model have no row.
 }
 \examples{
 ## Inspect the shipped defaults for the example species
-default_taper_models[default_taper_models$spcd \%in\% example_trees$spcd, ]
+library(dplyr)
+
+## Retain equation assignments for the example species
+default_taper_models \%>\%
+  filter(spcd \%in\% example_trees$spcd) \%>\%
+  select(spcd, model)
 }
 \keyword{datasets}

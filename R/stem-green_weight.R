@@ -52,33 +52,41 @@
   value
 }
 
-#' Convert cubic volume to merchandising weight
+#' Convert solid stem volume to merchandising weight
 #'
-#' @param volume The cubic volume is the amount of solid wood to weigh. Numeric vector, cubic
-#'   feet. Required, with no default.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param inside_bark The bark flag says whether the supplied volume excludes bark. Logical,
-#'   TRUE for volume inside bark and FALSE for volume including bark. Default: \code{TRUE}.
-#' @param component The component selects the part of the tree to measure. Character scalar,
-#'   'stem', 'wood', or 'bark'. Default: \code{'stem'}.
-#' @param moisture The moisture choice selects green or dry merchandising weight. Character
-#'   scalar, 'green' or 'dry'. Default: \code{'green'}.
-#' @param specific_gravity The wood specific gravity replaces the species table value. Numeric
-#'   vector, ratio to water density. Default: \code{NULL}.
-#' @param moisture_pct The wood moisture replaces the species table value. Numeric vector, percent
-#'   of dry mass. Default: \code{NULL}.
-#' @param bark_specific_gravity The bark specific gravity replaces the species table value.
-#'   Numeric vector, ratio to water density. Default: \code{NULL}.
-#' @param bark_moisture_pct The bark moisture replaces the species table value. Numeric vector,
-#'   percent of dry mass. Default: \code{NULL}.
-#' @param bark_volume_pct The bark volume replaces the species table value. Numeric vector,
-#'   percent of inside-bark wood volume. Default: \code{NULL}.
-#' @details
-#' Specific gravities must be at most 2. Wood and bark moisture percentages must be at
-#'   most 300. Bark volume percentage must be at most 100.
-#' @return A data frame with value (merchandising weight, short tons) and status
-#'   (integer result code), one row per input row.
+#' Convert solid wood volume to wood, bark, or combined stem weight using species properties and
+#'   optional overrides. This function returns short tons for merchandising, rather than biomass
+#'   carbon.
+#'
+#' @param volume Solid stem volume, in cubic feet, as a nonnegative numeric vector. Required,
+#'   without a default. `inside_bark` identifies whether the supplied volume contains bark.
+#' @param spcd Species identifiers as numeric positive whole-number codes recognized by the
+#'   species-property lookup. Required, without a default. A recognized species is still required
+#'   when wood or bark properties are overridden.
+#' @param inside_bark Basis of the supplied solid volume, as `TRUE` or `FALSE` per row. Defaults
+#'   to `TRUE` for wood volume excluding bark. With `FALSE`, bark volume is separated using the
+#'   bark-to-wood volume ratio. Missing values produce missing results with status.
+#' @param component Mass component as a character vector. Accepts `'stem'`, `'wood'`, or
+#'   `'bark'`. Defaults to `'stem'`, including wood and attached bark even when the volume input
+#'   is inside bark.
+#' @param moisture Mass basis as a character vector. Accepts `'green'` or `'dry'`. Defaults to
+#'   `'green'`, adding moisture to dry wood and bark mass. `'dry'` excludes moisture but retains
+#'   the selected components.
+#' @param specific_gravity Wood specific gravity as finite numeric values greater than zero and
+#'   no greater than two. Defaults to `NULL`, using species properties. Overrides apply only to
+#'   the wood component.
+#' @param moisture_pct Wood moisture as percent of dry mass, from 0 through 300. Defaults to
+#'   `NULL`, using species properties. Used only for green mass.
+#' @param bark_specific_gravity Bark specific gravity as finite numeric values greater than zero
+#'   and no greater than two. Defaults to `NULL`, using species properties. Overrides apply to
+#'   the bark component.
+#' @param bark_moisture_pct Bark moisture as percent of dry mass, from 0 through 300. Defaults to
+#'   `NULL`, using species properties. Used only for green mass.
+#' @param bark_volume_pct Bark volume as percent of inside bark wood volume, from 0 through 100.
+#'   Defaults to `NULL`, using species properties. Determines attached bark volume or separates
+#'   an outside bark volume.
+#' @return A data frame in input order with `value` (short tons on the selected component and
+#'   moisture basis) and `status` (integer result code). Scalar inputs recycle across rows.
 #' @usage
 #' green_weight(
 #'   volume,
@@ -94,18 +102,16 @@
 #' )
 #' @export
 #' @examples
-#' ## Load data verbs
-#' library(dplyr)
-#'
-#' ## Measure the first example stem
+#' ## Calculate solid volume before converting to weight
 #' volume <- stem_volume(dbh = example_trees$dbh[1],
 #'                       ht = example_trees$ht[1],
-#'                       spcd = example_trees$spcd[1])
+#'                       spcd = example_trees$spcd[1],
+#'                       model = example_trees$model[1])
 #'
-#' ## Convert volume using its species properties
+#' ## Inspect green stem weight including attached bark
 #' green_weight(volume = volume$value,
-#'              spcd = example_trees$spcd[1]) %>%
-#'   rename(`green weight (short tons)` = value)
+#'              spcd = example_trees$spcd[1],
+#'              inside_bark = TRUE)
 green_weight <- function(
   volume,
   spcd,

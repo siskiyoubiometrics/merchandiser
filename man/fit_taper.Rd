@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-taper_fit.R
 \name{fit_taper}
 \alias{fit_taper}
-\title{Fit a taper model to stem-analysis data}
+\title{Fit taper coefficients to repeated stem measurements}
 \usage{
 fit_taper(
   tree_id,
@@ -18,75 +18,84 @@ fit_taper(
 )
 }
 \arguments{
-\item{tree_id}{Identify each measurement's tree. Atomic vector, unitless, required.}
+\item{tree_id}{Tree identifiers repeated for measurements from the same tree, as an atomic
+vector. Required, without a default. Breast-height diameter and total height must remain
+constant within each identifier.}
 
-\item{dbh}{Diameter at breast height outside bark. Numeric vector, inches, required.}
+\item{dbh}{Outside bark diameter at breast height, in inches. Accepts numeric values greater
+than zero and no greater than 400. Required, with no default. Invalid measurement rows
+are omitted with a warning.}
 
-\item{ht}{Total tree height above ground. Numeric vector, feet, required.}
+\item{ht}{Total height above ground, in feet. Accepts numeric values greater than zero and no
+greater than 500. Required, with no default. Heights must be constant within each tree
+identifier, and its measurement heights cannot exceed this total.}
 
-\item{h}{Measurement height above ground. Numeric vector, feet, required.}
+\item{h}{Measurement height above ground, in feet. Accepts numeric values from zero through
+total height, inclusive. Required, with no default.}
 
-\item{dib}{Measured inside bark diameter. Numeric vector, inches, required.}
+\item{dib}{Observed inside bark diameter at \code{h}, in inches. Accepts numeric values from zero
+through 400. Required, without a default. Nonfinite or invalid measurement rows are omitted
+with a warning.}
 
-\item{spcd}{Species code of each measurement's tree. Numeric vector, required.
-The fitted species scope is the sorted unique set of measured codes.}
+\item{spcd}{Species identifiers as numeric positive whole-number codes present in
+species_reference. Required, without a default. Retained observations determine the fitted
+model's species scope. Unrecognized species rows are omitted with a warning.}
 
-\item{form}{Equation form to fit. Character scalar, default \code{'max_burkhart'}.
-Choices are \code{'max_burkhart'}, \code{'kozak_1988'}, and \code{'kozak_2002'}.}
+\item{form}{Equation form as one character string. Accepts \code{'max_burkhart'}, \code{'kozak_1988'},
+or \code{'kozak_2002'}. Defaults to \code{'max_burkhart'}. The form determines coefficient names,
+order, and constraints.}
 
-\item{group}{Trees in the same group share a local height or taper adjustment. Atomic vector of
-group identifiers. Default: \code{NULL}.}
+\item{group}{Group identifiers matching measurement rows, as an atomic vector. Defaults to
+\code{NULL} for an ordinary nonlinear fit. Multiple groups request a mixed effects fit, with a
+random effect on \code{b1} for the segmented form or the Kozak scale parameter. A single group
+falls back with a warning.}
 
-\item{weights}{The weights control the contribution of each measured diameter to the fit.
-Numeric vector, relative weights. Default: \code{NULL}.}
+\item{weights}{Relative observation weights as positive finite numeric values matching
+measurements. Defaults to \code{NULL}, assigning equal weight. Larger weights increase a
+measurement's contribution to fitting.}
 
-\item{start}{Starting coefficients give the fitting routine an initial estimate. Named numeric
-vector. Default: \code{NULL}.}
+\item{start}{Starting coefficients as a finite named numeric vector matching the selected
+form, or \code{NULL}. Defaults to \code{NULL}, using the built-in starting search. Starts must satisfy
+the form's coefficient constraints.}
 }
 \value{
-A \code{taper_fit} object with coefficients, form, species scope, fitting method,
-convergence details, the fitted model, and these diagnostic tables.
-\code{residual_diagnostics} has \code{tree_id} (identifier), \code{dbh}, \code{observed_dib},
-\code{fitted_dib}, \code{population_fitted_dib}, and \code{residual} (inches), \code{ht} and \code{h}
-(feet), \code{relative_height} (height fraction), and \code{standardized_residual}
-(unitless). Optional \code{group} retains the supplied group identifiers.
-\code{fit_statistics$overall} has \code{n} (measurement count), \code{rmse} (root mean squared
-error, inches), and \code{bias} (mean residual, inches).
-\code{fit_statistics$by_relative_height} adds \code{relative_height_class} (height-fraction
-interval) to those columns. \code{random_effects} has \code{group} (identifier) and \code{effect}
-(adjustment on the fitted parameter's internal scale).
-\code{data_metric} is the internal metric copy the fit uses for prediction. It has
-\code{tree_id}, \code{dbh}, \code{dib} (centimeters), \code{ht}, \code{h} (meters), and
-\code{weight} (relative weight), with optional \code{group} and \code{p_fixed}
-(relative inflection height). Published equations retain their native metric
-coefficients. Inputs, predictions, and diagnostics use inches and feet.
+A \code{taper_fit} list containing:
+\itemize{
+\item \code{form}, \code{coefficients} (metric equation scale), \code{spcd} (species scope),
+\code{n_trees}, \code{n_measurements} (counts), \code{groups_seen}, \code{method}, \code{measurement_system},
+\code{input_measurement_system}, and \code{package_version}.
+\item \code{fit_statistics}: \code{overall} and \code{by_relative_height} summaries with observation
+count \code{n}, diameter root mean squared error \code{rmse}, and mean residual \code{bias}
+in inches, plus \code{relative_height_class} (relative-height interval) for the latter table.
+\item \code{residual_diagnostics}: \code{tree_id}, \code{dbh} (inches), \code{ht} and \code{h} (feet),
+\code{relative_height} (height fraction), \code{observed_dib}, \code{fitted_dib},
+\code{population_fitted_dib}, \code{residual} (inches), \code{standardized_residual}
+(residual divided by its standard deviation), \code{spcd}, and optional \code{group}.
+\item \code{random_effects}: \code{group} and \code{effect} on the internal coefficient scale.
+\item \code{convergence}: optimizer outcome, attempt counts, and stop messages.
+\item \code{model}, \code{internal_coefficients}, and \code{random_parameter}: fitted object and
+its internal parameterization.
+\item \code{data_metric}: retained \code{tree_id}, \code{dbh} and \code{dib} (centimeters), \code{ht} and \code{h}
+(meters), \code{species} (numeric code), \code{weight} (relative fitting weight), and optional
+\code{group} (identifier) or \code{p_fixed} (reference-height fraction).
+The plot method compares observed and fitted relative diameters. Predictions
+return inches and use population coefficients for unseen groups.
+}
 }
 \description{
-Fit a taper model to stem-analysis data
-}
-\details{
-Invalid rows are omitted with one warning giving the count and reasons. Diameters
-must be at most 400 inches and total heights at most 500 feet. Species must occur
-in \code{species_reference}. Taper measurement heights must lie within the tree.
+Estimate population or grouped taper relationships from measured inside bark diameters. Public
+inputs and residual diagnostics use inches and feet. Fitting stores coefficients in
+centimeters and meters. Invalid measurements are omitted with a warning.
 }
 \examples{
-## Load data verbs
-library(dplyr)
+## Fit a profile to the shipped stem measurements
+fit <- fit_taper(tree_id = example_stem_measurements$tree_id,
+                 dbh = example_stem_measurements$dbh,
+                 ht = example_stem_measurements$ht,
+                 h = example_stem_measurements$h,
+                 dib = example_stem_measurements$dib,
+                 spcd = example_stem_measurements$spcd)
 
-## Fit the shipped synthetic stem measurements
-fit <- fit_taper(
-  tree_id = example_stem_measurements$tree_id,
-  dbh = example_stem_measurements$dbh,
-  ht = example_stem_measurements$ht,
-  h = example_stem_measurements$h,
-  dib = example_stem_measurements$dib,
-  spcd = example_stem_measurements$spcd,
-  form = 'max_burkhart'
-)
-
-## Show fit statistics with units
-fit$fit_statistics$overall \%>\%
-  rename(`measurements (count)` = n,
-         `root mean squared error (inches)` = rmse,
-         `mean residual (inches)` = bias)
+## Inspect diameter errors in inches
+fit$fit_statistics$overall
 }

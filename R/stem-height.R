@@ -311,29 +311,44 @@
   fit
 }
 
-#' Fit tree height from diameter and measured heights
+#' Fit height relationships by species and group
 #'
-#' @param dbh Diameter at breast height outside bark. Numeric vector,
-#'   inches, greater than zero and at most 400. Required, with no default.
-#' @param ht Total height above ground. Numeric vector, feet.
-#'   Required, with no default. Heights must be greater than zero and at most 500 feet.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param group Trees in the same group share a local height or taper adjustment. Atomic vector of
-#'   group identifiers. Default: \code{NULL}.
-#' @param form The equation form chooses the relationship to fit. Character scalar, equation name.
-#'   Default: \code{'chapman_richards'}.
-#' @param min_n The minimum sample size limits which species can receive a separate height fit.
-#'   Numeric scalar, number of measured trees. Default: \code{7}.
-#' @return A height_fit list. The data table has dbh (inches), ht (feet), spcd (species
-#'   code), and group (group identifier). The fixed_effects table has spcd, model_key,
-#'   pooled (logical), and equation coefficients a, b, and c for inputs in inches and feet.
-#'   The variance_components table has spcd, model_key, random_parameter (coefficient name),
-#'   random_effect_sd (coefficient standard deviation), and residual_sd (feet).
-#'   The random_effects table records model_key, group, and effect (local coefficient adjustment).
-#'   The n_by_species table has spcd (species code) and n (measured tree count).
-#'   Other elements retain the equation form, fitted models, model_map, internal_fixed_effects,
-#'   groups_seen, pooled_species, convergence_pooled_species, min_n, and package metadata.
+#' Fit pooled and species height relationships, optionally with group adjustments. Invalid rows
+#'   are omitted with a warning. Species below the minimum sample size or with an unsuccessful
+#'   fit use the pooled relationship.
+#'
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Rows with invalid measurements
+#'   are omitted with a warning.
+#' @param ht Measured total height above ground, in feet. Accepts numeric values greater than
+#'   zero and no greater than 500. Required, with no default. Valid measurements supply the
+#'   response for pooled and species fits.
+#' @param spcd Species identifiers as numeric positive whole-number codes within the R integer
+#'   range and present in species_reference. Required, without a default. Codes group
+#'   observations for species fits and need not have a registered taper equation. Unknown
+#'   species rows are omitted with a warning.
+#' @param group Group identifiers for shared adjustments, supplied as an atomic vector matching
+#'   the observations. Defaults to `NULL`, with no separate group assignments. Known groups use
+#'   their fitted adjustments for conditional predictions, while unseen groups use the population
+#'   relationship.
+#' @param form Height relationship as one character string. Accepts `'chapman_richards'`,
+#'   `'curtis'`, `'wykoff'`, `'naslund'`, or `'schumacher'`. Defaults to `'chapman_richards'`.
+#'   The selected form is used for pooled and species fits.
+#' @param min_n Minimum valid observations for a separate species fit, as one positive whole
+#'   number. Defaults to `7`. Species with fewer observations use the pooled model.
+#' @return A `height_fit` list containing:
+#' * `data`: retained `dbh` (inches), `ht` (feet), `spcd` (code), and `group` (identifier).
+#' * `fixed_effects`: `spcd` (code), `model_key` (identifier), `pooled` (indicator),
+#'   and equation coefficients `a`, `b`, `c` on the form-specific scale evaluated with
+#'   diameter in inches and height in feet. Unused coefficients are missing.
+#' * `variance_components`: `spcd`, `model_key`, `random_parameter`, `random_effect_sd`
+#'   (coefficient scale), and `residual_sd` (feet).
+#' * `random_effects`: `model_key`, `group`, and `effect` (internal coefficient scale).
+#' * `n_by_species`: `spcd` and `n` (observation count).
+#' * `form`, `min_n`, `groups_seen`, `pooled_species`, `convergence_pooled_species`,
+#'   `measurement_system`, and `package_version`: fitting choices and provenance.
+#' * `models`, `model_map`, and `internal_fixed_effects`: fitted model objects,
+#'   species-to-model assignments, and coefficients used for prediction.
 #' @usage
 #' fit_height(
 #'   dbh,
@@ -343,24 +358,20 @@
 #'   form = 'chapman_richards',
 #'   min_n = 7
 #' )
-#' @details
-#' Invalid rows are omitted with one warning giving the count and reasons. Diameters
-#'   must be at most 400 inches and total heights at most 500 feet. Species must occur
-#'   in `species_reference`.
 #' @export
 #' @examples
-#' ## Load data verbs
+#' ## Select measured heights from the shipped list
 #' library(dplyr)
 #'
-#' ## Select measured heights
-#' measured <- example_trees_pnw %>%
+#' ## Retain the tree rows used in this calculation
+#' trees <- example_trees_pnw %>%
 #'   filter(ht_status == 'measured')
 #'
-#' ## Fit and show measured heights with plot adjustments
-#' fit_height(dbh = measured$dbh,
-#'            ht = measured$ht,
-#'            spcd = measured$spcd,
-#'            group = measured$plot)
+#' ## Fit and inspect the relationship with plot adjustments
+#' fit_height(dbh = trees$dbh,
+#'            ht = trees$ht,
+#'            spcd = trees$spcd,
+#'            group = trees$plot)
 
 fit_height <- function(dbh, ht, spcd, group = NULL, form = "chapman_richards", min_n = 7) {
   form <- .scalar_character(form, "form", .height_forms)
@@ -566,28 +577,42 @@ print.height_fit <- function(x, ...) {
   list(lower = lower, upper = upper)
 }
 
-#' Predict tree height
+#' Predict tree heights and optional intervals
 #'
-#' @param fit The fitted height relationship supplies predictions for these trees. A height_fit
-#'   object. Required, with no default.
-#' @param dbh Diameter at breast height outside bark. Numeric vector,
-#'   inches, greater than zero and at most 400. Required, with no default.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param group Trees in the same group share a local height or taper adjustment. Atomic vector of
-#'   group identifiers. Default: \code{NULL}.
-#' @param re_form The prediction choice includes or leaves out local group adjustments. Character
-#'   scalar, 'conditional' or 'population'. Default: \code{'conditional'}.
-#' @param interval Choose whether to include an interval around each height prediction. Logical
-#'   scalar. Default: \code{FALSE}.
-#' @param level The interval level sets the share of the prediction distribution covered. Numeric
-#'   scalar, fraction between zero and one. Default: \code{0.95}.
-#' @param nsim The simulation count controls the number of draws for prediction intervals. Numeric
-#'   scalar, number of draws, at most 1e6. Default: \code{1000}.
-#' @param seed The random seed makes prediction intervals reproducible. Numeric scalar,
-#'   random-number seed. Default: \code{NULL}.
-#' @return Without intervals, a numeric vector of predicted heights in feet. With intervals, a
-#'   data frame with fit, lower, and upper (predicted height and lower and upper limits, feet).
+#' Predict total height from a fitted relationship. Conditional predictions use known group
+#'   adjustments, while missing or unseen groups use population values. Intervals simulate group
+#'   variation and residual error, holding fixed coefficients constant. They exclude coefficient
+#'   uncertainty and inventory sampling uncertainty.
+#'
+#' @param fit Fitted height relationship returned by [fit_height()]. Required, with no default.
+#'   Predictions use its species mapping and fitted group adjustments.
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Invalid rows return missing
+#'   heights, with warnings for invalid finite inputs.
+#' @param spcd Species identifiers as numeric positive whole-number codes within the R integer
+#'   range. Required, without a default. A code absent from the fitted species mapping returns a
+#'   missing prediction with a warning.
+#' @param group Group identifiers for shared adjustments, supplied as an atomic vector matching
+#'   the observations. Defaults to `NULL`, with no separate group assignments. Known groups use
+#'   their fitted adjustments for conditional predictions, while unseen groups use the population
+#'   relationship.
+#' @param re_form Adjustment basis as one character string. Accepts `'conditional'` or
+#'   `'population'`. Defaults to `'conditional'`, using available fitted group effects.
+#'   Population predictions omit those fitted adjustments.
+#' @param interval Whether to return simulated prediction intervals. Accepts one `TRUE` or
+#'   `FALSE`. Defaults to `FALSE`, returning a numeric vector. `TRUE` returns fitted values and
+#'   interval endpoints, with lower endpoints constrained to breast height.
+#' @param level Coverage requested for prediction intervals, as a single finite fraction strictly
+#'   between zero and one. Defaults to `0.95`. Used only when `interval = TRUE`.
+#' @param nsim Simulation count for intervals as one positive whole number, no greater than
+#'   1000000. Defaults to `1000`. More simulations refine the simulated quantiles without adding
+#'   coefficient uncertainty.
+#' @param seed Random seed as one nonnegative whole number within the R integer range, or `NULL`.
+#'   Defaults to `NULL`, using the current random state. A supplied seed makes interval
+#'   simulation repeatable.
+#' @return With `interval = FALSE`, a numeric vector of heights in feet. With `TRUE`, a data
+#'   frame with `fit`, `lower`, and `upper`, all in feet. Input order is retained. Species absent
+#'   from the fit return missing values with a warning.
 #' @usage
 #' predict_height(
 #'   fit,
@@ -602,16 +627,12 @@ print.height_fit <- function(x, ...) {
 #' )
 #' @export
 #' @examples
-#' ## Fit the shipped heights
-#' fit <- fit_height(dbh = example_trees_pnw$dbh,
-#'                   ht = example_trees_pnw$ht,
-#'                   spcd = example_trees_pnw$spcd,
-#'                   form = 'curtis')
-#'
-#' ## Predict the first example tree's height
-#' c(`height (feet)` = predict_height(fit = fit,
-#'                                    dbh = example_trees$dbh[1],
-#'                                    spcd = example_trees$spcd[1]))
+#' ## Fit and predict heights on the shipped example trees
+#' predict_height(fit = fit_height(dbh = example_trees$dbh,
+#'                                 ht = example_trees$ht,
+#'                                 spcd = example_trees$spcd),
+#'                dbh = example_trees$dbh,
+#'                spcd = example_trees$spcd)
 predict_height <- function(
   fit, dbh, spcd, group = NULL, re_form = "conditional", interval = FALSE,
   level = 0.95, nsim = 1000, seed = NULL
@@ -695,20 +716,33 @@ predict_height <- function(
   )
 }
 
-#' Complete missing tree heights
+#' Fill missing heights while retaining measured values
 #'
-#' @param dbh Diameter at breast height outside bark. Numeric vector,
-#'   inches, greater than zero and at most 400. Required, with no default.
-#' @param ht Total height above ground. Numeric vector, feet.
-#'   Required, with no default. Heights must be greater than zero and at most 500 feet.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param group Trees in the same group share a local height or taper adjustment. Atomic vector of
-#'   group identifiers. Default: \code{NULL}.
-#' @param fit The fitted height relationship supplies predictions for these trees. A height_fit
-#'   object. Default: \code{NULL}.
-#' @return A numeric vector of heights in feet, preserving observed heights and filling missing
-#'   heights in input order.
+#' Complete nonfinite heights from a fitted diameter-height relationship. Measured heights
+#'   are preserved only on rows with valid diameter, height, and species inputs. Invalid finite
+#'   rows generate a warning and remain missing.
+#'
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Invalid rows return missing
+#'   heights, with warnings for invalid finite inputs.
+#' @param ht Measured total height above ground, in feet. Accepts numeric values greater than
+#'   zero and no greater than 500, or nonfinite values to be predicted. Required, with no default.
+#'   Invalid finite rows remain missing. Nonfinite heights are completed from the supplied fit,
+#'   or from a fit to the remaining valid observations.
+#' @param spcd Species identifiers as numeric positive whole-number codes within the R integer
+#'   range. Required, without a default. Codes select relationships in the supplied fit or group
+#'   observations when a new fit is needed.
+#' @param group Group identifiers for shared adjustments, supplied as an atomic vector matching
+#'   the observations. Defaults to `NULL`, with no separate group assignments. Known groups use
+#'   their fitted adjustments for conditional predictions, while unseen groups use the population
+#'   relationship.
+#' @param fit Height fit returned by [fit_height()], or `NULL`. Defaults to `NULL`, fitting the
+#'   available valid heights with the supplied species and groups. Supplying a fit avoids
+#'   refitting.
+#' @return A numeric vector of total heights in feet, in input order. Measured values on rows
+#'   with valid diameter, height, and species inputs are unchanged. Missing predictions remain
+#'   `NA` when the fit cannot cover a species or an input
+#'   is invalid.
 #' @usage
 #' complete_heights(
 #'   dbh,
@@ -719,18 +753,18 @@ predict_height <- function(
 #' )
 #' @export
 #' @examples
-#' ## Load data verbs
+#' ## Remove stored predictions while preserving measurements
 #' library(dplyr)
 #'
-#' ## Blank and refill predicted heights with plot adjustments
-#' example_trees_pnw %>%
-#'   mutate(ht = if_else(condition = ht_status == 'predicted', true = NA_real_, false = ht)) %>%
-#'   mutate(ht = complete_heights(dbh = dbh,
-#'                                ht = ht,
-#'                                spcd = spcd,
-#'                                group = plot)) %>%
-#'   transmute(`height (feet)` = ht) %>%
-#'   head(n = 3)
+#' ## Retain the tree rows used in this calculation
+#' trees <- example_trees_pnw %>%
+#'   mutate(observed = if_else(ht_status == 'predicted', NA_real_, ht))
+#'
+#' ## Refit and inspect completed heights with the original plot groups
+#' head(complete_heights(dbh = trees$dbh,
+#'                       ht = trees$observed,
+#'                       spcd = trees$spcd,
+#'                       group = trees$plot))
 complete_heights <- function(dbh, ht, spcd, group = NULL, fit = NULL) {
   measurement_system <- "imperial"
   controls <- .height_completion_dots(list())

@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-taper_fit.R
 \name{as_taper_model}
 \alias{as_taper_model}
-\title{Use a fitted taper relationship in stem calculations}
+\title{Convert a taper fit to a usable model}
 \usage{
 as_taper_model(
   x,
@@ -13,43 +13,49 @@ as_taper_model(
 )
 }
 \arguments{
-\item{x}{The fitted taper relationship supplies the model coefficients. A taper_fit object.
-Required, with no default.}
+\item{x}{Fitted relationship returned by \code{\link[=fit_taper]{fit_taper()}}. Required, without a default. The
+converted model uses population coefficients rather than group-specific adjustments.}
 
-\item{model}{Identifier to assign to the fitted model. Character scalar, required.}
+\item{model}{Identifier for the new equation as a nonempty character scalar. Required, with no
+default. Private registrations require a namespaced identifier containing a dot, such as
+\code{'local.profile'}.}
 
-\item{stump_ht}{Stump height above ground. Numeric scalar, feet, default \code{1}.}
+\item{stump_ht}{Default stump height above ground, in feet. Accepts one finite nonnegative
+number. Defaults to \code{1}. Stored in the model's internal height units without changing public
+input units.}
 
-\item{bark_ratio}{Inside to outside diameter ratio. Numeric scalar, default \code{NA_real_}.}
+\item{bark_ratio}{Inside bark diameter divided by outside bark diameter. Accepts a single
+finite number greater than zero and no greater than one, or \code{NA}. Defaults to \code{NA_real_},
+leaving the ratio unspecified. Enables a constant-ratio outside bark calculation where
+needed.}
 
-\item{source}{Model provenance. Character scalar, default \code{NULL} uses the equation citation
-and fitted note. The fitted species scope is retained.}
+\item{source}{Provenance for the equation as a single character string. Defaults to \code{NULL},
+using the form citation where available. Stored with the model for later inspection.}
 }
 \value{
-A taper_model object with fitted coefficients and provenance, ready for
-register_taper_model().
+A \code{taper_model} list containing \code{id} (identifier), \code{form} (equation form),
+\code{kernel} (implementation and capability metadata), \code{dib}, \code{dob}, \code{height_at_dib},
+and \code{volume} (callbacks or absent optional callbacks), \code{inputs} (required, optional,
+and paired auxiliary names), \code{measurement_system} (internal units), \code{spcd} (species
+scope), \code{stump_ht} (feet for imperial models or meters for metric models),
+\code{bark_ratio} (inside-to-outside diameter ratio), \code{source} (provenance), \code{notes},
+\code{data} (equation data or coefficients), and \code{class_version}. The optional
+\code{oracle_verified} attribute records source-fixture verification. Public calls
+continue to accept inches and feet regardless of stored coefficient units.
 }
 \description{
-Use a fitted taper relationship in stem calculations
+Create a model from fitted population coefficients, retaining the fitted species scope.
+Registration is a separate step.
 }
 \examples{
-## Fit the shipped synthetic stem measurements.
-fitted <- fit_taper(
-  tree_id = example_stem_measurements$tree_id,
-  dbh = example_stem_measurements$dbh,
-  ht = example_stem_measurements$ht,
-  h = example_stem_measurements$h,
-  dib = example_stem_measurements$dib,
-  spcd = example_stem_measurements$spcd,
-  form = 'max_burkhart'
-)
+## Fit a profile to the shipped stem measurements
+fit <- fit_taper(tree_id = example_stem_measurements$tree_id,
+                 dbh = example_stem_measurements$dbh,
+                 ht = example_stem_measurements$ht,
+                 h = example_stem_measurements$h,
+                 dib = example_stem_measurements$dib,
+                 spcd = example_stem_measurements$spcd)
 
-## Prepare the fitted relationship for registration.
-local_model <- as_taper_model(
-  x = fitted,
-  model = 'example.fitted'
-)
-
-## Inspect the local model
-print(local_model)
+## Inspect the model created from population coefficients
+print(as_taper_model(x = fit, model = 'local.profile'))
 }

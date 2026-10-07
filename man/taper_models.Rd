@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-registry.R
 \name{taper_models}
 \alias{taper_models}
-\title{Find available taper equations by form or species}
+\title{List registered taper equations by form or species}
 \usage{
 taper_models(
   form = NULL,
@@ -10,33 +10,24 @@ taper_models(
 )
 }
 \arguments{
-\item{form}{Equation forms used by the taper models. Character vector. Default: \code{NULL}.}
+\item{form}{Equation form names as a character vector, or \code{NULL}. Defaults to \code{NULL},
+accepting every registered form. When supplied, only matching forms are returned.}
 
-\item{spcd}{The species codes limit the trees this model covers. Numeric vector of species
-codes. Default: \code{NULL}.}
+\item{spcd}{Species codes as numeric positive whole numbers, or \code{NULL}. Defaults to \code{NULL},
+imposing no species filter. Models with unrestricted scope remain eligible.}
 }
 \value{
-A data frame describing registered models:
-\itemize{
-\item Identification: \code{id}, \code{form}, \code{kernel}, \code{spcd_scope}.
-\item Logical capabilities: \code{has_dob}, \code{has_inverse}, \code{has_integral}.
-\item Verification: \code{oracle_verified}, logical.
-\item Internal units: \code{measurement_system} and \code{stump_ht} in that system's height unit.
-\item Registration: \code{owner_package}, \code{source}, \code{generation} (revision number).
-}
+A data frame with \code{id}, \code{form}, \code{kernel}, and \code{spcd_scope} (identification),
+\code{has_dob}, \code{has_inverse}, \code{has_integral} (capability indicators), \code{oracle_verified}
+(verification indicator), \code{measurement_system} (internal units), \code{stump_ht}
+(feet for imperial models or meters for metric models), \code{owner_package}
+(contributing package), \code{source} (provenance), and \code{generation} (registration order).
 }
 \description{
-Find available taper equations by form or species
+Inspect registered model capabilities and provenance. Dynamically resolved source identifiers
+need not appear in this registry list.
 }
 \examples{
-## Load data verbs
-library(dplyr)
-
-## List models covering an example species
-models <- taper_models(spcd = example_trees$spcd[1])
-
-## Show model identifiers and capabilities
-models \%>\%
-  select(id, form, has_dob, has_inverse, has_integral) \%>\%
-  head(n = 3)
+## Inspect registered models covering an example species
+head(taper_models(spcd = example_trees$spcd[1]))
 }

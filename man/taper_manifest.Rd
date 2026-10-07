@@ -2,21 +2,24 @@
 % Please edit documentation in R/stem-registry.R
 \name{taper_manifest}
 \alias{taper_manifest}
-\title{Record the equations registered for this analysis}
+\title{Record registered taper identifiers and versions}
 \usage{
 taper_manifest()
 }
 \value{
-A data frame with id (model identifier), owner_package (registering package),
-package_version (package version), and generation (registry revision number).
+A data frame with \code{id} (model identifier), \code{owner_package} (contributing package),
+\code{package_version} (version string), and \code{generation} (registration order). Save fitted
+objects or coefficient vectors separately.
 }
 \description{
-Record the equations registered for this analysis
+Capture registry provenance for a calculation. The manifest excludes model coefficients and
+source identifiers resolved without an explicit registry entry.
 }
 \examples{
-## Record the registered models
-manifest <- taper_manifest()
+## Find the registered entries used by the shipped example
+library(dplyr)
 
-## Show a small registry selection
-head(manifest, n = 3)
+## Retain registered identifiers used by the example
+taper_manifest() \%>\%
+  filter(id \%in\% example_trees$model)
 }

@@ -288,24 +288,38 @@ tv_cpp_kernel_eval <- function(
     .status_result(output, result_status, status_requested, details, function_name)
   }
 
-#' Diameter inside bark at a height
+#' Measure inside bark diameter at a height
 #'
-#' @param dbh Diameter at breast height outside bark. Numeric vector,
-#'   inches, greater than zero and at most 400. Required, with no default.
-#' @param ht Total height above ground. Numeric vector, feet.
-#'   Required, with no default.
-#' @param h The measurement height is the distance above the ground. Numeric vector, feet.
-#'   Required, with no default. Heights must be greater than zero and at most 500 feet.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param model Registered taper model identifier. Character vector of
-#'   registered model identifiers. Default: \code{NULL}.
-#'   model NULL selects the shipped default for the species, see [default_taper_models].
-#'   Species without a default return status 404.
-#' @param ... Additional named inputs supply measurements required by the selected model. Named
-#'   vectors in inches for diameters and feet for heights, none by default.
-#' @return A data frame with value (diameter inside bark, inches) and status (integer result
-#'   code), one row per input row.
+#'
+#' Measure inside bark diameter in inches at a supplied height in feet. Use this result to
+#' check an end-diameter limit against the selected taper equation. Scalar inputs recycle
+#' across trees, and invalid rows retain their input position and a status.
+#'
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Invalid measurement rows
+#'   return missing results with a status.
+#' @param ht Total height above ground, in feet. Accepts numeric values greater than zero and no
+#'   greater than 500. Required, with no default. Measurement heights and section bounds must
+#'   fall within the tree.
+#' @param h Measurement height above ground, in feet. Accepts numeric values from zero through
+#'   total height, inclusive. Required, with no default.
+#' @param spcd Species identifier as a numeric vector of positive whole-number codes. Required,
+#'   with no default. The species must be recognized for species properties and within the
+#'   selected equation's scope.
+#' @param model Taper equation identifier as a character vector. Defaults to `NULL`, selecting
+#'   the stored species default. A supplied identifier overrides that choice. Scalar identifiers
+#'   recycle across trees.
+#' @param ... Additional named inputs accepted by the selected model, with none supplied by
+#'   default. Numeric inputs must be finite: positive `upper_ht1`, `upper_ht2`, and `site_index`
+#'   use feet, positive `upper_d1` and `upper_d2` use inches, and positive `basal_area` uses
+#'   square feet per acre. `form_class` accepts positive numbers. `bark_ratio` is inside diameter
+#'   divided by outside diameter, greater than zero and no greater than one. `decay_class`
+#'   accepts whole numbers from 1 through 5 and `cull` accepts percentages from 0 through 100.
+#'   `upper_bark` accepts `'ib'` or `'ob'`. Upper heights and diameters must be supplied in
+#'   pairs. Only inputs declared by the selected model are accepted.
+#' @return A data frame in input order with `value` (inside bark diameter, inches) and `status`
+#'   (integer code described by [status_codes()]). Missing results remain in the table. Status
+#'   102 can accompany a retained value when multiple profile crossings exist.
 #' @usage
 #' dib(
 #'   dbh,
@@ -317,15 +331,12 @@ tv_cpp_kernel_eval <- function(
 #' )
 #' @export
 #' @examples
-#' ## Load data verbs
-#' library(dplyr)
-#'
-#' ## Measure diameter inside bark at breast height.
+#' ## Measure the first shipped tree with its stored equation
 #' dib(dbh = example_trees$dbh[1],
 #'     ht = example_trees$ht[1],
-#'     h = 4.5,
-#'     spcd = example_trees$spcd[1]) %>%
-#'   rename(`diameter inside bark (inches)` = value)
+#'     spcd = example_trees$spcd[1],
+#'     h = 20,
+#'     model = example_trees$model[1])
 dib <- function(dbh, ht, h, spcd, model = NULL, ...) {
   input <- .mc_stem_inputs(spcd, model, list(...), FALSE)
   .public_status(
@@ -333,24 +344,38 @@ dib <- function(dbh, ht, h, spcd, model = NULL, ...) {
   )
 }
 
-#' Diameter outside bark at a height
+#' Measure outside bark diameter at a height
 #'
-#' @param dbh Diameter at breast height outside bark. Numeric vector,
-#'   inches, greater than zero and at most 400. Required, with no default.
-#' @param ht Total height above ground. Numeric vector, feet.
-#'   Required, with no default.
-#' @param h The measurement height is the distance above the ground. Numeric vector, feet.
-#'   Required, with no default. Heights must be greater than zero and at most 500 feet.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param model Registered taper model identifier. Character vector of
-#'   registered model identifiers. Default: \code{NULL}.
-#'   model NULL selects the shipped default for the species, see [default_taper_models].
-#'   Species without a default return status 404.
-#' @param ... Additional named inputs supply measurements required by the selected model. Named
-#'   vectors in inches for diameters and feet for heights, none by default.
-#' @return A data frame with value (diameter outside bark, inches) and status (integer result
-#'   code), one row per input row.
+#'
+#' Measure outside bark diameter in inches at a supplied height in feet. Use this measurement
+#' when the log limits include bark. Scalar inputs recycle across trees, and invalid rows
+#' retain their input position and a status.
+#'
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Invalid measurement rows
+#'   return missing results with a status.
+#' @param ht Total height above ground, in feet. Accepts numeric values greater than zero and no
+#'   greater than 500. Required, with no default. Measurement heights and section bounds must
+#'   fall within the tree.
+#' @param h Measurement height above ground, in feet. Accepts numeric values from zero through
+#'   total height, inclusive. Required, with no default.
+#' @param spcd Species identifier as a numeric vector of positive whole-number codes. Required,
+#'   with no default. The species must be recognized for species properties and within the
+#'   selected equation's scope.
+#' @param model Taper equation identifier as a character vector. Defaults to `NULL`, selecting
+#'   the stored species default. A supplied identifier overrides that choice. Scalar identifiers
+#'   recycle across trees.
+#' @param ... Additional named inputs accepted by the selected model, with none supplied by
+#'   default. Numeric inputs must be finite: positive `upper_ht1`, `upper_ht2`, and `site_index`
+#'   use feet, positive `upper_d1` and `upper_d2` use inches, and positive `basal_area` uses
+#'   square feet per acre. `form_class` accepts positive numbers. `bark_ratio` is inside diameter
+#'   divided by outside diameter, greater than zero and no greater than one. `decay_class`
+#'   accepts whole numbers from 1 through 5 and `cull` accepts percentages from 0 through 100.
+#'   `upper_bark` accepts `'ib'` or `'ob'`. Upper heights and diameters must be supplied in
+#'   pairs. Only inputs declared by the selected model are accepted.
+#' @return A data frame in input order with `value` (outside bark diameter, inches) and `status`
+#'   (integer code described by [status_codes()]). Missing results remain in the table. Status
+#'   102 can accompany a retained value when multiple profile crossings exist.
 #' @usage
 #' dob(
 #'   dbh,
@@ -362,15 +387,12 @@ dib <- function(dbh, ht, h, spcd, model = NULL, ...) {
 #' )
 #' @export
 #' @examples
-#' ## Load data verbs
-#' library(dplyr)
-#'
-#' ## Measure diameter outside bark at breast height.
+#' ## Measure the first shipped tree with its stored equation
 #' dob(dbh = example_trees$dbh[1],
 #'     ht = example_trees$ht[1],
-#'     h = 4.5,
-#'     spcd = example_trees$spcd[1]) %>%
-#'   rename(`diameter outside bark (inches)` = value)
+#'     spcd = example_trees$spcd[1],
+#'     h = 20,
+#'     model = example_trees$model[1])
 dob <- function(dbh, ht, h, spcd, model = NULL, ...) {
   input <- .mc_stem_inputs(spcd, model, list(...), TRUE)
   .public_status(
@@ -690,24 +712,42 @@ dob <- function(dbh, ht, h, spcd, model = NULL, ...) {
   .status_result(output, result_status, status_requested, details, function_name)
 }
 
-#' Height to a diameter inside bark
+#' Locate a specified inside bark diameter
 #'
-#' @param dbh Diameter at breast height outside bark. Numeric vector,
-#'   inches, greater than zero and at most 400. Required, with no default.
-#' @param ht Total height above ground. Numeric vector, feet.
-#'   Required, with no default.
-#' @param dib The target diameter identifies the point to locate on the stem. Numeric vector,
-#'   inches, greater than zero and at most 400. Required, with no default.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param model Registered taper model identifier. Character vector of
-#'   registered model identifiers. Default: \code{NULL}.
-#'   model NULL selects the shipped default for the species, see [default_taper_models].
-#'   Species without a default return status 404.
-#' @param ... Additional named inputs supply measurements required by the selected model. Named
-#'   vectors in inches for diameters and feet for heights, none by default.
-#' @return A data frame with value (height above ground, feet) and status (integer result code),
-#'   one row per input row.
+#'
+#' Locate the height in feet corresponding to an inside bark diameter in inches. Use the result
+#' to set a stem-section boundary under the selected taper equation. The default compatibility
+#' setting selects the highest crossing, while source compatibility can reproduce a different
+#' source result. Scalar inputs recycle across trees, and invalid rows retain their input
+#' position and a status.
+#'
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Invalid measurement rows
+#'   return missing results with a status.
+#' @param ht Total height above ground, in feet. Accepts numeric values greater than zero and no
+#'   greater than 500. Required, with no default. Measurement heights and section bounds must
+#'   fall within the tree.
+#' @param dib Target diameter on the named bark basis, in inches. Accepts positive numeric
+#'   values. Required, with no default. The default compatibility setting selects the highest
+#'   crossing when the profile reaches the diameter more than once. Source compatibility
+#'   can reproduce a different source inverse result.
+#' @param spcd Species identifier as a numeric vector of positive whole-number codes. Required,
+#'   with no default. The species must be recognized for species properties and within the
+#'   selected equation's scope.
+#' @param model Taper equation identifier as a character vector. Defaults to `NULL`, selecting
+#'   the stored species default. A supplied identifier overrides that choice. Scalar identifiers
+#'   recycle across trees.
+#' @param ... Additional named inputs accepted by the selected model, with none supplied by
+#'   default. Numeric inputs must be finite: positive `upper_ht1`, `upper_ht2`, and `site_index`
+#'   use feet, positive `upper_d1` and `upper_d2` use inches, and positive `basal_area` uses
+#'   square feet per acre. `form_class` accepts positive numbers. `bark_ratio` is inside diameter
+#'   divided by outside diameter, greater than zero and no greater than one. `decay_class`
+#'   accepts whole numbers from 1 through 5 and `cull` accepts percentages from 0 through 100.
+#'   `upper_bark` accepts `'ib'` or `'ob'`. Upper heights and diameters must be supplied in
+#'   pairs. Only inputs declared by the selected model are accepted.
+#' @return A data frame in input order with `value` (height above ground, feet) and `status`
+#'   (integer code described by [status_codes()]). Missing results remain in the table. Status
+#'   102 can accompany a retained value when multiple profile crossings exist.
 #' @usage
 #' height_at_dib(
 #'   dbh,
@@ -719,16 +759,12 @@ dob <- function(dbh, ht, h, spcd, model = NULL, ...) {
 #' )
 #' @export
 #' @examples
-#' ## Load data verbs
-#' library(dplyr)
-#'
-#' ## Find the height of a six-inch inside-bark diameter.
+#' ## Measure the first shipped tree with its stored equation
 #' height_at_dib(dbh = example_trees$dbh[1],
 #'               ht = example_trees$ht[1],
-#'               dib = 6,
 #'               spcd = example_trees$spcd[1],
-#'               model = example_trees$model[1]) %>%
-#'   rename(`height (feet)` = value)
+#'               dib = 6,
+#'               model = example_trees$model[1])
 height_at_dib <- function(dbh, ht, dib, spcd, model = NULL, ...) {
   input <- .mc_stem_inputs(spcd, model, list(...), FALSE)
   .public_status(.height_impl(
@@ -737,24 +773,42 @@ height_at_dib <- function(dbh, ht, dib, spcd, model = NULL, ...) {
   ))
 }
 
-#' Height to a diameter outside bark
+#' Locate a specified outside bark diameter
 #'
-#' @param dbh Diameter at breast height outside bark. Numeric vector,
-#'   inches, greater than zero and at most 400. Required, with no default.
-#' @param ht Total height above ground. Numeric vector, feet.
-#'   Required, with no default.
-#' @param dob The target diameter identifies the point to locate on the stem. Numeric vector,
-#'   inches, greater than zero and at most 400. Required, with no default.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param model Registered taper model identifier. Character vector of
-#'   registered model identifiers. Default: \code{NULL}.
-#'   model NULL selects the shipped default for the species, see [default_taper_models].
-#'   Species without a default return status 404.
-#' @param ... Additional named inputs supply measurements required by the selected model. Named
-#'   vectors in inches for diameters and feet for heights, none by default.
-#' @return A data frame with value (height above ground, feet) and status (integer result code),
-#'   one row per input row.
+#'
+#' Locate the height in feet corresponding to an outside bark diameter in inches. Use the
+#' result when a section boundary is defined by a diameter that includes bark. The default
+#' compatibility setting selects the highest crossing, while source compatibility can reproduce
+#' a different source result. Scalar inputs recycle across trees, and invalid rows retain their
+#' input position and a status.
+#'
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Invalid measurement rows
+#'   return missing results with a status.
+#' @param ht Total height above ground, in feet. Accepts numeric values greater than zero and no
+#'   greater than 500. Required, with no default. Measurement heights and section bounds must
+#'   fall within the tree.
+#' @param dob Target diameter on the named bark basis, in inches. Accepts positive numeric
+#'   values. Required, with no default. The default compatibility setting selects the highest
+#'   crossing when the profile reaches the diameter more than once. Source compatibility
+#'   can reproduce a different source inverse result.
+#' @param spcd Species identifier as a numeric vector of positive whole-number codes. Required,
+#'   with no default. The species must be recognized for species properties and within the
+#'   selected equation's scope.
+#' @param model Taper equation identifier as a character vector. Defaults to `NULL`, selecting
+#'   the stored species default. A supplied identifier overrides that choice. Scalar identifiers
+#'   recycle across trees.
+#' @param ... Additional named inputs accepted by the selected model, with none supplied by
+#'   default. Numeric inputs must be finite: positive `upper_ht1`, `upper_ht2`, and `site_index`
+#'   use feet, positive `upper_d1` and `upper_d2` use inches, and positive `basal_area` uses
+#'   square feet per acre. `form_class` accepts positive numbers. `bark_ratio` is inside diameter
+#'   divided by outside diameter, greater than zero and no greater than one. `decay_class`
+#'   accepts whole numbers from 1 through 5 and `cull` accepts percentages from 0 through 100.
+#'   `upper_bark` accepts `'ib'` or `'ob'`. Upper heights and diameters must be supplied in
+#'   pairs. Only inputs declared by the selected model are accepted.
+#' @return A data frame in input order with `value` (height above ground, feet) and `status`
+#'   (integer code described by [status_codes()]). Missing results remain in the table. Status
+#'   102 can accompany a retained value when multiple profile crossings exist.
 #' @usage
 #' height_at_dob(
 #'   dbh,
@@ -766,16 +820,12 @@ height_at_dib <- function(dbh, ht, dib, spcd, model = NULL, ...) {
 #' )
 #' @export
 #' @examples
-#' ## Load data verbs
-#' library(dplyr)
-#'
-#' ## Find the height of a six-inch outside-bark diameter.
+#' ## Measure the first shipped tree with its stored equation
 #' height_at_dob(dbh = example_trees$dbh[1],
 #'               ht = example_trees$ht[1],
-#'               dob = 6,
 #'               spcd = example_trees$spcd[1],
-#'               model = example_trees$model[1]) %>%
-#'   rename(`height (feet)` = value)
+#'               dob = 6,
+#'               model = example_trees$model[1])
 height_at_dob <- function(dbh, ht, dob, spcd, model = NULL, ...) {
   input <- .mc_stem_inputs(spcd, model, list(...), TRUE)
   .public_status(.height_impl(

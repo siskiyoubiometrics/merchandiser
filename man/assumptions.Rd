@@ -2,41 +2,43 @@
 % Please edit documentation in R/assumptions.R
 \name{assumptions}
 \alias{assumptions}
-\title{Review the choices recorded with a result}
+\title{Inspect assumptions recorded with a merchandising result}
 \usage{
 assumptions(
   x
 )
 }
 \arguments{
-\item{x}{The result holds the assumptions to inspect. A merch_result object. Required, with no
-default.}
+\item{x}{Result returned by \code{\link[=merchandise]{merchandise()}}. Required, without a default. The stored
+assumptions are returned without recalculating the tree.}
 }
 \value{
-The assumptions data frame, with columns:
-\itemize{
-\item \code{tree_id}: tree identifier.
-\item \code{assumption}: assumption name.
-\item \code{spcd}: species code.
-\item \code{model}: model identifier.
-\item \code{value}, \code{unit}: numeric assumption and its measurement unit.
-\item \code{basis}: measurement basis.
-\item \code{product}: product name.
-\item \code{source}: provenance.
-}
+A data frame with \code{tree_id} (input identifier), \code{assumption} (record type), \code{spcd}
+(numeric species code), \code{model} (equation identifier), \code{value} (numeric value), \code{unit}
+(value unit), \code{basis} (measurement basis), \code{product} (associated product or missing), and
+\code{source} (provenance). Stump values use feet and bark ratios are inside diameter divided by
+outside diameter. Equation selections have identifiers rather than numeric values.
 }
 \description{
-Review the choices recorded with a result
+Extract the selected equation, stump height, and any supplementary bark ratio recorded during
+calculation. Use these records to compare inputs behind merchandising results.
 }
 \examples{
-## Inspect assumption names for the first example tree
-assumptions(x = merchandise(tree_id = example_trees$tree_id[1],
-                            dbh = example_trees$dbh[1],
-                            ht = example_trees$ht[1],
-                            spcd = example_trees$spcd[1],
-                            products = product(product = 'saw',  ## name, unitless
-                                               min_length = 16,  ## feet
-                                               max_length = 40,  ## feet
-                                               min_sed = 6,  ## inches
-                                               volume_unit = 'cubic')))$assumption  ## cubic feet
+## Define an unpriced cubic-foot product
+saw <- product(product = 'saw',  ## product label
+               min_length = 16,  ## feet
+               max_length = 32,  ## feet
+               min_sed = 6,  ## inches inside bark
+               volume_unit = 'cubic')  ## cubic feet
+
+## Select logs from the shipped trees
+result <- merchandise(tree_id = example_trees$tree_id,
+                      dbh = example_trees$dbh,
+                      ht = example_trees$ht,
+                      spcd = example_trees$spcd,
+                      products = saw,
+                      model = example_trees$model)
+
+## Inspect the recorded equation and stump inputs
+head(assumptions(x = result))
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-height.R
 \name{fit_height}
 \alias{fit_height}
-\title{Fit tree height from diameter and measured heights}
+\title{Fit height relationships by species and group}
 \usage{
 fit_height(
   dbh,
@@ -14,54 +14,64 @@ fit_height(
 )
 }
 \arguments{
-\item{dbh}{Diameter at breast height outside bark. Numeric vector,
-inches, greater than zero and at most 400. Required, with no default.}
+\item{dbh}{Outside bark diameter at breast height, in inches. Accepts numeric values greater
+than zero and no greater than 400. Required, with no default. Rows with invalid measurements
+are omitted with a warning.}
 
-\item{ht}{Total height above ground. Numeric vector, feet.
-Required, with no default. Heights must be greater than zero and at most 500 feet.}
+\item{ht}{Measured total height above ground, in feet. Accepts numeric values greater than
+zero and no greater than 500. Required, with no default. Valid measurements supply the
+response for pooled and species fits.}
 
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Required, with no default.}
+\item{spcd}{Species identifiers as numeric positive whole-number codes within the R integer
+range and present in species_reference. Required, without a default. Codes group
+observations for species fits and need not have a registered taper equation. Unknown
+species rows are omitted with a warning.}
 
-\item{group}{Trees in the same group share a local height or taper adjustment. Atomic vector of
-group identifiers. Default: \code{NULL}.}
+\item{group}{Group identifiers for shared adjustments, supplied as an atomic vector matching
+the observations. Defaults to \code{NULL}, with no separate group assignments. Known groups use
+their fitted adjustments for conditional predictions, while unseen groups use the population
+relationship.}
 
-\item{form}{The equation form chooses the relationship to fit. Character scalar, equation name.
-Default: \code{'chapman_richards'}.}
+\item{form}{Height relationship as one character string. Accepts \code{'chapman_richards'},
+\code{'curtis'}, \code{'wykoff'}, \code{'naslund'}, or \code{'schumacher'}. Defaults to \code{'chapman_richards'}.
+The selected form is used for pooled and species fits.}
 
-\item{min_n}{The minimum sample size limits which species can receive a separate height fit.
-Numeric scalar, number of measured trees. Default: \code{7}.}
+\item{min_n}{Minimum valid observations for a separate species fit, as one positive whole
+number. Defaults to \code{7}. Species with fewer observations use the pooled model.}
 }
 \value{
-A height_fit list. The data table has dbh (inches), ht (feet), spcd (species
-code), and group (group identifier). The fixed_effects table has spcd, model_key,
-pooled (logical), and equation coefficients a, b, and c for inputs in inches and feet.
-The variance_components table has spcd, model_key, random_parameter (coefficient name),
-random_effect_sd (coefficient standard deviation), and residual_sd (feet).
-The random_effects table records model_key, group, and effect (local coefficient adjustment).
-The n_by_species table has spcd (species code) and n (measured tree count).
-Other elements retain the equation form, fitted models, model_map, internal_fixed_effects,
-groups_seen, pooled_species, convergence_pooled_species, min_n, and package metadata.
+A \code{height_fit} list containing:
+\itemize{
+\item \code{data}: retained \code{dbh} (inches), \code{ht} (feet), \code{spcd} (code), and \code{group} (identifier).
+\item \code{fixed_effects}: \code{spcd} (code), \code{model_key} (identifier), \code{pooled} (indicator),
+and equation coefficients \code{a}, \code{b}, \code{c} on the form-specific scale evaluated with
+diameter in inches and height in feet. Unused coefficients are missing.
+\item \code{variance_components}: \code{spcd}, \code{model_key}, \code{random_parameter}, \code{random_effect_sd}
+(coefficient scale), and \code{residual_sd} (feet).
+\item \code{random_effects}: \code{model_key}, \code{group}, and \code{effect} (internal coefficient scale).
+\item \code{n_by_species}: \code{spcd} and \code{n} (observation count).
+\item \code{form}, \code{min_n}, \code{groups_seen}, \code{pooled_species}, \code{convergence_pooled_species},
+\code{measurement_system}, and \code{package_version}: fitting choices and provenance.
+\item \code{models}, \code{model_map}, and \code{internal_fixed_effects}: fitted model objects,
+species-to-model assignments, and coefficients used for prediction.
+}
 }
 \description{
-Fit tree height from diameter and measured heights
-}
-\details{
-Invalid rows are omitted with one warning giving the count and reasons. Diameters
-must be at most 400 inches and total heights at most 500 feet. Species must occur
-in \code{species_reference}.
+Fit pooled and species height relationships, optionally with group adjustments. Invalid rows
+are omitted with a warning. Species below the minimum sample size or with an unsuccessful
+fit use the pooled relationship.
 }
 \examples{
-## Load data verbs
+## Select measured heights from the shipped list
 library(dplyr)
 
-## Select measured heights
-measured <- example_trees_pnw \%>\%
+## Retain the tree rows used in this calculation
+trees <- example_trees_pnw \%>\%
   filter(ht_status == 'measured')
 
-## Fit and show measured heights with plot adjustments
-fit_height(dbh = measured$dbh,
-           ht = measured$ht,
-           spcd = measured$spcd,
-           group = measured$plot)
+## Fit and inspect the relationship with plot adjustments
+fit_height(dbh = trees$dbh,
+           ht = trees$ht,
+           spcd = trees$spcd,
+           group = trees$plot)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-height.R
 \name{predict_height}
 \alias{predict_height}
-\title{Predict tree height}
+\title{Predict tree heights and optional intervals}
 \usage{
 predict_height(
   fit,
@@ -17,49 +17,57 @@ predict_height(
 )
 }
 \arguments{
-\item{fit}{The fitted height relationship supplies predictions for these trees. A height_fit
-object. Required, with no default.}
+\item{fit}{Fitted height relationship returned by \code{\link[=fit_height]{fit_height()}}. Required, with no default.
+Predictions use its species mapping and fitted group adjustments.}
 
-\item{dbh}{Diameter at breast height outside bark. Numeric vector,
-inches, greater than zero and at most 400. Required, with no default.}
+\item{dbh}{Outside bark diameter at breast height, in inches. Accepts numeric values greater
+than zero and no greater than 400. Required, with no default. Invalid rows return missing
+heights, with warnings for invalid finite inputs.}
 
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Required, with no default.}
+\item{spcd}{Species identifiers as numeric positive whole-number codes within the R integer
+range. Required, without a default. A code absent from the fitted species mapping returns a
+missing prediction with a warning.}
 
-\item{group}{Trees in the same group share a local height or taper adjustment. Atomic vector of
-group identifiers. Default: \code{NULL}.}
+\item{group}{Group identifiers for shared adjustments, supplied as an atomic vector matching
+the observations. Defaults to \code{NULL}, with no separate group assignments. Known groups use
+their fitted adjustments for conditional predictions, while unseen groups use the population
+relationship.}
 
-\item{re_form}{The prediction choice includes or leaves out local group adjustments. Character
-scalar, 'conditional' or 'population'. Default: \code{'conditional'}.}
+\item{re_form}{Adjustment basis as one character string. Accepts \code{'conditional'} or
+\code{'population'}. Defaults to \code{'conditional'}, using available fitted group effects.
+Population predictions omit those fitted adjustments.}
 
-\item{interval}{Choose whether to include an interval around each height prediction. Logical
-scalar. Default: \code{FALSE}.}
+\item{interval}{Whether to return simulated prediction intervals. Accepts one \code{TRUE} or
+\code{FALSE}. Defaults to \code{FALSE}, returning a numeric vector. \code{TRUE} returns fitted values and
+interval endpoints, with lower endpoints constrained to breast height.}
 
-\item{level}{The interval level sets the share of the prediction distribution covered. Numeric
-scalar, fraction between zero and one. Default: \code{0.95}.}
+\item{level}{Coverage requested for prediction intervals, as a single finite fraction strictly
+between zero and one. Defaults to \code{0.95}. Used only when \code{interval = TRUE}.}
 
-\item{nsim}{The simulation count controls the number of draws for prediction intervals. Numeric
-scalar, number of draws, at most 1e6. Default: \code{1000}.}
+\item{nsim}{Simulation count for intervals as one positive whole number, no greater than
+1000000. Defaults to \code{1000}. More simulations refine the simulated quantiles without adding
+coefficient uncertainty.}
 
-\item{seed}{The random seed makes prediction intervals reproducible. Numeric scalar,
-random-number seed. Default: \code{NULL}.}
+\item{seed}{Random seed as one nonnegative whole number within the R integer range, or \code{NULL}.
+Defaults to \code{NULL}, using the current random state. A supplied seed makes interval
+simulation repeatable.}
 }
 \value{
-Without intervals, a numeric vector of predicted heights in feet. With intervals, a
-data frame with fit, lower, and upper (predicted height and lower and upper limits, feet).
+With \code{interval = FALSE}, a numeric vector of heights in feet. With \code{TRUE}, a data
+frame with \code{fit}, \code{lower}, and \code{upper}, all in feet. Input order is retained. Species absent
+from the fit return missing values with a warning.
 }
 \description{
-Predict tree height
+Predict total height from a fitted relationship. Conditional predictions use known group
+adjustments, while missing or unseen groups use population values. Intervals simulate group
+variation and residual error, holding fixed coefficients constant. They exclude coefficient
+uncertainty and inventory sampling uncertainty.
 }
 \examples{
-## Fit the shipped heights
-fit <- fit_height(dbh = example_trees_pnw$dbh,
-                  ht = example_trees_pnw$ht,
-                  spcd = example_trees_pnw$spcd,
-                  form = 'curtis')
-
-## Predict the first example tree's height
-c(`height (feet)` = predict_height(fit = fit,
-                                   dbh = example_trees$dbh[1],
-                                   spcd = example_trees$spcd[1]))
+## Fit and predict heights on the shipped example trees
+predict_height(fit = fit_height(dbh = example_trees$dbh,
+                                ht = example_trees$ht,
+                                spcd = example_trees$spcd),
+               dbh = example_trees$dbh,
+               spcd = example_trees$spcd)
 }

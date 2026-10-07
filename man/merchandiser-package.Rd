@@ -12,6 +12,7 @@ Measure stem dimensions and volume, fit heights and taper, and estimate dry mass
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://siskiyoubiometrics.com/merchandiser/}
   \item \url{https://github.com/siskiyoubiometrics/merchandiser}
   \item Report bugs at \url{https://github.com/siskiyoubiometrics/merchandiser/issues}
 }

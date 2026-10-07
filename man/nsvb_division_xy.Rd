@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-divisions.R
 \name{nsvb_division_xy}
 \alias{nsvb_division_xy}
-\title{Look up an ecological division by coordinates}
+\title{Look up ecological division from coordinates}
 \usage{
 nsvb_division_xy(
   x,
@@ -11,25 +11,29 @@ nsvb_division_xy(
 )
 }
 \arguments{
-\item{x}{The easting locates the tree in the supplied coordinate system. Numeric vector,
-coordinate-system distance or degrees. Required, with no default.}
+\item{x}{Horizontal coordinate as a numeric vector. Required, without a default. The default
+coordinate system uses longitude in decimal degrees. Other systems use their own coordinate
+units.}
 
-\item{y}{The northing locates the tree in the supplied coordinate system. Numeric vector,
-coordinate-system distance or degrees. Required, with no default.}
+\item{y}{Vertical coordinate as a numeric vector. Required, without a default. The default
+coordinate system uses latitude in decimal degrees. Coordinates outside the polygon coverage
+receive status 8.}
 
-\item{crs}{The coordinate reference system identifies how to interpret the locations. An
-sf-compatible coordinate reference system, 4326 means longitude and latitude in degrees.
-Default: \code{4326}.}
+\item{crs}{Coordinate reference system as one numeric code or character string accepted by
+\code{sf::st_crs()}. Defaults to \code{4326} for longitude and latitude in degrees. A different
+system requires sf to transform coordinates. A constructed sf coordinate-system object
+is not accepted.}
 }
 \value{
-A data frame with value (ecological division code) and status (integer result code),
-in input order.
+A data frame with \code{value} (integer ecological division code) and \code{status} (integer
+result code). Missing inputs receive status 1, and unrecognized locations receive status 8.
 }
 \description{
-Look up an ecological division by coordinates
+Locate coordinates in the shipped ecological division polygons for biomass coefficient
+selection. Use the returned code when estimating biomass with local coefficients.
 }
 \examples{
-## Find divisions for the example tree locations.
+## Inspect the ecological division at the shipped location
 nsvb_division_xy(x = example_trees_pnw$longitude[1],
                  y = example_trees_pnw$latitude[1])
 }

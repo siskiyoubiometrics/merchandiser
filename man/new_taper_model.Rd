@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-model.R
 \name{new_taper_model}
 \alias{new_taper_model}
-\title{Define a taper equation written as an R function}
+\title{Create a taper model from diameter and volume functions}
 \usage{
 new_taper_model(
   id,
@@ -19,60 +19,76 @@ new_taper_model(
 )
 }
 \arguments{
-\item{id}{The identifier names the taper model in the registry. Character scalar model
-identifier. Required, with no default.}
+\item{id}{Identifier for the new equation as a nonempty character scalar. Required, with no
+default. Private registrations require a namespaced identifier containing a dot, such as
+\code{'local.profile'}.}
 
-\item{form}{Equation form used by the taper model. Character scalar. Required, with no default.}
+\item{form}{Descriptive equation form as one nonempty character string. Required, without a
+default. Used to identify and filter the model, without selecting a built-in coefficient
+equation.}
 
-\item{dib}{The callback computes inside diameter along the stem. R function accepting dbh, ht,
-measurement arguments, and aux, with diameters in inches, heights in feet, and volumes in
-cubic feet. Required, with no default.}
+\item{dib}{Inside bark diameter function with arguments \code{dbh}, \code{ht}, \code{h}, and \code{aux}. Required,
+without a default. Diameters use inches, heights use feet, and \code{aux} is a named list. Return
+one numeric diameter per input tree.}
 
-\item{dob}{The callback computes outside diameter along the stem. R function accepting dbh, ht,
-measurement arguments, and aux, with diameters in inches, heights in feet, and volumes in
-cubic feet. Default: \code{NULL}.}
+\item{dob}{Outside bark diameter function with arguments \code{dbh}, \code{ht}, \code{h}, and \code{aux}, or
+\code{NULL}. Defaults to \code{NULL}. Uses the same units as \code{dib}, with a supplied bark ratio
+available as a fallback.}
 
-\item{height_at_dib}{The callback finds height from inside diameter. R function accepting dbh,
-ht, measurement arguments, and aux, with diameters in inches, heights in feet, and volumes in
-cubic feet. Default: \code{NULL}.}
+\item{height_at_dib}{Inverse function with arguments \code{dbh}, \code{ht}, \code{dib}, and \code{aux}, or \code{NULL}.
+Defaults to \code{NULL}, enabling numerical inversion. Return height in feet for a target
+diameter in inches.}
 
-\item{volume}{The callback computes volume between two heights. R function accepting dbh, ht,
-measurement arguments, and aux, with diameters in inches, heights in feet, and volumes in
-cubic feet. Default: \code{NULL}.}
+\item{volume}{Inside bark volume function with arguments \code{dbh}, \code{ht}, \code{lower}, \code{upper}, and
+\code{aux}, or \code{NULL}. Defaults to \code{NULL}, enabling numerical integration. Bounds use feet and
+the returned volume uses cubic feet.}
 
-\item{inputs}{The input declaration lists additional measurements the model needs. List with
-required and optional character vectors and a list of paired input names. Default:
-\code{list(required = character(), optional = character(), pairs = list())}.}
+\item{inputs}{Named list declaring \code{required} and \code{optional} auxiliary input names and \code{pairs}
+of inputs that must occur together. Defaults to empty character vectors and an empty pair
+list. Only declared supported auxiliary names are accepted.}
 
-\item{spcd}{The species codes limit the trees this model covers. Numeric vector of species
-codes. Default: \code{integer()}.}
+\item{spcd}{Species scope as numeric positive whole-number codes. Defaults to \code{integer()},
+imposing no species restriction. A scoped model reports a condition when called for another
+species.}
 
-\item{stump_ht}{Stump height above ground. Numeric
-scalar, feet. Default: \code{1}.}
+\item{stump_ht}{Default stump height above ground, in feet. Accepts one finite nonnegative
+number. Defaults to \code{1}. Stored in the model's internal height units without changing public
+input units.}
 
-\item{bark_ratio}{The bark ratio estimates inside diameter from outside diameter when needed.
-Numeric scalar, inside diameter divided by outside diameter. Default: \code{NA_real_}.}
+\item{bark_ratio}{Inside bark diameter divided by outside bark diameter. Accepts a single
+finite number greater than zero and no greater than one, or \code{NA}. Defaults to \code{NA_real_},
+leaving the ratio unspecified. Enables a constant-ratio outside bark calculation where
+needed.}
 
-\item{source}{The source records where the model came from. Character scalar, provenance text.
-Default: \code{NULL} stores an empty string.}
+\item{source}{Provenance for the equation as a single character string. Defaults to \code{NULL},
+storing an empty provenance string. Supply source text to retain an attribution with
+the model for later inspection.}
 }
 \value{
-A validated taper_model list containing id, form, kernel (callbacks), inputs,
-spcd, stump_ht (feet), bark_ratio (diameter ratio), source (provenance), and internal
-equation metadata.
+A \code{taper_model} list containing \code{id} (identifier), \code{form} (equation form),
+\code{kernel} (implementation and capability metadata), \code{dib}, \code{dob}, \code{height_at_dib},
+and \code{volume} (callbacks or absent optional callbacks), \code{inputs} (required, optional,
+and paired auxiliary names), \code{measurement_system} (internal units), \code{spcd} (species
+scope), \code{stump_ht} (feet for imperial models or meters for metric models),
+\code{bark_ratio} (inside-to-outside diameter ratio), \code{source} (provenance), \code{notes},
+\code{data} (equation data or coefficients), and \code{class_version}. The optional
+\code{oracle_verified} attribute records source-fixture verification. Public calls
+continue to accept inches and feet regardless of stored coefficient units.
 }
 \description{
-Define a taper equation written as an R function
+Define an equation using existing R callbacks. Callbacks receive inches and feet and must
+return finite numeric vectors without changing global state. Registration validates the
+model and its callback behavior.
 }
 \examples{
-## Inspect the shipped demonstration callback
-base <- get_taper_model(model = 'demo.paraboloid.r')
+## Reuse the demonstration model's diameter function
+local_model <- new_taper_model(id = 'local.demonstration',
+                               form = 'paraboloid',
+                               dib = get_taper_model(model = 'demo.paraboloid.r')$dib)
 
-## Construct a local model from the callback
-local_model <- new_taper_model(id = 'example.callback',
-                               form = 'demonstration',
-                               dib = base$dib)
-
-## Inspect the local model
-print(local_model)
+## Evaluate the callback on a shipped tree, in inches and feet
+local_model$dib(dbh = example_trees$dbh[1],
+                ht = example_trees$ht[1],
+                h = 20,
+                aux = list())
 }

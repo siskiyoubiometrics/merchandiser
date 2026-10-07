@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-volume.R
 \name{stem_volume}
 \alias{stem_volume}
-\title{Cubic volume of a stem section}
+\title{Measure solid volume between stem bounds}
 \usage{
 stem_volume(
   dbh,
@@ -21,57 +21,82 @@ stem_volume(
 )
 }
 \arguments{
-\item{dbh}{Diameter at breast height outside bark. Numeric vector,
-inches, greater than zero and at most 400. Required, with no default.}
+\item{dbh}{Outside bark diameter at breast height, in inches. Accepts numeric values greater
+than zero and no greater than 400. Required, with no default. Invalid measurement rows
+return missing results with a status.}
 
-\item{ht}{Total height above ground. Numeric vector, feet.
-Required, with no default. Heights must be greater than zero and at most 500 feet.}
+\item{ht}{Total height above ground, in feet. Accepts numeric values greater than zero and no
+greater than 500. Required, with no default. Measurement heights and section bounds must
+fall within the tree.}
 
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Required, with no default.}
+\item{spcd}{Species identifier as a numeric vector of positive whole-number codes. Required,
+with no default. The species must be recognized for species properties and within the
+selected equation's scope.}
 
-\item{model}{Registered taper model identifier. Character vector of
-registered model identifiers. Default: \code{NULL}.
-model NULL selects the shipped default for the species, see \link{default_taper_models}.
-Species without a default return status 404.}
+\item{model}{Taper equation identifier as a character vector. Defaults to \code{NULL}, selecting
+the stored species default. A supplied identifier overrides that choice. Scalar identifiers
+recycle across trees.}
 
-\item{from}{Start height above ground. Numeric vector, feet. Default \code{NULL} uses \code{stump_ht}.}
+\item{from}{Lower section height above ground, in feet. Accepts numeric values from zero
+through total height. Defaults to \code{NULL}, using \code{stump_ht}. Supply at most one of \code{from},
+\code{from_dib}, and \code{from_dob}.}
 
-\item{to}{End height above ground. Numeric vector, feet. Default \code{NULL} uses the tree tip.}
+\item{to}{Upper section height above ground, in feet. Accepts numeric values from zero through
+total height. Defaults to \code{NULL}, using the tip. Supply at most one of \code{to}, \code{to_dib}, and
+\code{to_dob}. The resulting upper bound must exceed the lower bound.}
 
-\item{from_dib}{Inside bark diameter at the start. Numeric vector, inches, default \code{NULL}.}
+\item{from_dib}{Lower section boundary specified by inside bark diameter, in inches. Accepts
+positive numeric values. Defaults to \code{NULL}, leaving this diameter bound unset. It locates
+the boundary independently of the volume bark basis and cannot accompany another lower
+bound.}
 
-\item{from_dob}{Outside bark diameter at the start. Numeric vector, inches, default \code{NULL}.}
+\item{from_dob}{Lower section boundary specified by outside bark diameter, in inches. Accepts
+positive numeric values. Defaults to \code{NULL}, leaving this diameter bound unset. It locates
+the boundary independently of the volume bark basis and cannot accompany another lower
+bound.}
 
-\item{to_dib}{Inside bark diameter at the end. Numeric vector, inches, default \code{NULL}.}
+\item{to_dib}{Upper section boundary specified by inside bark diameter, in inches. Accepts
+positive numeric values. Defaults to \code{NULL}, leaving this diameter bound unset. It locates
+the boundary independently of the volume bark basis and cannot accompany another upper
+bound.}
 
-\item{to_dob}{Outside bark diameter at the end. Numeric vector, inches, default \code{NULL}.
-Diameter bounds use \code{\link[=height_at_dib]{height_at_dib()}} or \code{\link[=height_at_dob]{height_at_dob()}}, including their status conventions.
-Supply at most one start argument and at most one end argument.}
+\item{to_dob}{Upper section boundary specified by outside bark diameter, in inches. Accepts
+positive numeric values. Defaults to \code{NULL}, leaving this diameter bound unset. It locates
+the boundary independently of the volume bark basis and cannot accompany another upper
+bound.}
 
-\item{inside_bark}{Choose whether the measurement excludes the bark. Logical scalar, unitless,
-default TRUE excludes bark.}
+\item{inside_bark}{Bark basis for the calculation. Accepts \code{TRUE} or \code{FALSE}. Defaults to
+\code{TRUE} for inside bark. \code{FALSE} includes bark in the measured solid volume.}
 
-\item{stump_ht}{Stump height above ground. Numeric
-vector, feet. Default: \code{1}.}
+\item{stump_ht}{Stump height above ground, in feet. Accepts finite, nonnegative numeric values
+below total height. Defaults to \code{1}. Used as the lower section bound unless another bound is
+supplied.}
 
-\item{...}{Additional named inputs supply measurements required by the selected model. Named
-vectors in inches for diameters and feet for heights, none by default.}
+\item{...}{Additional named inputs accepted by the selected model, with none supplied by
+default. Numeric inputs must be finite: positive \code{upper_ht1}, \code{upper_ht2}, and \code{site_index}
+use feet, positive \code{upper_d1} and \code{upper_d2} use inches, and positive \code{basal_area} uses
+square feet per acre. \code{form_class} accepts positive numbers. \code{bark_ratio} is inside diameter
+divided by outside diameter, greater than zero and no greater than one. \code{decay_class}
+accepts whole numbers from 1 through 5 and \code{cull} accepts percentages from 0 through 100.
+\code{upper_bark} accepts \code{'ib'} or \code{'ob'}. Upper heights and diameters must be supplied in
+pairs. Only inputs declared by the selected model are accepted.}
 }
 \value{
-A data frame with value (solid volume, cubic feet) and status (integer result code),
-one row per input row.
+A data frame in input order with \code{value} (solid volume, cubic feet) and \code{status}
+(integer code described by \code{\link[=status_codes]{status_codes()}}). Missing results remain in the table. Status
+102 can accompany a retained value when multiple profile crossings exist.
 }
 \description{
-Cubic volume of a stem section
+Measure solid volume in cubic feet between height or diameter bounds. Use this calculation
+for a stem section without defining merchandising products. Scalar inputs recycle across
+trees, and invalid rows retain their input position and a status.
 }
 \examples{
-## Load data verbs
-library(dplyr)
-
-## Measure the whole stem inside bark.
+## Measure the first shipped tree with its stored equation
 stem_volume(dbh = example_trees$dbh[1],
             ht = example_trees$ht[1],
-            spcd = example_trees$spcd[1]) \%>\%
-  rename(`volume (cubic feet)` = value)
+            spcd = example_trees$spcd[1],
+            from = 1,
+            to = 33,
+            model = example_trees$model[1])
 }

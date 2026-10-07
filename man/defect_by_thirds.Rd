@@ -2,7 +2,7 @@
 % Please edit documentation in R/defects.R
 \name{defect_by_thirds}
 \alias{defect_by_thirds}
-\title{Weight stem-third defect percentages by volume}
+\title{Combine defect percentages by stem-volume thirds}
 \usage{
 defect_by_thirds(
   dbh,
@@ -16,48 +16,63 @@ defect_by_thirds(
 )
 }
 \arguments{
-\item{dbh}{Diameter at breast height outside bark. Numeric vector,
-inches, greater than zero and at most 400. Required, with no default.}
+\item{dbh}{Outside bark diameter at breast height, in inches. Accepts numeric values greater
+than zero and no greater than 400. Required, with no default. Invalid measurement rows
+return missing results with a status.}
 
-\item{ht}{Total height above ground. Numeric vector, feet.
-Required, with no default. Heights must be greater than zero and at most 500 feet.}
+\item{ht}{Total height above ground, in feet. Accepts numeric values greater than zero and no
+greater than 500. Required, with no default. Measurement heights and section bounds must
+fall within the tree.}
 
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Required, with no default.}
+\item{spcd}{Species identifier as a numeric vector of positive whole-number codes. Required,
+with no default. The species must be recognized for species properties and within the
+selected equation's scope.}
 
-\item{lower}{Record the defect in the lower third. Numeric, percent, required.}
+\item{lower}{Defect in the lower third of total tree height, in percent. Accepts numeric
+values from 0 through 100, or missing values. Required, with no default. The contribution is
+weighted by inside bark volume in that third.}
 
-\item{middle}{Record the defect in the middle third. Numeric, percent, required.}
+\item{middle}{Defect in the middle third of total tree height, in percent. Accepts numeric
+values from 0 through 100, or missing values. Required, with no default. The contribution is
+weighted by inside bark volume in that third.}
 
-\item{upper}{Record the defect in the upper third. Numeric, percent, required.}
+\item{upper}{Defect in the upper third of total tree height, in percent. Accepts numeric
+values from 0 through 100, or missing values. Required, with no default. The contribution is
+weighted by inside bark volume in that third.}
 
-\item{model}{Registered taper model identifier. Character vector of
-registered model identifiers. Default: \code{NULL}.
-model NULL selects the shipped default for the species, see \link{default_taper_models}.
-Species without a default return status 404.}
+\item{model}{Taper equation identifier as a character vector. Defaults to \code{NULL}, selecting
+the stored species default. A supplied identifier overrides that choice. Scalar identifiers
+recycle across trees.}
 
-\item{...}{Additional named inputs supply measurements required by the selected model. Named
-vectors in inches for diameters and feet for heights, none by default.}
+\item{...}{Additional named inputs accepted by the selected model, with none supplied by
+default. Numeric inputs must be finite: positive \code{upper_ht1}, \code{upper_ht2}, and \code{site_index}
+use feet, positive \code{upper_d1} and \code{upper_d2} use inches, and positive \code{basal_area} uses
+square feet per acre. \code{form_class} accepts positive numbers. \code{bark_ratio} is inside diameter
+divided by outside diameter, greater than zero and no greater than one. \code{decay_class}
+accepts whole numbers from 0 through 5 and \code{cull} accepts percentages from 0 through 100.
+\code{upper_bark} accepts \code{'ib'} or \code{'ob'}. Upper heights and diameters must be supplied in
+pairs. Only inputs declared by the selected model are accepted.}
 }
 \value{
-A data frame with \code{value} (whole-tree percent) and \code{status} (unitless integer code).
+A data frame in input order with \code{value} (whole-tree defect, percent) and \code{status}
+(integer code described by \code{\link[=status_codes]{status_codes()}}). Missing results remain in the table.
+Nonfatal section statuses are not propagated to this percentage result.
 }
 \description{
-Convert percentages recorded by stem third into one whole-tree percentage.
-The package does not apply this percentage inside \code{\link[=merchandise]{merchandise()}}. Application to volume is a
-separate script calculation.
+Combine lower, middle, and upper defect percentages using inside bark volume weights. Use
+the returned percentage in a separate deduction calculation, with diameters in inches and
+heights in feet. The thirds divide total height from ground to tip, and merchandise()
+does not apply the returned percentage. Scalar inputs recycle across trees, and invalid rows
+retain their
+input position and a status.
 }
 \examples{
-## Load data verbs
-library(dplyr)
-
-## Calculate a separate whole-tree percentage for an example tree.
+## Measure the first shipped tree with its stored equation
 defect_by_thirds(dbh = example_trees$dbh[1],
-                       ht = example_trees$ht[1],
-                       spcd = example_trees$spcd[1],
-                       model = example_trees$model[1],
-                       lower = 10,
-                       middle = 0,
-                       upper = 0) \%>\%
-  rename(`defect (percent)` = value)
+                 ht = example_trees$ht[1],
+                 spcd = example_trees$spcd[1],
+                 lower = 10,
+                 middle = 5,
+                 upper = 0,
+                 model = example_trees$model[1])
 }

@@ -2,19 +2,19 @@
 % Please edit documentation in R/stem-provider_api.R
 \name{nvel_source_revision}
 \alias{nvel_source_revision}
-\title{Record the source version used for the shipped equations}
+\title{Inspect the pinned source library revision}
 \usage{
 nvel_source_revision()
 }
 \value{
-A single character source revision, unitless. Character attributes   \code{upstream_url} and
-\code{fixtures_release_tag} record the source repository   address and saved reference-test
-release label. Neither is a tree input.
+A character scalar containing the pinned source commit, with \code{upstream_url} and
+\code{fixtures_release_tag} attributes.
 }
 \description{
-Record the source version used for the shipped equations
+Return the source revision associated with shipped equations and fixtures. Use it to identify
+the implementation behind a source comparison.
 }
 \examples{
-## Record the source revision used by this package.
+## Inspect the revision behind the shipped example equations
 nvel_source_revision()
 }

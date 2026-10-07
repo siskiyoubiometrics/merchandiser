@@ -2,7 +2,7 @@
 % Please edit documentation in R/defects.R
 \name{defect}
 \alias{defect}
-\title{Record a section that changes log selection}
+\title{Record a located stem defect}
 \usage{
 defect(
   tree_id,
@@ -14,53 +14,45 @@ defect(
 )
 }
 \arguments{
-\item{tree_id}{Identify the tree each record belongs to. Atomic vector, unitless, required.
-This identifier ties every log, residual, and status row back to its tree and is the only
-link between a log and its tree.}
+\item{tree_id}{Identifiers linking each defect to an input tree. Accepts a nonmissing atomic
+vector. Required, with no default. Its type must match the tree list when records are
+validated.}
 
-\item{start_height}{Set the lower height of the affected section. Numeric, feet above ground,
-required.}
+\item{start_height}{Lower height of the affected interval, in feet above ground. Accepts
+numeric values. Required, with no default. Validation requires a nonnegative height within
+the tree.}
 
-\item{end_height}{Set the upper height of the affected section. Numeric, feet above ground,
-required.
-\code{NA} means the tree top. For an end, use \code{NA} or the same height as \code{start_height}.}
+\item{end_height}{Upper height of the affected interval, in feet above ground. Accepts numeric
+values or \code{NA}. Required, with no default. Missing values extend intervals to the tip. An
+end effect accepts missing or equal starting and ending heights. Other intervals require a
+higher end.}
 
-\item{effect}{Describe how the section changes cutting. Character, unitless, required.
-Use \code{'cull'}, \code{'restrict'}, \code{'end'}, or \code{'sweep'}.}
+\item{effect}{Effect on cutting as a character vector. Accepts \code{'cull'} to remove wood,
+\code{'end'} to stop cutting, \code{'restrict'} to allow only a named product, or \code{'sweep'} to compare
+severity with product limits. Required, with no default.}
 
-\item{product}{Name the only product allowed in a restriction. Character, unitless,
-default \code{NULL}. Required for a restriction and unused for other effects.}
+\item{product}{Required product label for a restriction, as a character vector. Defaults to
+\code{NULL}, represented by missing values. Must match a supplied specification for restrict
+effects and remain missing for other effects.}
 
-\item{percent}{Record the sweep, crook, or spike knot severity. Numeric, percent from zero
-through 100, default \code{NULL}. Required for sweep and unused for other effects.}
+\item{percent}{Sweep severity, in percent, as numeric values from 0 through 100. Defaults to
+\code{NULL}, represented by missing values. Required for sweep effects and must remain missing
+for other effects. It affects eligibility, not a scale deduction.}
 }
 \value{
-A \code{merch_defects} data frame with \code{tree_id} (input identifier), \code{start_height} and
-\code{end_height}
-(feet above ground), \code{effect} and \code{product} (text), and \code{percent} (percent).
+A \code{merch_defects} data frame with \code{tree_id} (identifier), \code{start_height} and
+\code{end_height} (feet above ground), \code{effect} (cutting effect), \code{product} (restriction label,
+otherwise missing), and \code{percent} (sweep percentage, otherwise missing). Scalars recycle to
+the record count.
 }
 \description{
-Record culls, product restrictions, stem ends, and sweep as heights above ground.
-The records change available stem sections and product eligibility.
-}
-\details{
-Culls remove intervals, and restrictions allow only their named product.
-Both split the stem and restart product log counts.
-Cascade also restarts cutting priority.
-An end stops cutting at its lower height.
-Sweep rejects overlapping logs above the product's percentage limit.
+Describe a cull, usable-stem end, product restriction, or sweep interval. Construction checks
+field types. Use \code{\link[=validate_defects]{validate_defects()}} to check heights and product relationships.
 }
 \examples{
-## Load data verbs
-library(dplyr)
-
-## Record a product restriction
+## Record a cull on the first example tree
 defect(tree_id = example_trees$tree_id[1],
-       start_height = 40,
-       end_height = NA,
-       effect = 'restrict',
-       product = 'pulp') \%>\%
-  rename(`start_height (feet)` = start_height,
-         `end_height (feet)` = end_height,
-         `percent (\%)` = percent)
+       start_height = 1,
+       end_height = 8,
+       effect = 'cull')
 }

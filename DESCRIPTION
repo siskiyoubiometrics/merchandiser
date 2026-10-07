@@ -9,7 +9,7 @@ Description: Estimates log and product volumes from tree measurements.
     Volume Estimator Library supplies the shipped source equations.
 License: MIT + file LICENSE
 Copyright: See inst/COPYRIGHTS for copyright holders of ported material.
-URL: https://github.com/siskiyoubiometrics/merchandiser
+URL: https://siskiyoubiometrics.com/merchandiser/, https://github.com/siskiyoubiometrics/merchandiser
 BugReports: https://github.com/siskiyoubiometrics/merchandiser/issues
 Depends:
     R (>= 4.1)

@@ -1,0 +1,533 @@
+---
+title: 'Taper equations'
+output:
+  rmarkdown::html_vignette:
+    md_extensions: -smart
+vignette: >
+  %\VignetteIndexEntry{Taper equations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      dev.args = list(bg = 'white'), fig.width = 8, fig.height = 4.5, dpi = 120)
+library(merchandiser)
+library(dplyr)
+```
+
+Taper equations supply the diameter profiles and section measurements used by merchandising. Select a shipped equation when its species scope and required inputs fit the tree measurements, or fit coefficients to measured stems when a local relationship is needed. Public tree measurements use inches and feet, including calls that evaluate a fitted equation stored on a metric coefficient scale.
+
+## Which equation families ship?
+
+The shipped source equations come from the Forest Service National Volume Estimator Library. The source inventory records the files contributing each family, including the supporting routines used to select equations and measure profiles. Availability is determined by the implemented equation and its required measurements, rather than by the identifier's appearance alone.
+
+
+```{r, echo = FALSE}
+families <- c(
+  'Flewelling variable-shape profiles',
+  'Clark source profiles',
+  'Alaska and Mathis source profiles',
+  'Smaller source profile families',
+  'National scale volume and biomass profiles',
+  'Identifier and merchandising support'
+)
+
+flewelling_files <- paste(
+  c(
+    'f_west.f',
+    'f_ingy.f',
+    'f_alaska.f',
+    'f_other.f',
+    'sf_2pt.f',
+    'sf_2pth.f',
+    'sf_3pt.f',
+    'sf_3z.f',
+    'sf_corr.f',
+    'sf_dfz.f',
+    'sf_ds.f',
+    'sf_hs.f',
+    'sf_shp.f',
+    'sf_taper.f',
+    'sf_yhat.f',
+    'sf_yhat3.f',
+    'sf_zero.f'
+  ),
+  collapse = ', '
+)
+
+clark_files <- paste(
+  c(
+    'r8clkdib.f',
+    'r8dib.f',
+    'r8dib.inc',
+    'r8clkcoef.inc',
+    'r8cfo.inc',
+    'r8clist.inc',
+    'r8vlist.f',
+    'r8vlist.inc',
+    'r8init.f',
+    'r8prep.f',
+    'r8vol.f',
+    'r8vol1.f',
+    'r8vol2.f',
+    'r9clarkdib.f',
+    'r9clark.f',
+    'r9coeff.inc',
+    'r9init.f',
+    'r9vol.f',
+    'r9logs.f',
+    'clkcoef_mod.f',
+    'calcdia.f',
+    'ht2topd.f',
+    'profile.f',
+    'volinit.f',
+    'voleqdef.f'
+  ),
+  collapse = ', '
+)
+
+alaska_files <- paste(
+  c(
+    'r10tap.f',
+    'r10tapo.f',
+    'r10d2h.f',
+    'r10vol.f',
+    'r10vol1.f',
+    'r10volo.f',
+    'r4d2h.f',
+    'r4vol.f',
+    'profile.f',
+    'calcdia.f',
+    'ht2topd.f'
+  ),
+  collapse = ', '
+)
+
+source_files <- paste(
+  c(
+    'r1tap.f',
+    'r2tap.f',
+    'r5tap.f',
+    'r12tap.f',
+    'stump.f',
+    'blmtap.f',
+    'blmvol.f',
+    'formclas.f',
+    'r6vol3.f'
+  ),
+  collapse = ', '
+)
+
+national_files <- paste(
+  c(
+    'nsvb.f',
+    'tables1.inc through tables11.inc',
+    'dist_ecoprov.inc',
+    'regndftdata.inc',
+    'scrib.f'
+  ),
+  collapse = ', '
+)
+
+identifier_files <- paste(c('voleqdef.f', 'fiaeq2nveleq.for', 'mrules.f'),
+  collapse = ', '
+)
+
+family_sources <- data.frame(
+  family = families,
+  source_files = c(
+    flewelling_files,
+    clark_files,
+    alaska_files,
+    source_files,
+    national_files,
+    identifier_files
+  )
+)
+
+knitr::kable(family_sources, row.names = FALSE)
+```
+
+The identifier and merchandising support family draws on `r family_sources$source_files[6]`, the source files listed for equation selection and cutting rules.
+
+Source identifiers have family-specific field layouts. The following table separates an identifier stored with the example trees and a national identifier into their actual fields. Treat these as recorded identifiers, not names to edit when changing a species assignment.
+
+
+```{r, echo = FALSE}
+profile_id <- example_trees$model[1]
+national_id <- 'NVB0210202'
+profile_parts <- data.frame(
+  layout = 'source profile',
+  field = c(
+    'geographic equation selection',
+    'equation mnemonic',
+    'family-specific variant',
+    'species suffix'
+  ),
+  positions = c('1:3', '4:6', '7', '8:10'),
+  value = c(
+    substr(profile_id, 1, 3),
+    substr(profile_id, 4, 6),
+    substr(profile_id, 7, 7),
+    substr(profile_id, 8, 10)
+  )
+)
+
+national_parts <- data.frame(
+  layout = 'national scale',
+  field = c(
+    'system marker',
+    'mountain indicator or zero',
+    'ecological division',
+    'species suffix'
+  ),
+  positions = c('1:3', '4', '5:7', '8:10'),
+  value = c(
+    substr(national_id, 1, 3),
+    substr(national_id, 4, 4),
+    substr(national_id, 5, 7),
+    substr(national_id, 8, 10)
+  )
+)
+
+identifier_parts <- bind_rows(profile_parts, national_parts)
+
+knitr::kable(identifier_parts, row.names = FALSE)
+```
+
+The stored profile's species suffix is `r profile_parts$value[4]`, matching the species code in that identifier. The national identifier `r paste(national_parts$value, collapse = '')` combines the system marker, mountain indicator, ecological division, and species suffix shown in the table.
+
+## Which compatibility behavior is used?
+
+The default `port` setting follows the public profile and the calculated quantities where source routines have inconsistent branches or unassigned outputs. The `nvel` setting reproduces the listed source behavior. This option is separate from choosing a taper equation, and affects the specific calculations in the comparison table.
+
+
+```{r}
+## Attach the calculation and data tools
+library(merchandiser)
+library(dplyr)
+```
+
+```{r}
+## Inspect the active compatibility choice
+getOption(x = 'merchandiser.compat', default = 'port')
+```
+
+
+```{r, echo = FALSE}
+area <- c(
+  'Inventory-code geographic substitution (fiaeq2nveleq.for)',
+  'Flewelling SF_HS inverse',
+  'Clark 834CLKE110 inverse',
+  'Clark R9LOGS error 12',
+  'R10 height selection and cedar equality',
+  'Smaller-family inverse search',
+  'R12 height selection',
+  'National scale CALCDIA outside-bark diameter',
+  'National scale Table S10 carbon fraction'
+)
+
+port <- c(
+  'applies the intended trimmed geographic substitutions',
+  'inverts the displayed profile and selects its highest crossing',
+  'returns the highest actual crossing',
+  'retains a computable total in the internal volume record',
+  'inverts the registered profile consistently',
+  'returns the precise numeric crossing',
+  'inverts the public profile',
+  'returns the outside-bark diameter computed internally',
+  'returns the fraction used by the biomass calculation'
+)
+
+nvel <- c(
+  'reproduces fixed-width source string semantics',
+  'reproduces the source bark-height argument and crossing selection',
+  'reproduces the source two-root addition',
+  'reproduces the source error and cleared record',
+  'retains source height results and the cedar equality rule',
+  'reproduces the source rounded search',
+  'retains the source result for an unselected calculation',
+  'reproduces the unassigned source output slot',
+  'returns the raw source-table fraction'
+)
+
+compatibility_differences <- data.frame(area = area, port = port, nvel = nvel)
+
+knitr::kable(compatibility_differences, row.names = FALSE)
+```
+
+The Clark inverse entry selects the highest actual crossing in `port`, while `nvel` reproduces the source's addition of two roots. The distinction affects the height returned for that source profile, rather than its species assignment.
+
+## How closely does the package match the pinned source?
+
+The agreement table compares saved single and double precision source results with package calculations. Each row reports the comparison count, the number within tolerance, the largest relative difference, and the count of excluded rows. These tolerances apply to the specified output and compatibility setting, not to every equation as a single blanket accuracy claim.
+
+
+```{r}
+## Identify the source revision used for agreement fixtures
+nvel_source_revision()
+```
+
+
+```{r, echo = FALSE}
+agreement <- read.csv(system.file('extdata',
+  'oracle-agreement.csv',
+  package = 'merchandiser'
+))
+agreement %>%
+  distinct(precision, compat) %>%
+  arrange(precision, compat) %>%
+  knitr::kable(row.names = FALSE)
+```
+
+The `double` entries retain both compatibility settings, so precision alone does not identify the calculation being compared.
+
+Excluded rows and their reasons are listed in `inst/extdata/oracle-agreement.csv`, shipped with the package.
+
+```{r, echo = FALSE}
+agreement_display <- agreement %>%
+  filter(rows_compared > 0) %>%
+  rowwise() %>%
+  mutate(
+    excluded_rows = sum(as.numeric(regmatches(
+      exclusions, gregexpr('[0-9]+(?=($|,))', exclusions, perl = TRUE)
+    )[[1]]))
+  ) %>%
+  ungroup() %>%
+  select(-exclusions) %>%
+  mutate(output = recode(output,
+                         DIB = 'diameter inside bark',
+                         DOB = 'diameter outside bark',
+                         `height at DIB` = 'height at inside bark diameter',
+                         `cedar equality height at DIB` =
+                           'cedar equality height at inside bark diameter')) %>%
+  mutate(
+    max_relative_difference = sprintf('%.2e', max_relative_difference),
+    tolerance = sprintf('%.2e', tolerance)
+  )
+largest_comparison <- agreement_display %>%
+  slice_max(rows_compared, n = 1, with_ties = FALSE)
+agreement_display %>%
+  rename(`rows compared (count)` = rows_compared,
+         `rows within tolerance (count)` = rows_within_tolerance,
+         `maximum relative difference (ratio)` = max_relative_difference,
+         `tolerance (ratio)` = tolerance, `excluded rows (count)` = excluded_rows) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The `r largest_comparison$family` family has the most rows compared in a table entry, with `r largest_comparison$rows_compared` rows and a maximum relative difference of `r largest_comparison$max_relative_difference`. Full source fixtures are supplied separately to the test suite, which enforces their tolerances and exclusion counts.
+
+## How is a local relationship fitted?
+
+`fit_taper()` accepts repeated measurements identified by tree, with constant breast-height diameter and total height within each tree. The shipped measurements are synthetic profiles derived from the example trees. They demonstrate fitting inputs and diagnostics without representing a field calibration sample.
+
+
+```{r}
+## Retain the measured fields required for fitting
+measurements <- example_stem_measurements %>%
+  filter(spcd == 202) %>%
+  select(tree_id, dbh, ht, h, dib, spcd)
+```
+
+
+```{r, echo = FALSE}
+forms <- tribble(
+  ~form,
+  ~source,
+  ~structure,
+  'kozak_1988',
+  'Kozak (1988), doi:10.1139/x88-213',
+  'Variable exponent with reference point',
+  'kozak_2002',
+  'Kozak (2004), doi:10.5558/tfc80507-4',
+  'Variable exponent with tree and height terms',
+  'max_burkhart',
+  'Max and Burkhart (1976), doi:10.1093/forestscience/22.3.283',
+  'Segmented polynomial with fitted join points'
+)
+knitr::kable(forms)
+```
+
+The `max_burkhart` row specifies a segmented polynomial with fitted join points. These forms ship as fitting relationships, without a supplied set of published local coefficients.
+
+
+```{r}
+## Fit a segmented profile to the selected measured stems
+fit <- fit_taper(tree_id = measurements$tree_id,
+                 dbh = measurements$dbh,
+                 ht = measurements$ht,
+                 h = measurements$h,
+                 dib = measurements$dib,
+                 spcd = measurements$spcd,
+                 form = 'max_burkhart')
+```
+
+
+```{r, echo = FALSE}
+fit$fit_statistics$overall %>%
+  rename(`measurements (count)` = n, `root mean squared error (inches)` = rmse,
+         `mean residual (inches)` = bias) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+rmse_text <- format(round(fit$fit_statistics$overall$rmse, 3), trim = TRUE)
+```
+
+The fitted profile has a root mean squared diameter error of `r rmse_text` inches on the retained measurements. Residual diagnostics preserve measurement identifiers and physical units for examining departures along the stem.
+
+
+```{r, eval = FALSE}
+## Compare observed and fitted relative diameters
+plot(fit)
+```
+
+```{r, echo = FALSE}
+diagnostics <- fit$residual_diagnostics
+plot(diagnostics$relative_height, diagnostics$observed_dib / diagnostics$dbh,
+     xlab = 'Height / total height (fraction)',
+     ylab = 'Inside diameter / breast-height diameter (fraction)',
+     pch = 16, col = 'grey55')
+points(diagnostics$relative_height, diagnostics$fitted_dib / diagnostics$dbh,
+       pch = 1, col = '#0072B2')
+legend('topright', legend = c('Measured', 'Fitted'),
+       pch = c(16, 1), col = c('grey55', '#0072B2'), bty = 'n')
+```
+
+
+
+The figure compares `r fit$n_measurements` measured diameters with fitted values at the same relative heights. It describes the fitting observations, without a separate validation sample.
+
+<details>
+<summary>Measured and fitted diameter ratios</summary>
+
+```{r, echo = FALSE}
+fit$residual_diagnostics %>%
+  transmute(tree_id, `height / total height` = relative_height,
+            `observed diameter / breast-height diameter` = observed_dib / dbh,
+            `fitted diameter / breast-height diameter` = fitted_dib / dbh) %>%
+  knitr::kable(digits = 4, row.names = FALSE)
+first_ratio <- format(round(fit$residual_diagnostics$observed_dib[1] /
+                              fit$residual_diagnostics$dbh[1], 4), trim = TRUE)
+```
+
+The first observed diameter is `r first_ratio` times its tree's breast-height diameter, matching the first measured profile point.
+
+</details>
+
+```{r}
+## Predict diameters at the measured heights
+predicted <- measurements %>%
+  mutate(fitted_dib = predict(object = fit, newdata = measurements))
+```
+
+```{r, echo = FALSE}
+predicted %>%
+  slice_head(n = 5) %>%
+  rename(`breast-height diameter (inches)` = dbh, `total height (feet)` = ht,
+         `measurement height (feet)` = h, `measured diameter (inches)` = dib,
+         `fitted diameter (inches)` = fitted_dib, `species code` = spcd) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+first_prediction <- format(round(predicted$fitted_dib[1], 3), trim = TRUE)
+```
+
+The first prediction is `r first_prediction` inches at the first recorded measurement height. The returned values can be joined to other measurement attributes through the retained tree identifier and height.
+
+With several groups, `group` requests a mixed effects fit. Its random effect acts on the segmented form's slope parameter or the Kozak scale parameter. Prediction for an unseen group uses population coefficients. `summary()` returns coefficient and fit summaries, and `predict()` returns inside bark diameters in inches for supplied measurements.
+
+## How does the fit become a usable equation?
+
+`as_taper_model()` retains the population coefficients and fitted species scope. The private identifier must contain a dot, which separates it from source identifiers. An explicit bark ratio enables outside bark calculations where the fitted form itself provides only inside bark diameter.
+
+
+```{r}
+## Create a local model with an explicit bark ratio
+local_model <- as_taper_model(x = fit,
+                              model = 'local.douglas_fir',
+                              bark_ratio = 0.9)
+
+## Inspect the stored coefficient scale
+print(local_model)
+```
+
+The fitted model stores coefficients in metric units, as its print shows, while public calls continue to accept and return inches and feet.
+
+
+```{r}
+## Register the model for this session
+register_taper_model(x = local_model)
+
+## Check its availability and species scope
+check_taper_models(model = local_model$id, spcd = measurements$spcd)
+```
+
+The check returns no problem rows for the fitted species scope. It checks model availability and input requirements, not fit accuracy.
+
+
+```{r}
+## Select the tree with a stored taper equation
+tree <- example_trees %>%
+  filter(tree_id == 5)
+```
+
+
+```{r}
+## Measure an inside bark diameter through the public interface
+local_diameter <- dib(dbh = tree$dbh,
+                      ht = tree$ht,
+                      h = 20,
+                      spcd = tree$spcd,
+                      model = local_model$id)
+```
+
+
+```{r, echo = FALSE}
+local_diameter %>%
+  rename(`diameter (inches)` = value) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+local_text <- format(round(local_diameter$value, 3), trim = TRUE)
+```
+
+At the supplied height in feet, the fitted model returns `r local_text` inches inside bark. No manual conversion of the input tree measurements is needed.
+
+## What should be retained for later use?
+
+The registry manifest records registered identifiers, contributing packages, and registration order. A package version is recorded for models registered by a package and is missing for a model registered from a script. It excludes coefficients and source identifiers resolved without explicit registration. Save the fit or coefficient vector separately when the relationship needs to be restored in another session.
+
+
+```{r}
+## Record the local model's registry entry
+manifest <- taper_manifest() %>%
+  filter(id == local_model$id)
+```
+
+
+```{r, echo = FALSE}
+manifest %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The manifest identifies `r manifest$id[1]` as the registered local equation. Its registration lasts only for the current session.
+
+
+```{r}
+## Reconstruct a model directly from its metric coefficients
+coefficient_model <- taper_model_from_coefficients(id = 'local.coefficients',
+                                                   form = fit$form,
+                                                   coefficients = fit$coefficients,
+                                                   spcd = fit$spcd)
+
+## Inspect the reconstructed model identifier
+coefficient_model$id
+
+## Remove the example's session registration
+unregister_taper_model(model = local_model$id)
+```
+
+The reconstructed object retains the equation form and coefficient scale without registering it automatically. [The model constructor](../reference/new_taper_model.html) supports existing diameter functions when coefficients alone do not describe the implementation.

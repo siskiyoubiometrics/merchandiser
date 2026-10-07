@@ -2,26 +2,32 @@
 % Please edit documentation in R/stem-registry.R
 \name{get_taper_model}
 \alias{get_taper_model}
-\title{Inspect a taper equation and its required inputs}
+\title{Inspect a taper model and its required inputs}
 \usage{
 get_taper_model(
   model
 )
 }
 \arguments{
-\item{model}{The identifier names the taper model in the registry. Character scalar model
-identifier. Required, with no default.}
+\item{model}{Equation identifier as one nonempty character string. Required, without a
+default. The identifier must resolve to an available equation.}
 }
 \value{
-A taper_model list containing id, form, kernel, inputs, spcd, stump_ht,
-bark_ratio (diameter ratio), source (provenance), and internal equation metadata.
-\code{measurement_system} identifies the internal units.
-\code{stump_ht} uses feet for imperial models and meters for metric models.
+A \code{taper_model} list containing \code{id} (identifier), \code{form} (equation form),
+\code{kernel} (implementation and capability metadata), \code{dib}, \code{dob}, \code{height_at_dib},
+and \code{volume} (callbacks or absent optional callbacks), \code{inputs} (required, optional,
+and paired auxiliary names), \code{measurement_system} (internal units), \code{spcd} (species
+scope), \code{stump_ht} (feet for imperial models or meters for metric models),
+\code{bark_ratio} (inside-to-outside diameter ratio), \code{source} (provenance), \code{notes},
+\code{data} (equation data or coefficients), and \code{class_version}. The optional
+\code{oracle_verified} attribute records source-fixture verification. Public calls
+continue to accept inches and feet regardless of stored coefficient units.
 }
 \description{
-Inspect a taper equation and its required inputs
+Resolve an identifier to its equation, capabilities, inputs, and provenance. Inspect this
+object before supplying measurements required by a particular model.
 }
 \examples{
-## Inspect the model used for an example tree.
+## Inspect the model stored with the first shipped tree
 get_taper_model(model = example_trees$model[1])
 }

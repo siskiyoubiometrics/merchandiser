@@ -1,0 +1,411 @@
+---
+title: 'Working a tree list'
+output:
+  rmarkdown::html_vignette:
+    md_extensions: -smart
+vignette: >
+  %\VignetteIndexEntry{Working a tree list}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      dev.args = list(bg = 'white'), fig.width = 8, fig.height = 4.5, dpi = 120)
+library(merchandiser)
+library(dplyr)
+product_colors <- c(saw = '#B666B9', pulp = '#C66773',
+                    saw_young = '#767ECA', saw_mature = '#00999F')
+```
+
+A tree-list calculation returns logs and residual sections keyed to the original trees, so stand and species attributes can be joined back for summaries. Use the same workflow for completed heights, located defects, and stopper columns converted to defects. The shipped lists are synthetic examples with diameters in inches and heights in feet, and their unweighted totals describe the listed trees rather than an area estimate.
+
+## Which products apply to the Pacific Northwest list?
+
+The specifications below accept sawlogs before pulp because that is their order in `products()`. The pulp name matches restrictions in the shipped defect records. The sawlog sweep limit also gives the recorded sweep percentages an explicit eligibility test.
+
+
+```{r}
+## Attach the calculation and data tools
+library(merchandiser)
+library(dplyr)
+```
+
+```{r}
+## Assign sawlog dimensions and a sweep limit
+saw <- product(product = 'saw',  ## product label
+               min_length = 16,  ## feet
+               max_length = 32,  ## feet
+               trim = 0.5,  ## feet
+               min_sed = 6,  ## inches inside bark
+               max_sweep = 10,  ## percent
+               volume_unit = 'scribner')  ## board feet
+
+## Accept shorter and smaller sections as pulp
+pulp <- product(product = 'pulp',  ## product label
+                min_length = 8,  ## feet
+                max_length = 20,  ## feet
+                trim = 0.5,  ## feet
+                min_sed = 3,  ## inches inside bark
+                volume_unit = 'green_ton')  ## green short tons
+```
+
+
+```{r}
+## Combine products and retain the full tree list
+specifications <- products(saw, pulp)
+
+## Retain the tree attributes for later joins
+trees <- example_trees_pnw
+```
+
+
+```{r}
+## Select logs with the matching located defects
+pnw <- merchandise(tree_id = trees$tree_id,
+                   dbh = trees$dbh,
+                   ht = trees$ht,
+                   spcd = trees$spcd,
+                   products = specifications,
+                   defects = example_defects_pnw)
+```
+
+A single call retains the tree identifier on every log, residual, and status row. Trees with no selected logs still need review through their residual and status records, because absence from the log table alone does not identify the reason.
+
+## How are logs summarized by stand?
+
+Join attributes by `tree_id`, then group by the attributes and measurement basis needed for the summary. Keeping both product and `volume_unit` in the grouping prevents a board foot total from absorbing weight scale. The example supplies no expansion factors, so none are introduced here.
+
+
+```{r}
+## Attach stand and diameter to each selected log
+pnw_logs <- pnw$logs %>%
+  left_join(y = trees %>%
+              select(tree_id, stand, dbh),
+            by = 'tree_id')
+
+## Keep each product in its own scale unit
+pnw_totals <- pnw_logs %>%
+  group_by(stand, product, volume_unit) %>%
+  summarize(scale = sum(scale), .groups = 'drop')
+```
+
+
+```{r, echo = FALSE}
+pnw_totals %>%
+  transmute(stand, product,
+            `scale (Scribner board feet)` = if_else(volume_unit == 'scribner', scale, NA_real_),
+            `scale (green short tons)` = if_else(volume_unit == 'green_ton', scale, NA_real_)) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+pnw_scale <- format(round(sum(pnw_logs$scale[pnw_logs$product == 'saw']), 3), trim = TRUE)
+```
+
+The saw product totals `r pnw_scale` Scribner board feet across the listed Pacific Northwest trees.
+
+Diameter classes can be calculated after the join, using the same tree measurement for each of its logs. The separate panels below retain product measurement units. Bars stack products only within a common scale basis.
+
+
+```{r, echo = FALSE, fig.width = 12}
+yield <- pnw_logs %>%
+  mutate(diameter_class = cut(dbh, breaks = c(0, 10, 20, 30, 40, 60),
+                              include.lowest = TRUE)) %>%
+  group_by(volume_unit, product, diameter_class) %>%
+  summarize(scale = sum(scale), .groups = 'drop')
+yield %>%
+  transmute(product, `diameter class (inches)` = diameter_class,
+            `scale (Scribner board feet)` = if_else(volume_unit == 'scribner', scale, NA_real_),
+            `scale (green short tons)` = if_else(volume_unit == 'green_ton', scale, NA_real_)) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The first diameter class contributes `r format(round(yield$scale[1], 3), trim = TRUE)` green short tons to the pulp panel.
+
+```{r, echo = FALSE, fig.width = 12}
+par(mfrow = c(1, 2), mar = c(5, 4, 1, 1))
+for (basis in c('scribner', 'green_ton')) {
+  part <- yield %>% filter(volume_unit == basis)
+  heights <- xtabs(scale ~ product + diameter_class, data = part)
+  palette <- product_colors[rownames(heights)]
+  barplot(heights, col = palette, border = NA,
+          xlab = 'Diameter class (inches)',
+          ylab = if (basis == 'scribner') {
+            'Scale (Scribner board feet)'
+          } else {
+            'Scale (green short tons)'
+          })
+  legend('topright', legend = rownames(heights), fill = palette, bty = 'n')
+}
+```
+
+The diameter-class bars allocate the same `r pnw_scale` Scribner board feet among the measured size classes, without combining it with pulp weight.
+
+
+<details>
+<summary>Logs in the stacked drawings</summary>
+
+```{r, echo = FALSE}
+pnw$logs %>%
+  filter(tree_id %in% c(7, 14, 28)) %>%
+  transmute(tree_id, product, `start (feet)` = start_height, `end (feet)` = end_height,
+            `length (feet)` = length, `small-end diameter (inches)` = sed,
+            `scale (Scribner board feet)` = if_else(volume_unit == 'scribner', scale, NA_real_),
+            `scale (green short tons)` = if_else(volume_unit == 'green_ton', scale, NA_real_)) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The first displayed tree starts cutting at `r pnw$logs$start_height[pnw$logs$tree_id == 7][1]` feet, above its cull.
+
+</details>
+
+```{r, echo = FALSE, fig.height = 9}
+par(mfrow = c(3, 1), mar = c(4, 4, 1, 1))
+for (id in c(7, 14, 28)) {
+  plot(pnw, tree_id = id, main = '', ylab = 'Stem radius (inches)',
+       yaxt = 's', col = product_colors)
+}
+```
+
+The first stacked drawing begins above the cull ending at `r example_defects_pnw$end_height[1]` feet. The other drawings show how a later cull and a pulp restriction change cuts on their respective trees.
+
+## How do age limits change the southern products?
+
+The southern list contains stands of different ages and stopper heights for some trees. Age limits use inclusive lower and exclusive upper endpoints. Passing the tree ages allows the same dimensions to produce separate age-limited sawlog products without assigning those products manually by stand.
+
+
+```{r}
+## Accept sawlogs from younger qualifying trees
+saw_young <- product(product = 'saw_young',  ## product label
+                     min_age = 20,  ## years
+                     max_age = 35,  ## years, excluded
+                     min_length = 16,  ## feet
+                     max_length = 32,  ## feet
+                     trim = 0.5,  ## feet
+                     min_sed = 6,  ## inches inside bark
+                     volume_unit = 'scribner')  ## board feet
+
+## Assign older qualifying trees to a separate sawlog product
+saw_mature <- product(product = 'saw_mature',  ## product label
+                      min_age = 35,  ## years
+                      min_length = 16,  ## feet
+                      max_length = 32,  ## feet
+                      trim = 0.5,  ## feet
+                      min_sed = 6,  ## inches inside bark
+                      volume_unit = 'scribner')  ## board feet
+
+## Keep smaller and age-ineligible wood eligible for pulp
+pulp <- product(product = 'pulp',  ## product label
+                min_length = 8,  ## feet
+                max_length = 20,  ## feet
+                trim = 0.5,  ## feet
+                min_sed = 3,  ## inches inside bark
+                volume_unit = 'green_ton')  ## green short tons
+```
+
+
+```{r}
+## Set the southern list and its ordered specifications
+south_trees <- example_trees_south
+
+## Offer age-qualified sawlogs before pulp
+south_specs <- products(saw_young, saw_mature, pulp)
+```
+
+
+```{r}
+## Turn stopper columns into located defect records
+south_defects <- defects_from_stoppers(tree_id = south_trees$tree_id,
+                                       ht = south_trees$ht,
+                                       topwood_product = 'pulp',
+                                       saw_stop = south_trees$saw_stop,
+                                       pulp_stop = south_trees$pulp_stop,
+                                       jump_butt = south_trees$jump_butt)
+```
+
+
+```{r}
+## Apply age limits and converted stopping heights
+south <- merchandise(tree_id = south_trees$tree_id,
+                     dbh = south_trees$dbh,
+                     ht = south_trees$ht,
+                     spcd = south_trees$spcd,
+                     products = south_specs,
+                     age = south_trees$age,
+                     defects = south_defects)
+```
+
+
+```{r}
+## Join stand ages to the southern log record
+south_logs <- south$logs %>%
+  left_join(y = south_trees %>%
+              select(tree_id, stand, age, dbh),
+            by = 'tree_id')
+
+## Summarize products within stands and their own units
+south_totals <- south_logs %>%
+  group_by(stand, age, product, volume_unit) %>%
+  summarize(scale = sum(scale), .groups = 'drop')
+```
+
+
+```{r, echo = FALSE}
+south_totals %>%
+  transmute(stand, `age (years)` = age, product,
+            `scale (Scribner board feet)` = if_else(volume_unit == 'scribner', scale, NA_real_),
+            `scale (green short tons)` = if_else(volume_unit == 'green_ton', scale, NA_real_)) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The youngest stand is `r min(south_trees$age)` years old and supplies pulp only under these age limits. The other stands shift from the younger to the mature sawlog product when their ages reach the specified boundary.
+
+
+```{r, echo = FALSE, fig.width = 12, fig.height = 10}
+yield <- south_logs %>%
+  mutate(diameter_class = cut(dbh, breaks = c(0, 10, 20, 30, 40, 60),
+                              include.lowest = TRUE)) %>%
+  group_by(stand, age, volume_unit, product, diameter_class) %>%
+  summarize(scale = sum(scale), .groups = 'drop')
+yield %>%
+  transmute(stand, `age (years)` = age, product, `diameter class (inches)` = diameter_class,
+            `scale (Scribner board feet)` = if_else(volume_unit == 'scribner', scale, NA_real_),
+            `scale (green short tons)` = if_else(volume_unit == 'green_ton', scale, NA_real_)) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The youngest stand contributes `r format(round(yield$scale[1], 3), trim = TRUE)` green short tons in its first occupied diameter class.
+
+```{r, echo = FALSE, fig.width = 12, fig.height = 10}
+par(mfrow = c(4, 2), mar = c(4, 4, 2, 1))
+for (stand_id in unique(south_trees$stand)) {
+  for (basis in c('scribner', 'green_ton')) {
+    labels <- if (basis == 'scribner') c('saw_young', 'saw_mature') else 'pulp'
+    part <- yield %>%
+      filter(stand == stand_id, volume_unit == basis) %>%
+      mutate(product = factor(product, levels = labels))
+    heights <- xtabs(scale ~ product + diameter_class, data = part)
+    palette <- product_colors[labels]
+    barplot(heights, col = palette, border = NA,
+            ylim = c(0, max(1, max(colSums(heights))) * 1.4),
+            xlab = 'Diameter class (inches)',
+            ylab = if (basis == 'scribner') {
+              'Scale (Scribner board feet)'
+            } else {
+              'Scale (green short tons)'
+            })
+    legend('topright', legend = labels, fill = palette, title = stand_id, bty = 'n')
+  }
+}
+```
+
+The youngest stand supplies `r format(round(south_totals$scale[1], 3), trim = TRUE)` green short tons across its pulp bars and has no sawlog contribution. Each stand has a separate row, and pulp remains on its own weight axis.
+
+## Did any trees fail the calculation?
+
+The status table contains only reported tree conditions. An empty table indicates that no condition was recorded, not that every tree supplied every product. Here a separate clean call and a deliberately invalid diameter show the distinction without changing the shipped tree list.
+
+
+```{r}
+## Keep a valid single tree for the status comparison
+tree <- example_trees %>%
+  filter(tree_id == 5)
+```
+
+
+```{r}
+## Select logs without located defects
+clean <- merchandise(tree_id = tree$tree_id,
+                     dbh = tree$dbh,
+                     ht = tree$ht,
+                     spcd = tree$spcd,
+                     products = saw)
+```
+
+
+```{r}
+## Inspect the clean run's status rows
+clean$status
+```
+
+The clean run reports `r nrow(clean$status)` status rows.
+
+
+```{r}
+## Create a copy with an invalid diameter
+bad_tree <- tree %>%
+  mutate(dbh = -1)
+```
+
+
+```{r}
+## Inspect the effect of an invalid tree diameter
+bad <- merchandise(tree_id = bad_tree$tree_id,
+                   dbh = bad_tree$dbh,
+                   ht = bad_tree$ht,
+                   spcd = bad_tree$spcd,
+                   products = saw)
+```
+
+
+```{r, echo = FALSE}
+bad$status %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The invalid diameter produces status `r bad$status$status[1]`, identifying the input that prevented calculation.
+
+
+```{r}
+## Look up the reported code's category and description
+codes <- status_codes() %>%
+  filter(status %in% bad$status$status)
+```
+
+
+```{r, echo = FALSE}
+codes %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Code `r codes$status[1]` belongs to the `r codes$category[1]` category.
+
+## Which assumptions were recorded?
+
+The result stores the equation and stump choice for each tree. When an outside bark calculation needs a supplementary bark ratio, its record includes the ratio's source and diameter basis. Inspect these rows before comparing runs that used different assignments or auxiliary measurements.
+
+
+```{r}
+## Extract the clean run's recorded assumptions
+record <- assumptions(x = clean)
+```
+
+
+```{r, echo = FALSE}
+record %>%
+  rename(`value (see unit column)` = value) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The stump row records `r record$value[record$assumption == 'stump_height']` foot from the call's stump input. The equation row records its identifier and selection source, rather than an estimate of model uncertainty.
+
+## How are threads controlled?
+
+`threads()` reports the current worker limit or changes it when supplied a count. `with_threads()` restores the previous limit after evaluating an expression, including when evaluation fails. The temporary setting below is useful when a larger script needs a predictable calculation limit.
+
+
+```{r}
+## Inspect the current thread limit
+threads()
+
+## Run a measurement under a temporary limit
+with_threads(n = 1,
+             code = dib(dbh = tree$dbh,
+                        ht = tree$ht,
+                        h = 20,
+                        spcd = tree$spcd))
+```
+
+The temporary call uses the requested single worker and returns an inside bark diameter in inches. Thread settings change execution resources, not the product definitions or scale units.

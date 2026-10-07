@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-height.R
 \name{complete_heights}
 \alias{complete_heights}
-\title{Complete missing tree heights}
+\title{Fill missing heights while retaining measured values}
 \usage{
 complete_heights(
   dbh,
@@ -13,39 +13,50 @@ complete_heights(
 )
 }
 \arguments{
-\item{dbh}{Diameter at breast height outside bark. Numeric vector,
-inches, greater than zero and at most 400. Required, with no default.}
+\item{dbh}{Outside bark diameter at breast height, in inches. Accepts numeric values greater
+than zero and no greater than 400. Required, with no default. Invalid rows return missing
+heights, with warnings for invalid finite inputs.}
 
-\item{ht}{Total height above ground. Numeric vector, feet.
-Required, with no default. Heights must be greater than zero and at most 500 feet.}
+\item{ht}{Measured total height above ground, in feet. Accepts numeric values greater than
+zero and no greater than 500, or nonfinite values to be predicted. Required, with no default.
+Invalid finite rows remain missing. Nonfinite heights are completed from the supplied fit,
+or from a fit to the remaining valid observations.}
 
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Required, with no default.}
+\item{spcd}{Species identifiers as numeric positive whole-number codes within the R integer
+range. Required, without a default. Codes select relationships in the supplied fit or group
+observations when a new fit is needed.}
 
-\item{group}{Trees in the same group share a local height or taper adjustment. Atomic vector of
-group identifiers. Default: \code{NULL}.}
+\item{group}{Group identifiers for shared adjustments, supplied as an atomic vector matching
+the observations. Defaults to \code{NULL}, with no separate group assignments. Known groups use
+their fitted adjustments for conditional predictions, while unseen groups use the population
+relationship.}
 
-\item{fit}{The fitted height relationship supplies predictions for these trees. A height_fit
-object. Default: \code{NULL}.}
+\item{fit}{Height fit returned by \code{\link[=fit_height]{fit_height()}}, or \code{NULL}. Defaults to \code{NULL}, fitting the
+available valid heights with the supplied species and groups. Supplying a fit avoids
+refitting.}
 }
 \value{
-A numeric vector of heights in feet, preserving observed heights and filling missing
-heights in input order.
+A numeric vector of total heights in feet, in input order. Measured values on rows
+with valid diameter, height, and species inputs are unchanged. Missing predictions remain
+\code{NA} when the fit cannot cover a species or an input
+is invalid.
 }
 \description{
-Complete missing tree heights
+Complete nonfinite heights from a fitted diameter-height relationship. Measured heights
+are preserved only on rows with valid diameter, height, and species inputs. Invalid finite
+rows generate a warning and remain missing.
 }
 \examples{
-## Load data verbs
+## Remove stored predictions while preserving measurements
 library(dplyr)
 
-## Blank and refill predicted heights with plot adjustments
-example_trees_pnw \%>\%
-  mutate(ht = if_else(condition = ht_status == 'predicted', true = NA_real_, false = ht)) \%>\%
-  mutate(ht = complete_heights(dbh = dbh,
-                               ht = ht,
-                               spcd = spcd,
-                               group = plot)) \%>\%
-  transmute(`height (feet)` = ht) \%>\%
-  head(n = 3)
+## Retain the tree rows used in this calculation
+trees <- example_trees_pnw \%>\%
+  mutate(observed = if_else(ht_status == 'predicted', NA_real_, ht))
+
+## Refit and inspect completed heights with the original plot groups
+head(complete_heights(dbh = trees$dbh,
+                      ht = trees$observed,
+                      spcd = trees$spcd,
+                      group = trees$plot))
 }

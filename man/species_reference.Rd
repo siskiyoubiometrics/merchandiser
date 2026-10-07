@@ -10,7 +10,7 @@ A data frame with these columns:
 \item \code{spcd}: numeric species code.
 \item \code{common}, \code{scientific}, \code{genus}: species and genus names.
 \item \code{symbol}: plant symbol.
-\item \code{bark_ratio}: inside to outside diameter ratio, unitless.
+\item \code{bark_ratio}: inside to outside diameter ratio.
 \item \code{softwood_hardwood}: wood group.
 \item \code{wood_density}: oven-dry wood weight, pounds per cubic foot.
 \item \code{sources}: provenance.
@@ -24,7 +24,13 @@ Species codes, names, and bark ratios are available for user-managed joins.
 Function arguments accept numeric codes only.
 }
 \examples{
-## Inspect the species names and codes available for joins
-head(species_reference, n = 3)
+## Attach species names to the shipped tree list
+library(dplyr)
+
+## Join species labels by numeric code
+example_trees \%>\%
+  left_join(y = species_reference,
+            by = 'spcd') \%>\%
+  select(tree_id, spcd, common)
 }
 \keyword{datasets}

@@ -1,6 +1,7 @@
 #' Example trees for stem calculations
 #'
-#' The trees are synthetic and illustrate package calculations.
+#' Synthetic tree dimensions and stored equations supply reproducible stem calculations.
+#' Use these rows to compare product specifications with diameters in inches and heights in feet.
 #' @format A data frame with the following columns:
 #' \describe{
 #' \item{tree_id}{Tree identifier, unique within the example table.}
@@ -13,7 +14,8 @@
 
 #' Example Pacific Northwest trees
 #'
-#' The trees are synthetic and illustrate package calculations.
+#' Synthetic Pacific Northwest trees provide a complete list for merchandising and height fitting.
+#' Heights in feet retain their measured or predicted origin beside diameters in inches.
 #' @format A data frame with the following columns:
 #' \describe{
 #' \item{stand}{Stand identifier, text.}
@@ -31,7 +33,8 @@
 
 #' Example southern plantation trees
 #'
-#' The trees are synthetic and illustrate package calculations.
+#' Synthetic plantation stands provide tree ages and stopping heights for merchandising.
+#' Use the age and stopper columns with diameters in inches and heights in feet.
 #' @format A data frame with the following columns:
 #' \describe{
 #' \item{stand}{Stand identifier, text.}
@@ -51,7 +54,8 @@
 
 #' Example Pacific Northwest defect records
 #'
-#' The trees are synthetic and illustrate package calculations.
+#' Located records supply each supported defect effect for the Pacific Northwest example trees.
+#' Join them by tree identifier when cutting those trees, with interval heights in feet.
 #' @format A data frame with the following columns:
 #' \describe{
 #' \item{tree_id}{Identifier linking this record to tree_id in example_trees_pnw.}
@@ -67,7 +71,8 @@
 
 #' Example stem measurements
 #'
-#' The trees are synthetic and illustrate package calculations.
+#' Repeated synthetic inside bark measurements supply the inputs for taper fitting.
+#' Tree identifiers link measurement heights in feet to tree and stem diameters in inches.
 #' @format A data frame with the following columns:
 #' \describe{
 #' \item{tree_id}{Tree identifier, repeated for measurements on the same tree.}
@@ -81,7 +86,7 @@
 
 #' Shipped default taper models by species
 #'
-#' Species-specific models are selected from Region 6, then Region 8, then Region 9 lookups.
+#' Species defaults retain a source equation with matching species scope.
 #' A default must resolve to exactly that species and require no extra measurements.
 #' Species without an accepted model have no row.
 #' @format A data frame with the following columns:
@@ -93,5 +98,10 @@
 #' @export
 #' @examples
 #' ## Inspect the shipped defaults for the example species
-#' default_taper_models[default_taper_models$spcd %in% example_trees$spcd, ]
+#' library(dplyr)
+#'
+#' ## Retain equation assignments for the example species
+#' default_taper_models %>%
+#'   filter(spcd %in% example_trees$spcd) %>%
+#'   select(spcd, model)
 "default_taper_models"

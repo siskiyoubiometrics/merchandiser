@@ -25,6 +25,7 @@ A data frame with the following columns:
 example_trees_south
 }
 \description{
-The trees are synthetic and illustrate package calculations.
+Synthetic plantation stands provide tree ages and stopping heights for merchandising.
+Use the age and stopper columns with diameters in inches and heights in feet.
 }
 \keyword{datasets}

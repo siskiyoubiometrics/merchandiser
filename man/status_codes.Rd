@@ -2,29 +2,30 @@
 % Please edit documentation in R/utils.R
 \name{status_codes}
 \alias{status_codes}
-\title{Interpret tree calculation and volume codes}
+\title{Look up calculation status codes}
 \usage{
 status_codes()
 }
 \value{
-A data frame with these columns:
-\itemize{
-\item \code{status}: stable integer status code, unitless.
-\item \code{name}: plain problem name.
-\item \code{description}: result description.
-\item \code{category}: problem group.
-\item \code{source}: stem model or merchandising.
-}
-
-Columns other than \code{status} contain text.
+A data frame with \code{status} (integer code), \code{name} (short name), \code{category} (condition
+class), \code{description} (meaning), and \code{source} (origin of the definition). Code zero denotes
+a successful calculation.
 }
 \description{
-Interpret tree calculation and volume codes
+List result codes for invalid inputs, unavailable equations, capability limits, and retained
+calculation conditions. Join these descriptions to a result when investigating a reported code.
 }
 \examples{
-## Inspect calculation status codes
-codes <- status_codes()
+## Look up codes returned by an example measurement
+library(dplyr)
 
-## Show input status descriptions
-head(codes, n = 3)
+## Calculate diameters using the stored species defaults
+measured <- dib(dbh = example_trees$dbh,
+                ht = example_trees$ht,
+                h = 20,
+                spcd = example_trees$spcd)
+
+## Inspect descriptions of the returned codes
+status_codes() \%>\%
+  filter(status \%in\% measured$status)
 }

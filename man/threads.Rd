@@ -2,30 +2,34 @@
 % Please edit documentation in R/stem-threads.R
 \name{threads}
 \alias{threads}
-\title{Choose the number of calculation workers}
+\title{Inspect or set the calculation thread limit}
 \usage{
 threads(
   n = NULL
 )
 }
 \arguments{
-\item{n}{The worker count controls how many threads may evaluate trees. Numeric scalar, number
-of threads, a whole number of at least one. Counts above the detected core count
-are clamped with a warning. Default: \code{NULL}.}
+\item{n}{Requested thread count as one finite whole number of at least one. Defaults to \code{NULL}
+to report the current count. Larger requests are limited to the available cores, and builds
+without parallel support use one.}
 }
 \value{
-The current worker count, or the previous worker count when \code{n} is supplied.
+With \code{n = NULL}, the current integer thread limit. With a count supplied, the previous
+limit after setting the new one. Counts are limited to available cores, and nonparallel
+builds use one worker.
 }
 \description{
-Choose the number of calculation workers
+Control the worker limit used by parallel tree calculations. Initialization reads
+MERCHANDISER_THREADS, then TREEVOLUME_THREADS, and otherwise starts with one worker.
 }
 \examples{
-## Read the current worker setting before changing it.
-previous <- threads()
+## Inspect the active calculation limit
+threads()
 
-## Use one worker for a local calculation.
-threads(n = 1)
-
-## Restore the original setting.
-threads(n = previous)
+## Measure the example trees under a temporary single-worker limit
+with_threads(n = 1,
+             code = dib(dbh = example_trees$dbh,
+                        ht = example_trees$ht,
+                        h = 20,
+                        spcd = example_trees$spcd))
 }

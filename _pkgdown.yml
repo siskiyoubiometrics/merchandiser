@@ -1,143 +1,133 @@
-url: https://siskiyoubiometrics.github.io/merchandiser/
+url: https://siskiyoubiometrics.com/merchandiser/
 destination: docs/site
 template:
   bootstrap: 5
-home:
-  title: Logs, scale, biomass, and carbon
-  description: Turn tree measurements and product specifications into logs and scale.
 navbar:
   structure:
-    left: [intro, guides, reference]
+    left: [intro, articles, reference]
     right: [search, github]
   components:
     intro:
       text: Get started
       href: articles/get-started.html
-    guides:
+    articles:
       text: Guides
       menu:
-      - text: Get started
-        href: articles/get-started.html
-      - text: Defining products
-        href: articles/defining-products.html
-      - text: Recording defect
-        href: articles/defect-recording-conventions.html
-      - text: Fitting and completing heights
-        href: articles/fill-missing-heights.html
-      - text: Taper and stem profiles
-        href: articles/taper-profiles.html
-      - text: Volumes and green weight
-        href: articles/volumes-scaling.html
-      - text: Scaling rules
-        href: articles/scaling-rules.html
-      - text: Biomass and carbon
-        href: articles/biomass-carbon.html
-      - text: Pacific Northwest tree list
-        href: articles/pacific-northwest.html
-      - text: Southern stands
-        href: articles/southern.html
-      - text: Optimal bucking
-        href: articles/optimal-bucking.html
-      - text: Assumptions and status
-        href: articles/assumptions-status.html
-      - text: Taper equation methods
-        href: articles/methods-taper-equations.html
-      - text: Fitting taper equations
-        href: articles/methods-fitting-taper.html
-      - text: Stem model calculations
-        href: articles/stem-model-overview.html
-      - text: Source agreement
-        href: articles/oracle-agreement.html
-      - text: Identifiers and defaults
-        href: articles/identifiers-defaults.html
-reference:
-- title: Logs and products
-  contents:
-  - merchandise
-  - product
-  - products
-  - products_from_nvel_rules
-- title: Recording defect
-  contents:
-  - defect
-  - validate_defects
-  - defects_from_stoppers
-  - defect_by_thirds
-- title: Height models
-  contents:
-  - fit_height
-  - complete_heights
-  - predict_height
-- title: Stem measurements
-  contents:
-  - stem_profile
-  - dib
-  - dob
-  - height_at_dib
-  - height_at_dob
-- title: Volumes and weight
-  contents:
-  - stem_volume
-  - green_weight
-- title: Biomass and carbon
-  contents:
-  - biomass
-  - carbon_fraction
-  - nsvb_division
-  - nsvb_division_xy
-- title: Taper fitting and models
-  contents:
-  - fit_taper
-  - as_taper_model
-  - taper_model_from_coefficients
-  - new_taper_model
-  - register_taper_model
-  - unregister_taper_model
-  - get_taper_model
-  - taper_models
-  - has_taper_model
-  - check_taper_models
-  - taper_manifest
-- title: Assumptions and computation
-  contents:
-  - assumptions
-  - status_codes
-  - threads
-  - with_threads
-- title: Source library
-  contents:
-  - nvel_default_equation
-  - nvel_from_fia_code
-  - nvel_rules
-  - nvel_source_revision
-- title: Example data and species properties
-  contents:
-  - example_trees
-  - example_trees_pnw
-  - example_trees_south
-  - example_defects_pnw
-  - example_stem_measurements
-  - species_reference
-  - default_taper_models
-  - nsvb_division_polygons
+        - text: Get started
+          href: articles/get-started.html
+        - text: Defining products
+          href: articles/defining-products.html
+        - text: Recording defect
+          href: articles/recording-defect.html
+        - text: Heights
+          href: articles/heights.html
+        - text: Stem measurements and volumes
+          href: articles/stem-measurements.html
+        - text: Biomass and carbon
+          href: articles/biomass-carbon.html
+        - text: Bucking strategy and value
+          href: articles/bucking-strategy.html
+        - text: Working a tree list
+          href: articles/tree-lists.html
+        - text: Taper equations
+          href: articles/taper-equations.html
+    github:
+      icon: fa-github
+      href: https://github.com/siskiyoubiometrics/merchandiser
+      aria-label: GitHub
 articles:
-- title: Guides
-  navbar: ~
-  contents:
-  - get-started
-  - defining-products
-  - defect-recording-conventions
-  - fill-missing-heights
-  - taper-profiles
-  - volumes-scaling
-  - scaling-rules
-  - biomass-carbon
-  - pacific-northwest
-  - southern
-  - optimal-bucking
-  - assumptions-status
-  - methods-taper-equations
-  - methods-fitting-taper
-  - stem-model-overview
-  - oracle-agreement
-  - identifiers-defaults
+  - title: Guides
+    navbar: ~
+    contents:
+      - get-started
+      - defining-products
+      - recording-defect
+      - heights
+      - stem-measurements
+      - biomass-carbon
+      - bucking-strategy
+      - tree-lists
+      - taper-equations
+reference:
+  - title: Select and price logs
+    contents:
+      - merchandise
+      - assumptions
+      - example_trees
+  - title: Define products
+    contents:
+      - product
+      - products
+  - title: Record defects
+    contents:
+      - defect
+      - validate_defects
+      - defects_from_stoppers
+      - defect_by_thirds
+      - example_defects_pnw
+  - title: Fit and complete heights
+    contents:
+      - fit_height
+      - complete_heights
+      - predict_height
+  - title: Measure stems
+    contents:
+      - stem_profile
+      - dib
+      - dob
+      - height_at_dib
+      - height_at_dob
+      - stem_volume
+      - green_weight
+      - get_taper_model
+      - taper_models
+      - has_taper_model
+      - default_taper_models
+      - species_reference
+  - title: Estimate biomass and carbon
+    contents:
+      - biomass
+      - carbon_fraction
+      - nsvb_division
+      - nsvb_division_xy
+      - nsvb_division_polygons
+  - title: Work with tree lists
+    contents:
+      - status_codes
+      - threads
+      - with_threads
+      - example_trees_pnw
+      - example_trees_south
+  - title: Fit and manage taper equations
+    contents:
+      - fit_taper
+      - as_taper_model
+      - register_taper_model
+      - unregister_taper_model
+      - check_taper_models
+      - taper_manifest
+      - taper_model_from_coefficients
+      - new_taper_model
+      - example_stem_measurements
+  - title: Source library
+    contents:
+      - nvel_default_equation
+      - nvel_from_fia_code
+      - nvel_rules
+      - nvel_source_revision
+      - products_from_nvel_rules
+redirects:
+  - [articles/defect-recording-conventions.html, articles/recording-defect.html]
+  - [articles/fill-missing-heights.html, articles/heights.html]
+  - [articles/taper-profiles.html, articles/stem-measurements.html]
+  - [articles/volumes-scaling.html, articles/stem-measurements.html]
+  - [articles/identifiers-defaults.html, articles/stem-measurements.html]
+  - [articles/scaling-rules.html, articles/defining-products.html]
+  - [articles/optimal-bucking.html, articles/bucking-strategy.html]
+  - [articles/pacific-northwest.html, articles/tree-lists.html]
+  - [articles/southern.html, articles/tree-lists.html]
+  - [articles/assumptions-status.html, articles/tree-lists.html]
+  - [articles/methods-taper-equations.html, articles/taper-equations.html]
+  - [articles/stem-model-overview.html, articles/taper-equations.html]
+  - [articles/methods-fitting-taper.html, articles/taper-equations.html]
+  - [articles/oracle-agreement.html, articles/taper-equations.html]

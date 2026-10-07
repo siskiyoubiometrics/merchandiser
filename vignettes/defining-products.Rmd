@@ -1,219 +1,253 @@
 ---
 title: 'Defining products'
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    md_extensions: -smart
 vignette: >
   %\VignetteIndexEntry{Defining products}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE, echo = FALSE}
+```{r, echo = FALSE, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
-                      fig.width = 8, fig.height = 4.5, dpi = 120)
+                      dev.args = list(bg = 'white'), fig.width = 8, fig.height = 4.5, dpi = 120)
 library(merchandiser)
 library(dplyr)
 ```
 
-Product order in `products()` sets cutting priority. Product fields set the trees and log sections eligible for each output.
+`product()` defines the trees and logs that qualify for a product and its scaling rule. Use explicit specifications when dimensions, eligibility, or measurement rules differ between products. Tree and log diameters enter in inches, and heights, lengths, and trim enter in feet.
+
+## Which trees qualify?
+
+The product name identifies logs in the result and must be unique within a specification. Species, diameter, and age limits keep a product within its accepted tree classes, while pruning requirements limit cuts to the recorded pruned portion. `spcd` limits eligibility to numeric species codes. Leaving it unspecified allows any species with a usable taper equation. Tree diameter limits use outside bark diameter at breast height regardless of the log bark setting.
+
+The minimum tree diameter and age are inclusive. Their maximum limits are exclusive, so adjacent classes can share a boundary without accepting the same tree. Age limits require `age` in `merchandise()`. `requires_pruned = TRUE` requires a supplied `pruned_ht`, and only logs ending within that height qualify.
+
 
 ```{r}
-## Select example trees
-trees <- example_trees %>%
-  slice_head(n = 3)
-
-## Define export specifications
-export <- product(product = 'export',  ## product name, unitless
-                  spcd = c(202, 263),  ## species codes, unitless
-                  min_dbh = 12,  ## inches
-                  min_length = 32,  ## feet
-                  max_length = 40,  ## feet
-                  trim = 1,  ## feet
-                  min_sed = 12,  ## inches
-                  inside_bark = TRUE,  ## logical, unitless
-                  volume_unit = 'scribner',  ## board feet
-                  split_scale = FALSE)  ## logical, unitless
-
-## Define domestic saw specifications
-domestic_saw <- product(product = 'domestic_saw',  ## product name, unitless
-                        spcd = c(202, 263),  ## species codes, unitless
-                        min_dbh = 10,  ## inches
-                        min_length = 16,  ## feet
-                        max_length = 40,  ## feet
-                        trim = 1,  ## feet
-                        min_sed = 6,  ## inches
-                        inside_bark = TRUE,  ## logical, unitless
-                        volume_unit = 'scribner',  ## board feet
-                        split_scale = FALSE)  ## logical, unitless
-
-## Define pulp specifications
-pulp <- product(product = 'pulp',  ## product name, unitless
-                spcd = c(202, 263),  ## species codes, unitless
-                min_dbh = 5,  ## inches
-                min_length = 8,  ## feet
-                max_length = 40,  ## feet
-                trim = 0.5,  ## feet
-                min_sed = 3,  ## inches
-                inside_bark = TRUE,  ## logical, unitless
-                volume_unit = 'green_ton')  ## green short tons
-
-## Combine products in cutting priority order
-specifications <- products(export = export,
-                           domestic_saw = domestic_saw,
-                           pulp = pulp)
-
-## Cut and scale the trees
-result <- merchandise(tree_id = trees$tree_id,
-                      dbh = trees$dbh,
-                      ht = trees$ht,
-                      spcd = trees$spcd,
-                      products = specifications,
-                      model = trees$model)
+## Attach the calculation and data tools
+library(merchandiser)
+library(dplyr)
 ```
 
+```{r}
+## Select the tree with a stored taper equation
+tree <- example_trees %>%
+  filter(tree_id == 5)
+```
+
+
+```{r}
+## Define all tree and log eligibility fields explicitly
+saw <- product(product = 'saw',  ## product label
+               spcd = 202,  ## species code
+               min_dbh = 12,  ## inches outside bark
+               max_dbh = 30,  ## inches outside bark, excluded
+               min_age = 40,  ## years
+               max_age = 90,  ## years, excluded
+               requires_pruned = TRUE,  ## keep logs within the pruned height
+               min_length = 16,  ## feet
+               max_length = 32,  ## feet
+               length_round = 1,  ## feet
+               trim = 0.5,  ## feet
+               min_sed = 6,  ## inches
+               max_sed = 20,  ## inches
+               min_led = 8,  ## inches
+               max_led = 30,  ## inches
+               inside_bark = TRUE,  ## limits measured inside bark
+               max_sweep = 10,  ## percent
+               max_logs = 2,  ## logs per available segment
+               volume_unit = 'scribner',  ## board feet
+               split_scale = FALSE,  ## scale the nominal log without splitting
+               round = 'default')  ## use the rule's default diameter rounding
+```
+
+
+```{r}
+## Check age, diameter, and pruning eligibility
+qualified <- merchandise(tree_id = tree$tree_id,
+                         dbh = tree$dbh,
+                         ht = tree$ht,
+                         spcd = tree$spcd,
+                         products = saw,
+                         age = 60,
+                         pruned_ht = 50)
+```
+
+
 ```{r, echo = FALSE}
-result$logs %>%
-  filter(volume_unit == 'scribner') %>%
-  transmute(`tree_id` = tree_id,
-            `log` = log,
-            `product` = product,
-            `length (feet)` = length,
-            `sed (inches)` = sed,
-            `scale (Scribner board feet)` = scale) %>%
+qualified$logs %>%
+  select(product, `length (feet)` = length, `end (feet)` = end_height,
+         `scale (Scribner board feet)` = scale) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-```{r, echo = FALSE}
-result$logs %>%
-  filter(volume_unit == 'green_ton') %>%
-  transmute(`tree_id` = tree_id,
-            `log` = log,
-            `product` = product,
-            `length (feet)` = length,
-            `sed (inches)` = sed,
-            `scale (green short tons)` = scale) %>%
-  knitr::kable(digits = 3, row.names = FALSE)
-```
+The last selected log ends at `r tail(qualified$logs$end_height, 1)` feet, within the supplied pruning height.
 
-## Tree and log limits
-
-`min_dbh` and `max_dbh` apply to tree diameter. `min_age` and `max_age` apply to supplied tree age.
-Lower limits are inclusive. Upper tree diameter and age limits are exclusive.
-
-Missing age prevents eligibility for products with age limits.
-
-`min_length` and `max_length` bound candidate nominal lengths. Candidates use the internal half foot grid.
-`min_sed`, `max_sed`, `min_led`, and `max_led` constrain physical end diameters.
-`max_logs` limits product counts within each segment.
-
-`requires_pruned` requires the entire cut below `pruned_ht`. `max_sweep` rejects overlaps above its percentage limit.
 
 ```{r}
-## Define clear specifications
-clear <- product(product = 'clear',  ## product name, unitless
-                 min_age = 35,  ## years
-                 max_age = 70,  ## years
-                 requires_pruned = TRUE,  ## logical, unitless
-                 min_length = 16,  ## feet
-                 max_length = 16,  ## feet
-                 min_sed = 6,  ## inches
-                 max_sweep = 10,  ## percent
-                 volume_unit = 'cubic')  ## cubic feet
+## Raise the minimum tree diameter above this tree's diameter
+excluded_spec <- saw %>%
+  mutate(min_dbh = 21)
+```
 
-## Cut and scale the trees
-clear_result <- merchandise(tree_id = trees$tree_id,
-                            dbh = trees$dbh,
-                            ht = trees$ht,
-                            spcd = trees$spcd,
-                            products = clear,
-                            model = trees$model,
-                            age = 45,
-                            pruned_ht = 34)
+
+```{r}
+## Recalculate after raising the minimum diameter
+excluded <- merchandise(tree_id = tree$tree_id,
+                        dbh = tree$dbh,
+                        ht = tree$ht,
+                        spcd = tree$spcd,
+                        products = excluded_spec,
+                        age = 60,
+                        pruned_ht = 50)
+```
+
+
+```{r}
+## Count logs after changing tree eligibility
+nrow(excluded$logs)
+```
+
+The revised minimum accepts `r nrow(excluded$logs)` logs from this tree because its measured diameter falls below the new threshold.
+
+## Which logs qualify?
+
+`min_length` and `max_length` bound nominal lengths on the half-foot candidate grid. Large-end limits can exclude oversized butt sections, and small-end limits determine whether an upper cut still qualifies. `trim` adds wood above the nominal body, and the physical log must fit within an available section. Both end diameter limits are inclusive and apply at the physical ends, including trim. `min_led` and `max_led` refer to the physical large end, while `min_sed` and `max_sed` refer to the small end.
+
+`max_sweep` sets the largest recorded percentage a product accepts on an overlapping sweep interval. Omitting it imposes no sweep limit. `max_logs` caps selected logs of that product within a segment. This limits repeated assignments to that product before other eligible products are considered. Cull and restriction boundaries start new segments and reset those counts. The [defect guide](recording-defect.html) shows how those intervals enter the calculation.
+
+When rows are combined with `products()`, the first row gets the first opportunity to use each available stem section under the default strategy. Changing that order can change the logs even when every field within each row stays the same.
+
+## How is the accepted log scaled?
+
+`volume_unit` accepts `scribner`, `international`, `doyle`, `cubic`, `cord`, or `green_ton`. The first three return board feet under the named rule. Cubic scale returns cubic feet, and cord scale converts solid volume to stacked volume using `cord_solid_fraction`. Green weight returns short tons including wood and attached bark.
+
+`inside_bark` controls the physical log diameter limits and the cubic or cord volume basis. Board foot rules always use inside bark diameters. Green weight includes attached bark regardless of that setting, so changing bark basis does not turn it into a wood-only mass estimate.
+
+`length_round` rounds the scaling length down. Board foot rules accept whole-foot or even-foot rounding, while other scales accept a positive increment. Cubic, cord, and green weight calculations use nominal length even when the reported scaling length differs. `round` selects `default`, `down`, `nearest`, or `none` for scaling diameter. `split_scale` selects shorter scaling sections for Scribner without adding cuts or affecting other scale units. `none` disables diameter preprocessing, but the source rule can still round internally. These fields affect scale without adding trim to the scaled body.
+
+
+```{r}
+## Hold nominal length and diameter limits fixed for the rounding comparison
+rounding_spec <- product(product = 'saw',  ## product label
+                         min_length = 16,  ## feet
+                         max_length = 16,  ## feet
+                         min_sed = 6,  ## inches
+                         inside_bark = TRUE,  ## limits measured inside bark
+                         trim = 0.5,  ## feet
+                         volume_unit = 'scribner',  ## board feet
+                         round = 'default')  ## use the rule's diameter rounding
+```
+
+```{r}
+## Scale the accepted logs with default diameter rounding
+rounded <- merchandise(tree_id = tree$tree_id,
+                       dbh = tree$dbh,
+                       ht = tree$ht,
+                       spcd = tree$spcd,
+                       products = rounding_spec,
+                       model = tree$model)
+```
+
+```{r}
+## Round scaling diameters down on the same accepted logs
+down_spec <- rounding_spec %>%
+  mutate(round = 'down')
+```
+
+```{r}
+## Recalculate with scaling diameters rounded down
+rounded_down <- merchandise(tree_id = tree$tree_id,
+                            dbh = tree$dbh,
+                            ht = tree$ht,
+                            spcd = tree$spcd,
+                            products = down_spec,
+                            model = tree$model)
 ```
 
 ```{r, echo = FALSE}
-clear_result$logs %>%
-  filter(volume_unit == 'cubic') %>%
-  transmute(`tree_id` = tree_id,
-            `log` = log,
-            `product` = product,
-            `length (feet)` = length,
-            `sed (inches)` = sed,
-            `scale (cubic feet)` = scale) %>%
+bind_rows(default = rounded$logs, down = rounded_down$logs, .id = 'rounding') %>%
+  select(rounding, log, `scaling diameter (inches)` = scaling_diameter,
+         `scale (Scribner board feet)` = scale) %>%
   knitr::kable(digits = 3, row.names = FALSE)
+physical_sed <- format(round(rounded$logs$sed[1], 2), trim = TRUE)
 ```
 
-`age` and `pruned_ht` supply scenario measurements.
-[Southern stands](southern.html) compares explicit age limits across the shipped stand ages.
+The first log scales to `r rounded$logs$scale[1]` Scribner board feet under default rounding and `r rounded_down$logs$scale[1]` when rounded down. Its physical small end of `r physical_sed` inches rounds to `r rounded$logs$scaling_diameter[1]` inches under the rule and to `r rounded_down$logs$scaling_diameter[1]` inches when rounded down.
 
-## Cords
+## How are cords specified?
 
-`cord_solid_fraction` supplies the solid wood proportion for the stacked cord conversion.
+Cords require `cord_solid_fraction`, the solid wood fraction of stacked volume. It must lie strictly between zero and one. The conversion uses the chosen bark basis and divides solid cubic volume by the cord's stacked volume and this fraction.
+
 
 ```{r}
-## Define cordwood specifications
-cordwood <- product(product = 'cordwood',  ## product name, unitless
+## Convert nominal log bodies to cords with an explicit solid fraction
+cordwood <- product(product = 'cordwood',  ## product label
                     min_length = 8,  ## feet
-                    max_length = 16,  ## feet
-                    min_sed = 3,  ## inches
-                    inside_bark = TRUE,  ## logical, unitless
+                    max_length = 20,  ## feet
+                    min_sed = 3,  ## inches inside bark
                     volume_unit = 'cord',  ## cords
-                    cord_solid_fraction = 0.7)  ## solid wood proportion, unitless
-
-## Cut and scale the trees
-cord_result <- merchandise(tree_id = trees$tree_id,
-                           dbh = trees$dbh,
-                           ht = trees$ht,
-                           spcd = trees$spcd,
-                           products = cordwood,
-                           model = trees$model)
+                    cord_solid_fraction = 0.7)  ## solid volume / stacked volume
 ```
 
+
+```{r}
+## Scale the nominal bodies in cords
+cords <- merchandise(tree_id = tree$tree_id,
+                     dbh = tree$dbh,
+                     ht = tree$ht,
+                     spcd = tree$spcd,
+                     products = cordwood)
+```
+
+
 ```{r, echo = FALSE}
-cord_result$logs %>%
-  filter(volume_unit == 'cord') %>%
-  transmute(`tree_id` = tree_id,
-            `log` = log,
-            `product` = product,
-            `length (feet)` = length,
-            `sed (inches)` = sed,
-            `scale (cords)` = scale) %>%
+cords$logs %>%
+  select(log, `length (feet)` = length, `scale (cords)` = scale) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-## Prices and validation
 
-`price` is the amount per `price_per` volume units. Omitting `price` leaves the product unpriced and omits log values.
-[Prices and bucking](optimal-bucking.html) shows priced specifications.
-
-```{r}
-## Check the product table
-checked <- specifications
-
-## Count validated products
-nrow(checked)
+```{r, echo = FALSE}
+cord_text <- format(round(sum(cords$logs$scale), 3), trim = TRUE)
 ```
 
-## Source rule conversion
+The first nominal log body scales to `r format(round(cords$logs$scale[1], 3), trim = TRUE)` cords at the specified solid fraction.
 
-`products_from_nvel_rules()` translates explicit source rule limits into products, a stump height, and model auxiliaries.
-Continuous length bounds replace source top segment policies. Factor scaling cannot be translated.
+## How are prices applied?
+
+`price` is the amount charged for `price_per` scale units. Currency is supplied by the caller and is not converted. An omitted price leaves the product unpriced. A result includes a value column when any product is priced, with missing values for unpriced products.
+
 
 ```{r}
-## Specify the source rule fields to translate
-rules <- nvel_rules(even_or_odd = 1,
-                    option = 14,
-                    maximum_length = 32,
-                    minimum_length = 16,
-                    primary_top = 6,
-                    secondary_top = 3,
-                    stump = 1,
-                    trim = 0.5,
-                    minimum_board_foot_dbh = 6,
-                    scribner = 'table')
-
-## Translate the rule record
-translated <- products_from_nvel_rules(x = rules)
-
-## Inspect the translated result structure
-names(translated)
+## Price Scribner scale in dollars per specified board feet
+priced <- product(product = 'priced saw',  ## product label
+                  min_length = 32,  ## feet
+                  max_length = 32,  ## feet
+                  min_sed = 12,  ## inches inside bark
+                  trim = 0.5,  ## feet
+                  volume_unit = 'scribner',  ## board feet
+                  price = 900,  ## dollars
+                  price_per = 1000)  ## board feet
 ```
+
+
+```{r}
+## Apply the stated price to accepted logs
+valued <- merchandise(tree_id = tree$tree_id,
+                      dbh = tree$dbh,
+                      ht = tree$ht,
+                      spcd = tree$spcd,
+                      products = priced)
+```
+
+
+```{r, echo = FALSE}
+valued$logs %>%
+  select(log, `scale (Scribner board feet)` = scale, `value (dollars)` = value) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The first log contributes `r valued$logs$value[1]` dollars from its scale multiplied by `price / price_per`. Prices affect log selection only when `strategy = 'optimize'` is requested.

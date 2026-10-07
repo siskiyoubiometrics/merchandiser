@@ -1,190 +1,228 @@
 ---
 title: 'Get started'
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    md_extensions: -smart
 vignette: >
   %\VignetteIndexEntry{Get started}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE, echo = FALSE}
+```{r, echo = FALSE, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
-                      fig.width = 8, fig.height = 4.5, dpi = 120)
+                      dev.args = list(bg = 'white'), fig.width = 8, fig.height = 4.5, dpi = 120)
 library(merchandiser)
 library(dplyr)
 ```
 
-Product order in `products()` sets cutting priority. `merchandise()` returns logs, residuals, status, and assumptions for checking product yield.
+`merchandise()` selects and scales logs from tree measurements and product specifications. Product order sets cutting priority under the default strategy. Prices assign value to the selected logs without changing that priority.
+
+Tree 5 is a synthetic example with species code 202, diameter at breast height of 20 inches, and total height of 100 feet. Its stored equation is passed explicitly below. Dimensions use inches and feet. Prices are illustrative United States dollars.
+
 
 ```{r}
-## Load the packages
+## Attach the calculation and data tools
 library(merchandiser)
-
-## Load data verbs
 library(dplyr)
-
-## Select example trees
-trees <- example_trees %>%
-  slice_tail(n = 3)
 ```
 
-## Products
-
-The products match `data-raw/example-products.R`.
 
 ```{r}
-## Define export specifications
-export <- product(product = 'export',  ## product name, unitless
-                  spcd = c(202, 263),  ## species codes, unitless
-                  min_dbh = 12,  ## inches
-                  min_length = 32,  ## feet
-                  max_length = 40,  ## feet
-                  trim = 1,  ## feet
-                  min_sed = 12,  ## inches
-                  inside_bark = TRUE,  ## logical, unitless
+## Select the tree with a stored taper equation
+tree <- example_trees %>%
+  filter(tree_id == 5)
+```
+
+```{r, echo = FALSE}
+tree %>%
+  select(tree_id, `species code` = spcd, `diameter (inches)` = dbh, `height (feet)` = ht) %>%
+  knitr::kable(row.names = FALSE)
+```
+
+The tree's 20-inch diameter and 100-foot height supply the measurements for the log calculation.
+
+
+## Which products can the tree supply?
+
+
+```{r}
+## Give long logs with the largest small end limit first priority
+large <- product(product = 'Large sawlog',  ## product label
+                 min_length = 32,  ## feet
+                 max_length = 32,  ## feet
+                 min_sed = 12,  ## inches
+                 inside_bark = TRUE,  ## limits measured inside bark
+                 trim = 0.5,  ## feet
+                 volume_unit = 'scribner',  ## board feet
+                 price = 900,  ## dollars
+                 price_per = 1000)  ## board feet
+
+## Accept shorter logs that meet the medium sawlog diameter limit
+medium <- product(product = 'Medium sawlog',  ## product label
+                  min_length = 16,  ## feet
+                  max_length = 16,  ## feet
+                  min_sed = 10,  ## inches
+                  inside_bark = TRUE,  ## limits measured inside bark
+                  trim = 0.5,  ## feet
                   volume_unit = 'scribner',  ## board feet
-                  split_scale = FALSE)  ## logical, unitless
+                  price = 700,  ## dollars
+                  price_per = 1000)  ## board feet
 
-## Define domestic saw specifications
-domestic_saw <- product(product = 'domestic_saw',  ## product name, unitless
-                        spcd = c(202, 263),  ## species codes, unitless
-                        min_dbh = 10,  ## inches
-                        min_length = 16,  ## feet
-                        max_length = 40,  ## feet
-                        trim = 1,  ## feet
-                        min_sed = 6,  ## inches
-                        inside_bark = TRUE,  ## logical, unitless
-                        volume_unit = 'scribner',  ## board feet
-                        split_scale = FALSE)  ## logical, unitless
+## Accept smaller sawlogs before assigning wood to pulp
+small <- product(product = 'Small sawlog',  ## product label
+                 min_length = 16,  ## feet
+                 max_length = 16,  ## feet
+                 min_sed = 6,  ## inches
+                 inside_bark = TRUE,  ## limits measured inside bark
+                 trim = 0.5,  ## feet
+                 volume_unit = 'scribner',  ## board feet
+                 price = 500,  ## dollars
+                 price_per = 1000)  ## board feet
 
-## Define pulp specifications
-pulp <- product(product = 'pulp',  ## product name, unitless
-                spcd = c(202, 263),  ## species codes, unitless
-                min_dbh = 5,  ## inches
+## Assign remaining eligible sections to pulp by green weight
+pulp <- product(product = 'Pulp',  ## product label
                 min_length = 8,  ## feet
-                max_length = 40,  ## feet
-                trim = 0.5,  ## feet
+                max_length = 20,  ## feet
                 min_sed = 3,  ## inches
-                inside_bark = TRUE,  ## logical, unitless
-                volume_unit = 'green_ton')  ## green short tons
+                inside_bark = TRUE,  ## limits measured inside bark
+                trim = 0.5,  ## feet
+                volume_unit = 'green_ton',  ## green short tons
+                price = 30,  ## dollars
+                price_per = 1)  ## green short tons
+```
 
-## Combine products in cutting priority order
-specifications <- products(export = export,
-                           domestic_saw = domestic_saw,
-                           pulp = pulp)
+Each cut occupies the nominal log length plus trim. Scale uses the nominal length, and trim remains in the residual record.
 
-## Cut and scale the trees
-result <- merchandise(tree_id = trees$tree_id,
-                      dbh = trees$dbh,
-                      ht = trees$ht,
-                      spcd = trees$spcd,
+
+```{r}
+## Offer the stem to sawlog products before pulp
+specifications <- products(large, medium, small, pulp)
+```
+
+
+```{r}
+## Select and price logs using the tree's stored taper equation
+result <- merchandise(tree_id = tree$tree_id,
+                      dbh = tree$dbh,
+                      ht = tree$ht,
+                      spcd = tree$spcd,
                       products = specifications,
-                      model = trees$model)
+                      model = tree$model)
 ```
 
-## Logs
+The same specification can be applied to a tree list by supplying measurement vectors and unique tree identifiers. Optional age and pruning measurements are needed only when a product uses those limits.
 
-Log numbers restart within each tree. Diameters describe physical log ends on the recorded bark basis.
+## Which logs were selected?
+
 
 ```{r, echo = FALSE}
 result$logs %>%
-  filter(volume_unit == 'scribner') %>%
-  transmute(`tree_id` = tree_id,
-            `log` = log,
-            `product` = product,
-            `start_height (feet)` = start_height,
-            `end_height (feet)` = end_height,
-            `length (feet)` = length,
-            `scaling_length (feet)` = scaling_length,
-            `sed (inches)` = sed,
-            `led (inches)` = led,
-            `scaling_diameter (inches)` = scaling_diameter,
-            `inside_bark` = inside_bark,
-            `scale (Scribner board feet)` = scale,
-            `volume_unit` = volume_unit) %>%
+  transmute(product, `start (feet)` = start_height,
+            `end including trim (feet)` = end_height,
+            `nominal length (feet)` = length,
+            `small-end diameter (inches)` = sed,
+            `scale (Scribner board feet)` = if_else(volume_unit == 'scribner', scale, NA_real_),
+            `scale (green short tons)` = if_else(volume_unit == 'green_ton', scale, NA_real_),
+            `value (dollars)` = value) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
+
+The large sawlog contributes 207 dollars at the specified price of 900 dollars per 1000 board feet.
 
 ```{r, echo = FALSE}
 result$logs %>%
-  filter(volume_unit == 'green_ton') %>%
-  transmute(`tree_id` = tree_id,
-            `log` = log,
-            `product` = product,
-            `start_height (feet)` = start_height,
-            `end_height (feet)` = end_height,
-            `length (feet)` = length,
-            `scaling_length (feet)` = scaling_length,
-            `sed (inches)` = sed,
-            `led (inches)` = led,
-            `scaling_diameter (inches)` = scaling_diameter,
-            `inside_bark` = inside_bark,
-            `scale (green short tons)` = scale,
-            `volume_unit` = volume_unit) %>%
-  knitr::kable(digits = 3, row.names = FALSE)
+  filter(product == 'Large sawlog') %>%
+  transmute(`scale (Scribner board feet)` = scale,
+            `price (dollars)` = large$price, `price basis (board feet)` = large$price_per,
+            `calculated value (dollars)` = scale * large$price / large$price_per) %>%
+  knitr::kable(row.names = FALSE)
 ```
 
-## Residuals
+Its 230 board feet supply the scale used in that value calculation.
 
-Residual intervals identify stem sections outside the scaled log bodies.
+
+The scale columns keep board feet and short tons separate. Add board feet within a scaling rule and short tons within weight products, or add dollar values across all priced products. Do not sum `result$logs$scale` across these products because its rows use incompatible units.
+
+The log record also includes physical end diameters and the diameter used for board foot scaling. Physical ends include trim when checking eligibility, while scale describes the nominal log body. Those columns make it possible to check a particular cut against the specification that accepted it.
+
+## What happened to the rest of the stem?
+
+The residual record accounts for stem sections outside the scaled log bodies. Its causes distinguish the stump and top from trim, length limits, diameter limits, and located defects. Residual heights use the same ground reference as the log heights.
+
 
 ```{r, echo = FALSE}
 result$residuals %>%
-  rename(`start_height (feet)` = start_height, `end_height (feet)` = end_height) %>%
+  rename(`start (feet)` = start_height, `end (feet)` = end_height) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-## Status
+The first residual ends at `r result$residuals$end_height[1]` foot, the stump height used for cutting.
 
-A clean run has an empty status table.
+## Did the calculation use valid inputs?
+
 
 ```{r}
-## Show the clean status table
+## Check for trees with a reported condition
 result$status
 ```
 
-## Assumptions
+The status table has `r nrow(result$status)` rows, so this calculation reports no tree conditions. A tree without eligible logs can still have valid inputs. Check residual causes when the question is why wood was not assigned to a product.
 
-`value` uses the accompanying `unit`.
+
+```{r}
+## Inspect the inputs recorded with the result
+record <- assumptions(x = result)
+```
+
 
 ```{r, echo = FALSE}
-result$assumptions %>%
-  mutate(source = if_else(assumption == 'species_model',
-                          'pinned source library', source)) %>%
-  rename(`value (unit column)` = value, `source (abbreviated)` = source) %>%
+record %>%
+  rename(`value (see unit column)` = value) %>%
   knitr::kable(digits = 3, row.names = FALSE)
 ```
 
-## Drawing
+The `stump_height` row records `r record$value[record$assumption == 'stump_height']` foot from `stump_ht`. The `species_model` row records the selected equation and whether it came from the caller or the species default. A `bark_ratio` row, when needed, records the ratio, its basis, and its source. These are recorded inputs, not adjustments to the selected logs.
 
-<details>
-<summary>Drawing measurements</summary>
+## Where are the cuts on the stem?
 
-```{r, echo = FALSE}
-drawing_trees <- trees %>%
-  slice_head(n = 1)
-drawing_rows <- match(drawing_trees$tree_id, result$call$tree_id)
-drawing_models <- result$call$model[drawing_rows]
-drawing_profiles <- stem_profile(
-  tree_id = drawing_trees$tree_id,
-  dbh = drawing_trees$dbh,
-  ht = drawing_trees$ht,
-  spcd = drawing_trees$spcd,
-  model = drawing_models,
-  step = 0.5,
-  from = 0
-)
-drawing_profiles %>%
-  transmute(tree_id, `height (feet)` = h, `radius inside bark (inches)` = dib / 2) %>%
-  knitr::kable(digits = 4, row.names = FALSE)
+
+```{r, eval = FALSE}
+## Draw the selected logs and unassigned stem sections
+plot(result)
 ```
 
-</details>
-
-The drawing locates the selected products and residual sections along the first tree.
-
 ```{r, echo = FALSE}
-plot(result, tree_id = trees$tree_id[1], ylab = 'Stem radius (inches)')
+plot(result, main = '', ylab = 'Stem radius (inches)', yaxt = 's')
 ```
 
-`call` retains inputs for replaying the calculation.
+The drawing places the large sawlog at the base, starting above the `r result$call$stump_ht[1]` foot stump.
+
+## What is the tree's biomass?
+
+Biomass estimates come from tree measurements independently of the product list. The aboveground total includes stem wood, stem bark, and branches. Foliage is returned separately, and roots are outside this total.
+
+
+```{r}
+## Estimate dry biomass and carbon for the same tree
+mass <- biomass(dbh = tree$dbh,
+                ht = tree$ht,
+                spcd = tree$spcd)
+```
+
+
+```{r, echo = FALSE}
+mass %>%
+  select(`dry mass excluding foliage (tonnes)` = dry_aboveground_no_foliage,
+         `carbon (tonnes)` = carbon, `carbon dioxide equivalent (tonnes)` = tco2e) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+mass_text <- format(round(mass$dry_aboveground_no_foliage, 3), trim = TRUE)
+```
+
+The tree contains `r mass_text` metric tonnes of dry aboveground biomass excluding foliage.
+
+The biomass columns describe overlapping components, so do not sum every mass column. Use [Biomass and carbon](biomass-carbon.html) to select a nonoverlapping total, or [Working a tree list](tree-lists.html) to carry these calculations across stands.

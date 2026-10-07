@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-defaults.R
 \name{nvel_from_fia_code}
 \alias{nvel_from_fia_code}
-\title{Translate inventory equation codes to source equation names}
+\title{Translate an inventory equation identifier}
 \usage{
 nvel_from_fia_code(
   fia_code,
@@ -12,32 +12,31 @@ nvel_from_fia_code(
 )
 }
 \arguments{
-\item{fia_code}{Identify the inventory volume equation to translate. Character vector,
-unitless, required. Surrounding spaces are removed, letters are made uppercase, and the
-first eight characters are used. Missing or unrecognized codes give source error flag 1.}
+\item{fia_code}{Forest Inventory and Analysis equation code as character strings of exactly
+eight characters. Required, without a default. Whitespace is not removed, and codes are
+normalized to uppercase.}
 
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Required, with no default.}
+\item{spcd}{Species code as numeric whole numbers from 1 through 9999. Required, without a
+default. The resulting source identifier may not be implemented by this package.}
 
-\item{geosub}{Select the geographic substitution for the equation. Character vector,
-unitless, default \code{''} uses the source's unqualified substitution. Missing gives flag 1.}
+\item{geosub}{Geographic substitution as a character vector. Defaults to an empty string,
+requesting no substitution. Compatibility mode controls fixed-width source string behavior.}
 
-\item{primary_top}{Set the primary product's top diameter. Numeric vector, inches,
-default \code{0} uses the source volume type's diameter convention. Missing gives flag 1.
-Values at least 99 preserve the equation template and volume type without substitutions.}
+\item{primary_top}{Primary inside bark top diameter, in inches, as numeric values from 0
+through 99. Defaults to \code{0}, using the translated rule. A value of \code{99} preserves the
+equation template setting.}
 }
 \value{
-A data frame with \code{model} (equation identifier), \code{volume_type} (source volume code),
-\code{primary_top} (inches), and \code{errflag} (unitless source error code, zero for success).
+A data frame with \code{model} (source identifier), \code{volume_type} (source volume code),
+\code{primary_top} (inside bark diameter, inches), and \code{errflag} (source translation code). Codes
+0, 1, and 6 distinguish success, an invalid template, and an unsupported translation.
 }
 \description{
-Translate inventory equation codes to source equation names
-}
-\details{
-Each nonmissing \code{fia_code} must have exactly eight characters.
+Translate a Forest Inventory and Analysis equation code to a source library identifier.
+Use the returned source identifier when checking an inventory equation assignment.
 }
 \examples{
 ## Translate a source inventory equation for the example species.
 nvel_from_fia_code(fia_code = 'BD000006',
-                   spcd = 202)
+                   spcd = example_trees$spcd[1])
 }

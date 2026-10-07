@@ -18,6 +18,7 @@ A data frame with the following columns:
 example_trees
 }
 \description{
-The trees are synthetic and illustrate package calculations.
+Synthetic tree dimensions and stored equations supply reproducible stem calculations.
+Use these rows to compare product specifications with diameters in inches and heights in feet.
 }
 \keyword{datasets}

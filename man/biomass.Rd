@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-nsvb.R
 \name{biomass}
 \alias{biomass}
-\title{Dry biomass in metric tonnes from tree measurements in inches and feet}
+\title{Estimate dry biomass and carbon in metric tonnes}
 \usage{
 biomass(
   dbh,
@@ -13,49 +13,59 @@ biomass(
 )
 }
 \arguments{
-\item{dbh}{Diameter at breast height outside bark. Numeric vector,
-inches. Required, with no default.}
+\item{dbh}{Outside bark diameter at breast height, in inches. Accepts numeric values greater
+than zero and no greater than 400. Required, with no default. Invalid measurement rows
+return missing results with a status.}
 
-\item{ht}{Total height above ground. Numeric vector, feet.
-Required, with no default.}
+\item{ht}{Total height above ground, in feet. Accepts numeric values greater than zero and no
+greater than 500. Required, with no default. Measurement heights and section bounds must
+fall within the tree.}
 
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Required, with no default.}
+\item{spcd}{Species identifiers as numeric positive whole-number codes. Required, without a
+default. The biomass lookup must recognize the code after its source species remapping.
+Unknown codes return missing masses with a status.}
 
-\item{division}{The ecological division selects biomass coefficients for the tree. Numeric
-vector, division codes, 0 selects national coefficients. Default: \code{0}.}
+\item{division}{Ecological division code as a numeric vector of whole numbers from 0 through
+1999. Defaults to \code{0}, using national coefficients. Lookup helpers return local codes, and
+unsupported codes receive a status.}
 
-\item{...}{Additional named inputs supply measurements required by the selected model. Named
-vectors in inches for diameters and feet for heights, none by default.}
+\item{...}{Named biomass inputs, with defaults used when omitted. Component boundaries accept
+positive \code{primary_top = 6} and \code{secondary_top = 4} in inches and nonnegative
+\code{stump_ht = 1} in feet. \code{max_log_length}, \code{min_log_length}, and \code{trim} accept positive
+feet or \code{NA_real_} (their defaults), leaving source length choices unresolved. \code{cull = 0}
+accepts
+percentages from 0 through 100, and \code{decay_class = 0} accepts whole numbers from 0 through
+5. These inputs affect the source biomass calculation and do not read merchandising
+products.}
 }
 \value{
-One row per input row in input order. All mass columns use metric tonnes:
+A data frame in input order. All mass columns use metric tonnes:
 \itemize{
-\item \code{dry_aboveground_no_foliage}: dry aboveground mass excluding foliage.
-\item \code{dry_stem_wood}, \code{dry_stem_bark}: dry stem components.
-\item \code{dry_stump_wood}, \code{dry_stump_bark}: dry stump components.
-\item \code{dry_saw_wood}, \code{dry_saw_bark}: dry sawlog components.
-\item \code{dry_topwood_wood}, \code{dry_topwood_bark}: dry topwood components.
-\item \code{dry_tip_wood}, \code{dry_tip_bark}: dry tip components.
-\item \code{dry_branches}, \code{dry_foliage}, \code{dry_top_and_limb}: dry crown components.
-\item \code{carbon}: carbon mass excluding foliage.
-\item \code{tco2e}: carbon dioxide equivalent.
+\item \code{dry_aboveground_no_foliage}: stem wood, stem bark, and branches.
+\item \code{dry_stem_wood}, \code{dry_stem_bark}: whole-stem wood and bark.
+\item \code{dry_stump_wood}, \code{dry_stump_bark}: stump wood and bark.
+\item \code{dry_saw_wood}, \code{dry_saw_bark}: sawlog portion wood and bark.
+\item \code{dry_topwood_wood}, \code{dry_topwood_bark}: topwood portion wood and bark.
+\item \code{dry_tip_wood}, \code{dry_tip_bark}: tip wood and bark.
+\item \code{dry_branches}, \code{dry_foliage}: separate crown components.
+\item \code{dry_top_and_limb}: tip wood, tip bark, and branches combined.
+\item \code{carbon}: carbon in aboveground dry mass excluding foliage.
+\item \code{tco2e}: carbon dioxide equivalent, \code{carbon * 44 / 12}.
+\item \code{status}: integer result code.
+Whole-stem and partition columns overlap. Do not sum all component columns.
+Foliage is separate from the aboveground total, and roots are not estimated.
 }
-
-The integer status column describes the row, including rows with invalid inputs.
 }
 \description{
-Outputs are metric tonnes and inputs are inches and feet.
+Estimate tree biomass independently of merchandising products. Inputs use inches and feet. All
+mass outputs use metric tonnes, and the aboveground total excludes foliage and roots.
 }
 \examples{
-## Load data verbs
-library(dplyr)
+## Estimate masses for the first shipped tree
+mass <- biomass(dbh = example_trees$dbh[1],
+                ht = example_trees$ht[1],
+                spcd = example_trees$spcd[1])
 
-## Estimate mass with national coefficients
-biomass(dbh = example_trees$dbh[1],
-        ht = example_trees$ht[1],
-        spcd = example_trees$spcd[1]) \%>\%
-  transmute(`dry mass excluding foliage (tonnes)` = dry_aboveground_no_foliage,
-            `carbon (tonnes)` = carbon,
-            `carbon dioxide equivalent (tonnes)` = tco2e)
+## Inspect dry mass in metric tonnes
+mass$dry_aboveground_no_foliage
 }

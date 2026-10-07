@@ -23,6 +23,7 @@ A data frame with the following columns:
 example_trees_pnw
 }
 \description{
-The trees are synthetic and illustrate package calculations.
+Synthetic Pacific Northwest trees provide a complete list for merchandising and height fitting.
+Heights in feet retain their measured or predicted origin beside diameters in inches.
 }
 \keyword{datasets}

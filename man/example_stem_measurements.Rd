@@ -19,6 +19,7 @@ A data frame with the following columns:
 example_stem_measurements
 }
 \description{
-The trees are synthetic and illustrate package calculations.
+Repeated synthetic inside bark measurements supply the inputs for taper fitting.
+Tree identifiers link measurement heights in feet to tree and stem diameters in inches.
 }
 \keyword{datasets}

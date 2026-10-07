@@ -238,25 +238,30 @@
   }
 }
 
-#' Interpret tree calculation and volume codes
+#' Look up calculation status codes
 #'
-#' @return A data frame with these columns:
-#'   * `status`: stable integer status code, unitless.
-#'   * `name`: plain problem name.
-#'   * `description`: result description.
-#'   * `category`: problem group.
-#'   * `source`: stem model or merchandising.
+#' List result codes for invalid inputs, unavailable equations, capability limits, and retained
+#'   calculation conditions. Join these descriptions to a result when investigating a reported code.
 #'
-#'   Columns other than `status` contain text.
+#' @return A data frame with `status` (integer code), `name` (short name), `category` (condition
+#'   class), `description` (meaning), and `source` (origin of the definition). Code zero denotes
+#'   a successful calculation.
 #' @usage
 #' status_codes()
 #' @export
 #' @examples
-#' ## Inspect calculation status codes
-#' codes <- status_codes()
+#' ## Look up codes returned by an example measurement
+#' library(dplyr)
 #'
-#' ## Show input status descriptions
-#' head(codes, n = 3)
+#' ## Calculate diameters using the stored species defaults
+#' measured <- dib(dbh = example_trees$dbh,
+#'                 ht = example_trees$ht,
+#'                 h = 20,
+#'                 spcd = example_trees$spcd)
+#'
+#' ## Inspect descriptions of the returned codes
+#' status_codes() %>%
+#'   filter(status %in% measured$status)
 status_codes <- function() {
   tree <- .tv_status_table
   tree$source <- "stem model"

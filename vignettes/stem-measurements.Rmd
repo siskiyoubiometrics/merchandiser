@@ -1,0 +1,304 @@
+---
+title: 'Stem measurements and volumes'
+output:
+  rmarkdown::html_vignette:
+    md_extensions: -smart
+vignette: >
+  %\VignetteIndexEntry{Stem measurements and volumes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      dev.args = list(bg = 'white'), fig.width = 8, fig.height = 4.5, dpi = 120)
+library(merchandiser)
+library(dplyr)
+```
+
+Stem calculations measure diameters, locate diameter limits, and integrate volume between specified points on a tree. Use them to inspect the taper underlying a product calculation or measure a section without selecting logs. Diameters enter and return in inches, heights use feet, and solid volume returns in cubic feet.
+
+## What does the selected profile look like?
+
+`stem_profile()` samples each tree between requested bounds and includes the ending height. The default lower bound is the stump, and the default upper bound is the tip. Each row retains `tree_id`, its measurement height, both bark diameters, cumulative volumes from the lower bound, and status.
+
+
+```{r}
+## Attach the calculation and data tools
+library(merchandiser)
+library(dplyr)
+```
+
+```{r}
+## Select the tree with a stored taper equation
+tree <- example_trees %>%
+  filter(tree_id == 5)
+```
+
+
+```{r}
+## Sample the stored equation along this tree
+profile <- stem_profile(tree_id = tree$tree_id,
+                        dbh = tree$dbh,
+                        ht = tree$ht,
+                        spcd = tree$spcd,
+                        model = tree$model,
+                        step = 5)
+```
+
+
+<details>
+<summary>Sampled profile values</summary>
+
+```{r, echo = FALSE}
+profile %>%
+  rename(`height (feet)` = h, `inside diameter (inches)` = dib,
+         `outside diameter (inches)` = dob, `inside volume (cubic feet)` = cum_volume_ib,
+         `outside volume (cubic feet)` = cum_volume_ob) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The final profile row reaches `r max(profile$h)` feet, the supplied total height.
+
+</details>
+
+```{r}
+## Draw inside and outside bark stem diameters
+plot(profile)
+```
+
+The final profile row reaches `r max(profile$h)` feet, matching the endpoint in the drawing. Solid and dashed lines distinguish inside and outside bark diameters.
+
+## What is the diameter at a specified height?
+
+`dib()` and `dob()` evaluate the selected equation at a height above ground. Their result contains one value and one status for each input tree. They retain input order but do not add identifiers, so attach the measurements to the original tree list when identifiers are needed.
+
+
+```{r}
+## Measure inside bark diameter at the chosen height
+inside <- dib(dbh = tree$dbh,
+              ht = tree$ht,
+              h = 20,
+              spcd = tree$spcd,
+              model = tree$model)
+
+```
+
+```{r}
+## Measure outside bark diameter at the same height
+outside <- dob(dbh = tree$dbh,
+               ht = tree$ht,
+               h = 20,
+               spcd = tree$spcd,
+               model = tree$model)
+```
+
+
+```{r, echo = FALSE}
+bind_rows(inside = inside, outside = outside, .id = 'basis') %>%
+  rename(`diameter (inches)` = value) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+diam_text <- format(round(inside$value, 3), trim = TRUE)
+```
+
+The inside bark diameter is `r diam_text` inches at the requested height. An equation without an outside bark capability needs a supported bark ratio or returns a capability status.
+
+## Where does the stem reach a diameter limit?
+
+The inverse functions return the height corresponding to a target diameter on the selected bark basis. Under the default compatibility setting, a profile with multiple crossings returns the highest crossing and reports the condition. Source compatibility can instead reproduce the source inverse behavior described under [Taper equations](taper-equations.html). This matters when using a diameter limit to bound a section near a butt irregularity.
+
+
+```{r}
+## Locate the inside bark diameter measured above
+inside_height <- height_at_dib(dbh = tree$dbh,
+                               ht = tree$ht,
+                               dib = inside$value,
+                               spcd = tree$spcd,
+                               model = tree$model)
+```
+
+
+```{r}
+## Locate the corresponding outside bark diameter
+outside_height <- height_at_dob(dbh = tree$dbh,
+                                ht = tree$ht,
+                                dob = outside$value,
+                                spcd = tree$spcd,
+                                model = tree$model)
+```
+
+
+```{r, echo = FALSE}
+bind_rows(inside = inside_height, outside = outside_height, .id = 'basis') %>%
+  rename(`height (feet)` = value) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+inverse_text <- format(round(inside_height$value, 3), trim = TRUE)
+```
+
+The inverse returns `r inverse_text` feet for the inside bark diameter previously calculated at that height.
+
+## How much wood is in a section?
+
+`stem_volume()` accepts height or diameter bounds. Specify at most one lower bound and one upper bound, using `from`, `from_dib`, or `from_dob` below and the corresponding `to` argument above. Diameter bounds locate the section independently of the bark basis used for its volume.
+
+
+```{r}
+## Measure wood between explicit heights above ground
+section <- stem_volume(dbh = tree$dbh,
+                       ht = tree$ht,
+                       spcd = tree$spcd,
+                       model = tree$model,
+                       from = 1,
+                       to = 33,
+                       inside_bark = TRUE)
+```
+
+
+```{r, echo = FALSE}
+section %>%
+  rename(`volume (cubic feet)` = value) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+volume_text <- format(round(section$value, 3), trim = TRUE)
+```
+
+The section contains `r volume_text` cubic feet inside bark. The lower bound must remain below the upper bound for a usable section.
+
+`green_weight()` converts solid volume to short tons using species wood and bark properties. Its default stem component includes wood and attached bark. `component` can instead select wood or bark, and `moisture` can request dry mass. Explicit property inputs override the corresponding species defaults. This is a merchandising weight calculation, not a carbon calculation.
+
+
+```{r}
+## Convert inside bark solid volume to green stem weight
+weight <- green_weight(volume = section$value,
+                       spcd = tree$spcd,
+                       inside_bark = TRUE)
+```
+
+
+```{r, echo = FALSE}
+weight %>%
+  rename(`green stem weight (short tons)` = value) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+weight_text <- format(round(weight$value, 3), trim = TRUE)
+```
+
+The section's wood and attached bark weigh `r weight_text` green short tons under the species defaults.
+
+## Which taper equation is being used?
+
+Leaving `model` unspecified selects the species default from `default_taper_models`. An explicit model identifier takes precedence. In `merchandise()`, a `taper_map` supplies unique `spcd` and `model` columns for custom species assignments. A supplied map must cover the trees being calculated, with no fallback for an omitted species. The map is validated even when `model` is explicit.
+
+
+```{r}
+## Inspect the stored model and confirm it can be resolved
+selected_model <- get_taper_model(model = tree$model)
+
+## Check whether the selected identifier is available
+has_taper_model(model = selected_model$id)
+
+## Inspect the identifier passed to the measurement calls
+selected_model$id
+```
+
+The stored identifier resolves to `r selected_model$id`, so it can be passed directly to the stem functions. Availability alone does not check species scope or required auxiliary measurements.
+
+
+```{r}
+## List registered models for this species
+models <- taper_models(spcd = tree$spcd)
+```
+
+
+```{r, echo = FALSE}
+models %>%
+  select(id, form, has_dob, has_inverse, has_integral) %>%
+  slice_head(n = 5) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The first listed model is `r models$id[1]`. The capability columns indicate whether the model supplies outside bark diameter, an inverse, and a volume integral, with numerical fallbacks available for the latter two.
+
+`species_reference` also records species names, wood density, and bark ratios. Calculation calls use numeric species codes. A species default is a stored equation assignment, not a fitted relationship inferred from the submitted tree list.
+
+Scalar inputs recycle to the number of trees. Other vector lengths must agree. `merchandise()` and `stem_profile()` require unique, nonmissing tree identifiers, while repeated measurement rows in `fit_taper()` deliberately share identifiers. Invalid tree inputs retain their place in vector calculations and receive a status rather than shifting the remaining rows.
+
+## Where is trim recorded?
+
+A log occupies its nominal length plus trim, is scaled on its nominal length, and leaves the trim wood in the residual record. This separates the occupied stem interval from the wood included in the product scale.
+
+
+```{r}
+## Define a nominal log with a separate trim allowance
+saw <- product(product = 'saw',  ## product label
+               min_length = 32,  ## feet
+               max_length = 32,  ## feet
+               trim = 0.5,  ## feet
+               min_sed = 12,  ## inches inside bark
+               volume_unit = 'cubic')  ## cubic feet
+```
+
+
+```{r}
+## Select nominal logs and retain their trim residuals
+result <- merchandise(tree_id = tree$tree_id,
+                      dbh = tree$dbh,
+                      ht = tree$ht,
+                      spcd = tree$spcd,
+                      products = saw,
+                      model = tree$model)
+```
+
+
+```{r, echo = FALSE}
+result$residuals %>%
+  filter(cause == 'trim') %>%
+  rename(`start (feet)` = start_height, `end (feet)` = end_height) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The first trim interval ends at `r result$residuals$end_height[result$residuals$cause == 'trim'][1]` feet above ground, beyond the nominal body. It is not included in that log's cubic scale.
+
+
+## How can a species map be retained?
+
+A map keeps chosen assignments beside the script without adding the same identifier separately to every call. Use the stored example assignments to build a map, then inspect the equation rows recorded with the result.
+
+```{r}
+## Build one equation assignment per species
+mapping <- example_trees %>%
+  distinct(spcd, model)
+```
+
+```{r}
+## Apply the retained assignments to the example tree
+mapped <- merchandise(tree_id = tree$tree_id,
+                      dbh = tree$dbh,
+                      ht = tree$ht,
+                      spcd = tree$spcd,
+                      products = saw,
+                      taper_map = mapping)
+```
+
+```{r, echo = FALSE}
+assumptions(x = mapped) %>%
+  filter(assumption == 'species_model') %>%
+  select(tree_id, spcd, model, source) %>%
+  knitr::kable(row.names = FALSE)
+```
+
+The mapped tree uses `r mapping$model[mapping$spcd == tree$spcd]`, matching the stored assignment. The recorded source label is `species_default` for this map-based selection, while an explicit `model` records `caller_model`.

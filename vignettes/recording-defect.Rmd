@@ -1,0 +1,257 @@
+---
+title: 'Recording defect'
+output:
+  rmarkdown::html_vignette:
+    md_extensions: -smart
+vignette: >
+  %\VignetteIndexEntry{Recording defect}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      dev.args = list(bg = 'white'), fig.width = 8, fig.height = 4.5, dpi = 120)
+library(merchandiser)
+library(dplyr)
+product_colors <- c(saw = '#B666B9', pulp = '#C66773',
+                    saw_young = '#767ECA', saw_mature = '#00999F')
+```
+
+Located defects change which stem sections `merchandise()` can use and which products can occupy them. Record these when a defect has a known position along the stem, using heights in feet above ground. A defect row belongs to a tree identifier and describes an interval or an ending height, rather than a deduction from the final scale.
+
+## What does each effect do?
+
+A cull removes its interval from cutting. An end stops the usable stem at its starting height. A restriction allows only its named product within the interval, and a sweep compares its percentage with each product's `max_sweep`. None of these effects applies a percentage deduction to log scale.
+
+
+```{r}
+## Attach the calculation and data tools
+library(merchandiser)
+library(dplyr)
+```
+
+```{r}
+## Remove a known section from this example tree
+cull <- defect(tree_id = example_trees$tree_id[1],
+               start_height = 1,
+               end_height = 8,
+               effect = 'cull')
+
+## End the usable stem at a measured height
+end <- defect(tree_id = example_trees$tree_id[1],
+              start_height = 40,
+              end_height = NA,
+              effect = 'end')
+```
+
+
+```{r}
+## Allow only pulp above the restriction's starting height
+restricted <- defect(tree_id = example_trees$tree_id[1],
+                     start_height = 30,
+                     end_height = NA,
+                     effect = 'restrict',
+                     product = 'pulp')
+```
+
+
+```{r}
+## Compare sweep severity with product acceptance limits
+sweep <- defect(tree_id = example_trees$tree_id[1],
+                start_height = 20,
+                end_height = 35,
+                effect = 'sweep',
+                percent = 25)
+```
+
+
+```{r, echo = FALSE}
+bind_rows(cull, end, restricted, sweep) %>%
+  rename(`start (feet)` = start_height, `end (feet)` = end_height,
+         `severity (percent)` = percent) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The cull ends at `r cull$end_height` feet, and its recorded interval is unavailable to every product.
+
+Missing interval ends extend to the tree tip for cull, restriction, and sweep records. An end record uses its starting height alone. Restrictions require an exact product name, and percentages belong only to sweep records. The constructor checks field types, while validation checks their relationships to the trees and products.
+
+## What changed with the defects?
+
+The shipped Pacific Northwest defects include each effect. The comparison below selects a tree with a butt cull and passes its matching record explicitly. Both calculations use the same measurements and specifications, so differences follow from the available stem sections.
+
+
+```{r}
+## Assign sawlog dimensions and a sweep limit
+saw <- product(product = 'saw',  ## product label
+               min_length = 16,  ## feet
+               max_length = 32,  ## feet
+               trim = 0.5,  ## feet
+               min_sed = 6,  ## inches inside bark
+               max_sweep = 10,  ## percent
+               volume_unit = 'scribner')  ## board feet
+
+## Accept shorter and smaller sections as pulp
+pulp <- product(product = 'pulp',  ## product label
+                min_length = 8,  ## feet
+                max_length = 20,  ## feet
+                trim = 0.5,  ## feet
+                min_sed = 3,  ## inches inside bark
+                volume_unit = 'green_ton')  ## green short tons
+```
+
+The saw product precedes pulp in `products()`, giving it cutting priority in both calculations.
+
+
+```{r}
+## Select the tree and its located defects
+tree <- example_trees_pnw %>%
+  filter(tree_id == 7)
+
+## Keep records for that tree
+located <- example_defects_pnw %>%
+  filter(tree_id == 7)
+
+## Set sawlog priority ahead of pulp
+specifications <- products(saw, pulp)
+```
+
+
+```{r}
+## Select logs without located defects
+clean <- merchandise(tree_id = tree$tree_id,
+                     dbh = tree$dbh,
+                     ht = tree$ht,
+                     spcd = tree$spcd,
+                     products = specifications)
+```
+
+
+```{r}
+## Select logs with the recorded cull
+affected <- merchandise(tree_id = tree$tree_id,
+                        dbh = tree$dbh,
+                        ht = tree$ht,
+                        spcd = tree$spcd,
+                        products = specifications,
+                        defects = located)
+```
+
+
+
+
+```{r, echo = FALSE}
+bind_rows(clean = clean$logs, affected = affected$logs, .id = 'condition') %>%
+  transmute(condition, product, `start (feet)` = start_height,
+            `end (feet)` = end_height, `length (feet)` = length,
+            `small-end diameter (inches)` = sed,
+            `scale (Scribner board feet)` = if_else(volume_unit == 'scribner', scale, NA_real_),
+            `scale (green short tons)` = if_else(volume_unit == 'green_ton', scale, NA_real_)) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The affected calculation starts its first log at `r affected$logs$start_height[1]` feet, which moves the base of the selected wood in the drawing.
+
+```{r, eval = FALSE}
+## Compare cuts with and without the recorded cull
+par(mfrow = c(1, 2))
+plot(clean)
+plot(affected)
+```
+
+```{r, echo = FALSE, fig.width = 12}
+par(mfrow = c(1, 2))
+plot(clean, main = '', ylab = 'Stem radius (inches)', yaxt = 's', col = product_colors)
+plot(affected, main = '', ylab = 'Stem radius (inches)', yaxt = 's', col = product_colors)
+```
+
+The affected stem begins cutting at `r affected$logs$start_height[1]` feet, above the recorded butt cull. The same product colors identify corresponding products in both drawings.
+
+
+```{r, echo = FALSE}
+affected$residuals %>%
+  filter(cause == 'cull') %>%
+  rename(`start (feet)` = start_height, `end (feet)` = end_height) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The cull residual ends at `r located$end_height[1]` feet, matching the upper boundary in the defect record.
+
+When merchandising a subset of trees, filter defect records to the same identifiers. The calculation warns and drops records for trees absent from that call before checking the remaining records. Retaining matching identifiers avoids carrying unrelated defect warnings into a comparison of product specifications.
+
+## How do stopper columns become defects?
+
+`defects_from_stoppers()` converts a saw stop to a restriction, a pulp stop to an end, and a jump butt to a cull above the stump. Stops must occur in their physical order and remain within the tree. Missing stop heights add no record. A whole pulp tree can be identified with `pulp_tree`, without also supplying a saw stop or jump butt.
+
+
+```{r}
+## Convert the southern list's recorded stopping heights
+stoppers <- defects_from_stoppers(tree_id = example_trees_south$tree_id,
+                                  ht = example_trees_south$ht,
+                                  topwood_product = 'pulp',
+                                  saw_stop = example_trees_south$saw_stop,
+                                  pulp_stop = example_trees_south$pulp_stop,
+                                  jump_butt = example_trees_south$jump_butt)
+```
+
+
+```{r, echo = FALSE}
+stoppers %>%
+  count(effect, name = 'records (count)') %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The conversion creates `r sum(stoppers$effect == 'restrict')` restriction records from the southern saw stops.
+
+## How is a percentage by thirds combined?
+
+`defect_by_thirds()` weights the recorded percentages by inside bark volume in the lower, middle, and upper thirds of total height. It returns a whole-tree percentage for use in a separate calculation. A subsequent calculation can apply the returned percentage to a specified quantity. `merchandise()` does not apply this percentage.
+
+
+```{r}
+## Weight the recorded percentages by stem volume in each third
+thirds <- defect_by_thirds(dbh = tree$dbh,
+                           ht = tree$ht,
+                           spcd = tree$spcd,
+                           lower = 10,
+                           middle = 5,
+                           upper = 0)
+```
+
+
+```{r, echo = FALSE}
+thirds %>%
+  rename(`whole-tree defect (percent)` = value) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+third_text <- format(round(thirds$value, 3), trim = TRUE)
+```
+
+The volume-weighted estimate is `r third_text` percent for this tree's thirds.
+
+The percentage result has its own status column. A missing percentage in any third prevents a complete weighted estimate, rather than treating the missing entry as an absence of defect. Retain that status with any later deduction.
+
+## Are the records consistent?
+
+
+```{r}
+## Validate heights and product names before cutting
+checked <- validate_defects(defects = located,
+                            tree_id = tree$tree_id,
+                            ht = tree$ht,
+                            products = specifications)
+```
+
+
+```{r, echo = FALSE}
+checked %>%
+  rename(`start (feet)` = start_height, `end (feet)` = end_height,
+         `sweep (percent)` = percent) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The record has status `r checked$status[1]`, indicating valid heights and an accepted effect. Validation also removes duplicate records and merges overlapping valid culls.

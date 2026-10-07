@@ -21,6 +21,7 @@ effects.}
 example_defects_pnw
 }
 \description{
-The trees are synthetic and illustrate package calculations.
+Located records supply each supported defect effect for the Pacific Northwest example trees.
+Join them by tree identifier when cutting those trees, with interval heights in feet.
 }
 \keyword{datasets}

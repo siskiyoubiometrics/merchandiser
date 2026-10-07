@@ -4,16 +4,18 @@ NULL
 .nvel_upstream_url <- "https://github.com/FMSC-Measurements/VolumeLibrary"
 .nvel_fixtures_release_tag <- "v0.1.0"
 
-#' Record the source version used for the shipped equations
+#' Inspect the pinned source library revision
 #'
-#' @return A single character source revision, unitless. Character attributes   `upstream_url` and
-#'   `fixtures_release_tag` record the source repository   address and saved reference-test
-#'   release label. Neither is a tree input.
+#' Return the source revision associated with shipped equations and fixtures. Use it to identify
+#'   the implementation behind a source comparison.
+#'
+#' @return A character scalar containing the pinned source commit, with `upstream_url` and
+#'   `fixtures_release_tag` attributes.
 #' @usage
 #' nvel_source_revision()
 #' @export
 #' @examples
-#' ## Record the source revision used by this package.
+#' ## Inspect the revision behind the shipped example equations
 #' nvel_source_revision()
 nvel_source_revision <- function() {
   structure(.nvel_source_commit,

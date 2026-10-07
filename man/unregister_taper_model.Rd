@@ -2,32 +2,32 @@
 % Please edit documentation in R/stem-registry.R
 \name{unregister_taper_model}
 \alias{unregister_taper_model}
-\title{Remove a local equation from the current analysis}
+\title{Remove a private taper model from the session}
 \usage{
 unregister_taper_model(
   model
 )
 }
 \arguments{
-\item{model}{The identifier names the taper model in the registry. Character scalar model
-identifier. Required, with no default.}
+\item{model}{Equation identifier as one nonempty character string. Required, without a
+default. The identifier must resolve to a private registered equation.}
 }
 \value{
-TRUE, invisibly, after removing the private model.
+\code{TRUE}, invisibly, after removing the private registration.
 }
 \description{
-Remove a local equation from the current analysis
+Remove an equation registered in the current session. Shipped models cannot be removed.
 }
 \examples{
-## Copy an example tree's model
+## Copy the first shipped tree's equation under a private identifier
 local_model <- get_taper_model(model = example_trees$model[1])
 
-## Name the local copy
-local_model$id <- 'example.remove'
+## Assign a private identifier to the copied model
+local_model$id <- 'local.example'
 
-## Register the copy
+## Register the private copy
 register_taper_model(x = local_model)
 
-## Remove and report the local registration
+## Remove and confirm the temporary registration
 print(unregister_taper_model(model = local_model$id))
 }

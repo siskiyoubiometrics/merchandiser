@@ -2,7 +2,7 @@
 % Please edit documentation in R/products.R
 \name{product}
 \alias{product}
-\title{Define one product}
+\title{Define log dimensions, eligibility, and pricing for a product}
 \usage{
 product(
   product,
@@ -32,113 +32,143 @@ product(
 )
 }
 \arguments{
-\item{product}{Name the product so its logs can be recognized. Character, unitless, required.}
+\item{product}{Product label as a single nonempty character string. Required, with no default.
+Names must be unique when rows are combined and must match names used in defect
+restrictions.}
 
-\item{spcd}{Limit this product to the listed species codes. Numeric vector of inventory
-species codes, unitless, default \code{NULL} accepts every species.}
+\item{spcd}{Species allowed for this product as a numeric vector of positive whole-number
+codes. Defaults to \code{NULL}, allowing all species. Tree calculations still require a usable
+taper equation and recognized species properties.}
 
-\item{min_dbh}{Set the smallest tree that qualifies for this product. Numeric, inches,
-default \code{0}.}
+\item{min_dbh}{Minimum outside bark diameter at breast height, in inches, for a tree to
+qualify. Accepts a single finite, nonnegative number. The lower limit is inclusive. Defaults
+to \code{0}, which imposes no additional minimum on a valid tree. Cannot exceed a supplied
+\code{max_dbh}.}
 
-\item{max_dbh}{Set the tree diameter at which this product stops qualifying. Numeric, inches,
-default \code{NA} has no upper limit.}
+\item{max_dbh}{Maximum outside bark diameter at breast height, in inches, for tree
+eligibility. Accepts a single finite positive number or \code{NA}. The upper limit is exclusive.
+Defaults to \code{NA_real_}, imposing no maximum. Cannot be smaller than \code{min_dbh}.}
 
-\item{min_age}{Set the youngest tree that qualifies. Numeric, years, default \code{NA} has no limit.}
+\item{min_age}{Minimum tree age, in years. Accepts a single finite nonnegative number or \code{NA}.
+The lower limit is inclusive. Defaults to \code{NA_real_}, imposing no minimum age. Requires
+\code{age} in \code{\link[=merchandise]{merchandise()}} and cannot exceed \code{max_age}.}
 
-\item{max_age}{Set the age at which the tree stops qualifying. Numeric, years,
-default \code{NA} has no limit.}
+\item{max_age}{Maximum tree age, in years. Accepts a single finite nonnegative number or \code{NA}.
+The upper limit is exclusive. Defaults to \code{NA_real_}, imposing no maximum age. Requires
+\code{age} in \code{\link[=merchandise]{merchandise()}} and cannot be below \code{min_age}.}
 
-\item{requires_pruned}{Require the entire cut to lie within the tree's pruned section.
-Logical, unitless, default \code{FALSE}.}
+\item{requires_pruned}{Whether logs must fit within the pruned portion of the tree. Accepts
+\code{TRUE} or \code{FALSE}, without missing values. Defaults to \code{FALSE}. When \code{TRUE}, \code{\link[=merchandise]{merchandise()}}
+requires \code{pruned_ht} and checks the physical log end against that height.}
 
-\item{min_length}{Set the shortest nominal log accepted. Numeric, feet, required.}
+\item{min_length}{Shortest nominal log length, in feet. Accepts one finite positive number.
+Required, with no default. Cannot exceed \code{max_length}, and the interval must include a
+candidate on the half-foot grid.}
 
-\item{max_length}{Set the longest nominal log accepted. Numeric, feet, required.}
+\item{max_length}{Longest nominal log length, in feet. Accepts one finite positive number.
+Required, with no default. Cannot be below \code{min_length}. Trim occupies additional stem
+length beyond this nominal length.}
 
-\item{length_round}{Set the mill's scaling increment. Numeric, feet, default \code{1}.}
+\item{length_round}{Increment for rounding scaling length down, in feet. Accepts one finite
+positive number. Defaults to \code{1}. Board foot rules accept only \code{1} or \code{2}. Cubic, cord, and
+green weight scales use nominal length even when reported scaling length differs.}
 
-\item{trim}{Allow extra wood above the nominal log for trimming. Numeric, feet, default \code{0}.}
+\item{trim}{Extra length occupied above the nominal log body, in feet. Accepts one finite
+nonnegative number. Defaults to \code{0}. Physical end diameters include trim, but scale excludes
+it and the wood remains in the residual record.}
 
-\item{min_sed}{Set the smallest diameter accepted at the physical small end. Numeric, inches,
-required.}
+\item{min_sed}{Minimum diameter at the physical small end of a candidate log, in inches.
+Accepts one finite nonnegative number. Required, with no default. The lower limit is
+inclusive, uses \code{inside_bark}, and cannot exceed \code{max_sed}.}
 
-\item{max_sed}{Set the largest diameter accepted at the physical small end. Numeric, inches,
-default \code{NA} has no limit.}
+\item{max_sed}{Maximum diameter at the physical small end of a candidate log, in inches.
+Accepts one finite nonnegative number or \code{NA}. The upper limit is inclusive. Defaults to
+\code{NA_real_}, imposing no maximum. Uses \code{inside_bark} and cannot be below \code{min_sed}.}
 
-\item{min_led}{Set the smallest diameter accepted at the physical large end. Numeric, inches,
-default \code{0}.}
+\item{min_led}{Minimum diameter at the physical large end of a candidate log, in inches.
+Accepts a single finite, nonnegative number. The lower limit is inclusive. Defaults to \code{0},
+which imposes no additional large end minimum. Uses the bark basis selected by \code{inside_bark}
+and cannot exceed a supplied \code{max_led}.}
 
-\item{max_led}{Set the largest diameter accepted at the physical large end. Numeric, inches,
-default \code{NA} has no limit.}
+\item{max_led}{Maximum diameter at the physical large end of a candidate log, in inches.
+Accepts one finite nonnegative number or \code{NA}. The upper limit is inclusive. Defaults to
+\code{NA_real_}, imposing no maximum. Uses \code{inside_bark} and cannot be below \code{min_led}.}
 
-\item{inside_bark}{Measure the diameter limits inside bark. Logical, unitless, default \code{TRUE}.
-\code{FALSE} uses outside bark. Cubic and cord volume use the same bark basis.}
+\item{inside_bark}{Bark basis for the log end diameter limits. Accepts \code{TRUE} or \code{FALSE}, with
+no missing value. Defaults to \code{TRUE} for inside bark. \code{FALSE} uses outside bark. Cubic and
+cord scales use the same basis. Board foot rules still use inside bark diameters, and green
+weight includes wood and attached bark. This setting does not change the tree diameter basis
+for \code{min_dbh}.}
 
-\item{max_sweep}{Set the greatest sweep or crook accepted in an overlapping section.
-Numeric, percent, default \code{NA} has no limit.}
+\item{max_sweep}{Largest sweep percentage accepted by a log overlapping a sweep interval.
+Accepts one finite number from 0 through 100 or \code{NA}. Defaults to \code{NA_real_}, imposing no
+sweep limit. Comparison uses the percentage in \code{\link[=defect]{defect()}}, without deducting it from scale.}
 
-\item{max_logs}{Limit the number of these logs in each segment. Numeric whole number,
-logs per segment, default \code{NA} has no limit. Counts restart above culls and restrictions.}
+\item{max_logs}{Maximum number of logs from this product within each available stem segment.
+Accepts one positive whole number or \code{NA}. Defaults to \code{NA_integer_}, imposing no count
+limit. Counts restart at cull and restriction boundaries.}
 
-\item{volume_unit}{Choose the product's volume measurement. Character, required.
-Choices are \code{'scribner'}, \code{'international'}, and \code{'doyle'} in board feet,
-\code{'cubic'} in cubic feet, \code{'green_ton'} in green short tons, and \code{'cord'} in cords.
-Board foot rules measure inside bark. Green weight includes wood and attached bark.}
+\item{volume_unit}{Scaling rule as one character string. Accepts \code{'scribner'},
+\code{'international'}, and \code{'doyle'} for board feet, \code{'cubic'} for cubic feet, \code{'cord'} for
+cords, or \code{'green_ton'} for green short tons. Required, with no default. The selected rule
+determines the scale and price basis.}
 
-\item{split_scale}{Scale Scribner logs in shorter sections. Logical, unitless, default \code{FALSE}.
-This changes scaling sections only and has no effect on other volume measurements.}
+\item{split_scale}{Whether Scribner logs use shorter scaling sections.
+Accepts \code{TRUE} or \code{FALSE}, without missing values. Defaults to \code{FALSE}. It affects
+Scribner scale only and does not add physical cuts.}
 
-\item{round}{Choose how to round the scaling diameter before applying the rule.
-Character, unitless, default \code{'default'} uses the rule's rounding.
-\code{'down'} rounds down to whole inches, \code{'nearest'} rounds to the nearest inch with halves
-upward, and \code{'none'} skips product rounding. Scribner and International still round
-to the nearest inch as their rules require. Doyle uses the resulting diameter directly.}
+\item{round}{Scaling diameter rounding as one character string. Accepts \code{'default'}, \code{'down'},
+\code{'nearest'}, or \code{'none'}. Defaults to \code{'default'}, using the selected board foot rule's
+convention. Does not round tree measurements or physical eligibility limits. \code{none}
+bypasses preprocessing, but the source rule can still round internally.}
 
-\item{cord_solid_fraction}{Set the solid wood proportion used to convert volume to cords.
-Numeric proportion strictly between zero and one, default \code{NA}.
-Required only for \code{'cord'}.}
+\item{cord_solid_fraction}{Solid volume divided by stacked cord volume. Accepts one finite
+number strictly between zero and one, or \code{NA}. Defaults to \code{NA_real_}. A finite fraction is
+required when \code{volume_unit = 'cord'} and converts the selected solid volume to cords.}
 
-\item{price}{Set the amount paid per pricing quantity. Numeric, caller's price unit,
-default \code{NA} leaves the product unpriced.}
+\item{price}{Amount per \code{price_per} scale units, in a caller-selected currency. Accepts one
+finite nonnegative number or \code{NA}. Defaults to \code{NA_real_}, leaving the product unpriced.
+Optimization requires a positive price on every product.}
 
-\item{price_per}{Set how many volume units the price covers. Numeric, selected volume units,
-default \code{1}. The quantity uses the selected volume unit.}
+\item{price_per}{Number of scale units covered by \code{price}. Accepts one finite positive number.
+Defaults to \code{1}. Log value is \code{scale * price / price_per}, using the unit selected by
+\code{volume_unit}.}
 }
 \value{
-A one-row \code{merch_products} data frame. Columns and units match the arguments:
+A one-row \code{merch_products} data frame with all specification fields:
 \itemize{
-\item Identification: \code{product}, \code{spcd}.
-\item Tree limits: \code{min_dbh}, \code{max_dbh}, \code{min_age}, \code{max_age}, \code{requires_pruned}.
-\item Lengths: \code{min_length}, \code{max_length}, \code{length_round}, \code{trim}.
-\item Diameters: \code{min_sed}, \code{max_sed}, \code{min_led}, \code{max_led}, \code{inside_bark}.
-\item Cutting limits: \code{max_sweep}, \code{max_logs}.
-\item Scaling: \code{volume_unit}, \code{split_scale}, \code{round}, \code{cord_solid_fraction}.
-\item Pricing: \code{price}, \code{price_per}.
+\item \code{product}: label. \code{spcd}: list column of allowed numeric codes.
+\item \code{min_dbh}, \code{max_dbh}: outside bark diameter limits, inches.
+\item \code{min_age}, \code{max_age}: age limits, years. \code{requires_pruned}: pruning requirement.
+\item \code{min_length}, \code{max_length}, \code{length_round}, \code{trim}: lengths, feet.
+\item \code{min_sed}, \code{max_sed}, \code{min_led}, \code{max_led}: end diameter limits, inches.
+\item \code{inside_bark}: diameter basis. \code{max_sweep}: percent. \code{max_logs}: count per segment.
+\item \code{volume_unit}: scale rule. \code{split_scale}: split-scaling choice. \code{round}: rounding choice.
+\item \code{cord_solid_fraction}: solid-to-stacked volume fraction.
+\item \code{price}: currency amount. \code{price_per}: scale units per price.
 }
-
-\code{spcd} is a list column of numeric code vectors.
 }
 \description{
-Describe the logs a mill accepts and how it measures and prices them.
-Candidate cuts use an internal half foot grid between the length limits.
-}
-\details{
-\code{length_round} rounds nominal length down for scaling. Source board foot products accept
-\code{1} for whole feet or \code{2} for even feet. The source segmentation option follows that choice
-and the rule scales exactly the rounded length. Other increments are rejected.
-
-Cubic, green weight, and cord products scale the nominal body and report the rounded length
-for the mill's records only.
+Define the tree and log limits, scaling rule, and optional price for a product. Returns a
+validated product row for \code{merchandise()}. Combine rows with \code{products()} to set cutting
+priority under the default strategy.
 }
 \examples{
-## Define an unpriced product
-specification <- product(product = 'domestic_saw',  ## name, unitless
-                         min_length = 16,  ## feet
-                         max_length = 40,  ## feet
-                         trim = 1,  ## feet
-                         min_sed = 6,  ## inches
-                         volume_unit = 'scribner')  ## board feet
+## Define an unpriced cubic-foot product
+saw <- product(product = 'saw',  ## product label
+               min_length = 16,  ## feet
+               max_length = 32,  ## feet
+               min_sed = 6,  ## inches inside bark
+               volume_unit = 'cubic')  ## cubic feet
 
-## Show the product name
-specification$product
+## Select logs from the shipped trees
+result <- merchandise(tree_id = example_trees$tree_id,
+                      dbh = example_trees$dbh,
+                      ht = example_trees$ht,
+                      spcd = example_trees$spcd,
+                      products = saw,
+                      model = example_trees$model)
+
+## Inspect selected logs
+head(result$logs)
 }

@@ -596,22 +596,27 @@
   as.integer(number)
 }
 
-#' Look up a source equation from species and geographic codes
+#' Look up a source library equation identifier
 #'
-#' @param region The Forest Service region selects the source defaults. Numeric vector,
-#'   whole-number region codes. Required, with no default.
-#' @param forest The national forest code selects local source rules. Numeric vector, whole-number
-#'   forest codes. Required, with no default.
-#' @param district The ranger district code selects local source rules. Numeric vector,
-#'   whole-number district codes. Required, with no default.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param variant Select the geographic variant for default equation lookup. Character vector,
-#'   unitless, default `NULL`. Missing and blank values request the source geographic mapping.
-#'   The source uses regional branches rather than one complete choice list.
-#' @return A character vector of source equation identifiers in input order.   Identifiers are
-#'   unitless. A selected source equation can be unsupported   by the package, so check
-#'   availability before computing.
+#' Select a source equation from location and species codes. Use the identifier to check
+#'   whether that source assignment is implemented.
+#'
+#' @param region Forest Service region code as whole-number numeric values from 1 through 10.
+#'   Required, without a default. Selects the source lookup table.
+#' @param forest Forest code as whole-number numeric values from 0 through 99. Required, without
+#'   a default. Used with region and district in the source lookup.
+#' @param district District code as whole-number numeric values from 0 through 99. Required,
+#'   without a default. Used with region and forest in the source lookup.
+#' @param spcd Species code as numeric whole numbers from 1 through 9999. Required, without a
+#'   default. The resulting source identifier may not be implemented by this package.
+#' @param variant Geographic variant as a character vector, or `NULL`. Defaults to `NULL`, using
+#'   the source default. Values are trimmed and normalized to uppercase. Accepted variants by
+#'   region are `1`: EM, IE, CI, `5`: CA, SO, WS, NC, `6`: BM, EC, SO, WC, PN, NC, IE, CA, OC, OP,
+#'   `7`: WC, NC, SO, PN, CA, OC, OP, `8`: SN, and `9`: LS, CS, NE, SN. Other regions accept
+#'   only an unspecified variant.
+#' @return A character vector of source equation identifiers in input order, with missing values
+#'   where no identifier is available. A returned identifier is not a guarantee that the package
+#'   implements it. Check with [has_taper_model()].
 #' @usage
 #' nvel_default_equation(
 #'   region,
@@ -622,11 +627,14 @@
 #' )
 #' @export
 #' @examples
-#' ## Find the source default for the Pacific Northwest example species.
-#' nvel_default_equation(region = 6,
-#'                       forest = 12,
-#'                       district = 0,
-#'                       spcd = example_trees$spcd[1])
+#' ## Look up a source equation for a shipped species
+#' model <- nvel_default_equation(region = 6,
+#'                                forest = 0,
+#'                                district = 0,
+#'                                spcd = example_trees$spcd[1])
+#'
+#' ## Check whether the returned equation is implemented
+#' has_taper_model(model = model)
 nvel_default_equation <- function(
   region,
   forest,
@@ -766,20 +774,24 @@ nvel_default_equation <- function(
   result
 }
 
-#' Translate inventory equation codes to source equation names
+#' Translate an inventory equation identifier
 #'
-#' @param fia_code Identify the inventory volume equation to translate. Character vector,
-#'   unitless, required. Surrounding spaces are removed, letters are made uppercase, and the
-#'   first eight characters are used. Missing or unrecognized codes give source error flag 1.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param geosub Select the geographic substitution for the equation. Character vector,
-#'   unitless, default `''` uses the source's unqualified substitution. Missing gives flag 1.
-#' @param primary_top Set the primary product's top diameter. Numeric vector, inches,
-#'   default `0` uses the source volume type's diameter convention. Missing gives flag 1.
-#'   Values at least 99 preserve the equation template and volume type without substitutions.
-#' @return A data frame with `model` (equation identifier), `volume_type` (source volume code),
-#'   `primary_top` (inches), and `errflag` (unitless source error code, zero for success).
+#' Translate a Forest Inventory and Analysis equation code to a source library identifier.
+#'   Use the returned source identifier when checking an inventory equation assignment.
+#'
+#' @param fia_code Forest Inventory and Analysis equation code as character strings of exactly
+#'   eight characters. Required, without a default. Whitespace is not removed, and codes are
+#'   normalized to uppercase.
+#' @param spcd Species code as numeric whole numbers from 1 through 9999. Required, without a
+#'   default. The resulting source identifier may not be implemented by this package.
+#' @param geosub Geographic substitution as a character vector. Defaults to an empty string,
+#'   requesting no substitution. Compatibility mode controls fixed-width source string behavior.
+#' @param primary_top Primary inside bark top diameter, in inches, as numeric values from 0
+#'   through 99. Defaults to `0`, using the translated rule. A value of `99` preserves the
+#'   equation template setting.
+#' @return A data frame with `model` (source identifier), `volume_type` (source volume code),
+#'   `primary_top` (inside bark diameter, inches), and `errflag` (source translation code). Codes
+#'   0, 1, and 6 distinguish success, an invalid template, and an unsupported translation.
 #' @usage
 #' nvel_from_fia_code(
 #'   fia_code,
@@ -787,13 +799,11 @@ nvel_default_equation <- function(
 #'   geosub = '',
 #'   primary_top = 0
 #' )
-#' @details
-#' Each nonmissing `fia_code` must have exactly eight characters.
 #' @export
 #' @examples
 #' ## Translate a source inventory equation for the example species.
 #' nvel_from_fia_code(fia_code = 'BD000006',
-#'                    spcd = 202)
+#'                    spcd = example_trees$spcd[1])
 nvel_from_fia_code <- function(fia_code, spcd, geosub = "", primary_top = 0) {
   compat <- .treevolume_compat()
   values <- .nvel_default_recycle(list(

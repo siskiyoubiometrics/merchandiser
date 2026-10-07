@@ -1,92 +1,80 @@
-#' Cut and scale logs from trees
+#' Select and scale logs from measured trees
 #'
-#' Select logs by product order or maximize their total value within each usable stem segment.
-#' Cull and restriction boundaries restart the product order and log counts.
-#' @param tree_id Identify the tree every result row came from. Required atomic vector, unitless.
-#'   This identifier links every result row to its input tree. Values must be unique and nonmissing.
-#' @param dbh Supply diameter at breast height outside bark. Numeric, inches, required.
-#'   Must be greater than zero and at most 400.
-#' @param ht Supply total tree height above ground. Numeric, feet, required.
-#'   Must be greater than zero and at most 500.
-#' @param spcd Identify each tree's species. Numeric inventory species code,
-#'   unitless, required.
-#' @param products Supply mill specifications. Their order sets cascade priority only. Made with
-#'   [products()], required. Its measurement units are documented in [product()].
-#' @param model Choose the taper equation for each tree. Character model identifier, unitless,
-#'   default `NULL` selects by species. One model may be repeated for all trees.
-#' @param taper_map Assign equations to species. Data frame with numeric `spcd` and character
-#'   `model`, unitless, default `NULL` uses the package defaults. Explicit `model` takes precedence.
-#' @param age Supply tree age for products with age limits. Numeric, years, default `NULL`.
-#'   Products without age limits do not use this input.
-#' @param pruned_ht Record clear wood from ground to this height. Numeric, feet, default `NULL`
-#'   records no pruned section. A product requiring pruning must fit entirely below this height.
-#' @param defects Supply sections that change cutting. Data frame from [defect()], with heights
-#'   in feet and sweep in percent, default `NULL` records no defects.
-#' @param stump_ht Leave this height below the first log. Numeric, feet, default `1`.
-#' @param strategy Choose how to select cuts. Character, unitless, default `'cascade'` takes
-#'   the longest feasible log in supplied product order at each step.
-#'   `'optimize'` maximizes total value with any eligible product at each cut position.
-#'   Product order has no effect on optimization, and every product must have a positive price.
-#'   Equal values prefer fewer logs, then longer logs lower on the stem.
-#'   Remaining ties prefer lower physical ends, then product names in byte order.
-#'   Value differences within eight machine epsilons of the larger total are treated as ties.
-#' @param quiet Silence the message about default equations. Logical, unitless, default `FALSE`.
-#' @param ... Supply named auxiliary measurements required by the taper model. Every value is
-#'   numeric, inches for diameters and feet for heights, except `upper_bark`. Default no
-#'   auxiliary inputs.
-#'   Supported inputs depend on the model:
-#'   * `bark_ratio`: inside to outside diameter ratio.
-#'   * `upper_ht1`, `upper_d1`, `upper_ht2`, `upper_d2`: paired upper measurements.
-#'   * `upper_bark`: the one character input, `'ib'` or `'ob'`.
-#'   * `form_class`: unitless.
-#'   * `site_index`: feet.
-#'   * `basal_area`: square feet per acre.
-#'   * `decay_class`: whole-number class.
-#'   * `cull`: percent.
+#' Select logs within available stem sections using explicit product dimensions and eligibility
+#'   limits. The default cascade follows product order. Optimization maximizes priced log value
+#'   within the candidate lengths and segment boundaries. Physical end diameters include trim,
+#'   but scale uses the nominal body and records trim as residual.
 #'
-#'   Inspect [get_taper_model()] for defaults.
 #' @details
-#' Invalid stump heights return status 411 on their tree. Invalid pruning heights return
-#'   status 408. Negative, nonfinite, and above-tree values are invalid, and stumps must
-#'   be strictly below the tree height. Orphan defects are dropped before validation.
-#' @return A `merch_result` list with four data frames and `call`, the inputs needed to replay it.
-#'   Every table starts with `tree_id`, retaining the input identifier type.
+#'   Optimization ties favor fewer
+#'   logs, then longer lower logs and lower physical ends. Remaining ties compare serialized
+#'   start heights, ends, cut kinds, nominal lengths, and product names in byte order. Values
+#'   within eight machine epsilons times the larger absolute value are treated as ties. Log
+#'   counts restart at cull and restriction boundaries. Independently capped products multiply
+#'   the possible states, and off-grid preparation rejects more than 50,000 cut positions.
 #'
-#'   `logs` contains:
-#'   * `log`: number within the tree.
-#'   * `product`: product name.
-#'   * `start_height`, `end_height`: physical cut heights in feet.
-#'   * `length`: nominal feet.
-#'   * `scaling_length`: rounded feet.
-#'   * `sed`, `led`: physical small and large end diameters in inches.
-#'   * `scaling_diameter`: inches used by the scale rule.
-#'   * `inside_bark`: logical diameter basis.
-#'   * `scale`: quantity in `volume_unit`.
-#'   * `volume_unit`: measurement name.
-#'   * `value`: present when a product is priced, in the price's unit.
-#'     Unpriced log values are missing.
-#'
-#'   `scaling_length` is nominal length rounded down to the product's `length_round`, in feet.
-#'   Source board foot rules scale that length in whole or even feet according to `length_round`.
-#'   Cubic, green weight, and cord scales measure the nominal body from the start
-#'   to the nominal end.
-#'   Their `scaling_length` is reported for the mill's records only.
-#'
-#'   `sed` and `led` are measured at the physical ends on the product's bark basis, recorded by
-#'   `inside_bark`. Product diameter limits are tested against those measurements.
-#'   `scaling_diameter` is the inside bark diameter used by the source board foot rule, rounded
-#'   as that rule rounds it. It is `NA` for cubic, green weight, and cord products.
-#'
-#'   `residuals` has `start_height`, `end_height` (feet above ground), and `cause` (text).
-#'
-#'   `status` has only nonzero tree codes in `status`, with `name` and `description` (text).
-#'   An empty status table means all trees completed cleanly.
-#'
-#'   `assumptions` has `assumption`, `spcd`, `model`, `value`, `unit`, `basis`,
-#'   `product`, and `source`.
-#'   Codes and labels are unitless, and `unit` describes each numeric value.
-#' @importFrom utils head tail
-#' @export
+#' @param tree_id Tree identifiers as a unique, nonmissing atomic vector. Required, with no
+#'   default. Identifiers link logs, residuals, defects, and status to the supplied trees.
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Invalid measurement rows
+#'   return missing results with a status.
+#' @param ht Total height above ground, in feet. Accepts numeric values greater than zero and no
+#'   greater than 500. Required, with no default. Measurement heights and section bounds must
+#'   fall within the tree.
+#' @param spcd Species identifier as a numeric vector of positive whole-number codes. Required,
+#'   with no default. The species must be recognized for species properties and within the
+#'   selected equation's scope.
+#' @param products Validated product rows from [product()] or [products()]. Required, with no
+#'   default. Names must be unique, and row order supplies priority for the default cascade
+#'   strategy.
+#' @param model Taper equation identifier as a character vector. Defaults to `NULL`, selecting
+#'   the stored species default. A supplied identifier overrides that choice. Scalar identifiers
+#'   recycle across trees.
+#' @param taper_map Species-to-model assignments as a data frame with unique numeric `spcd` and
+#'   character `model` columns. Defaults to `NULL`, using shipped defaults. Missing mapped
+#'   species receive a status rather than falling back. Explicit `model` takes precedence, but a
+#'   supplied map is still validated.
+#' @param age Tree age in years as a nonnegative numeric vector. Defaults to `NULL`, leaving age
+#'   unspecified. Required when any product has an age limit.
+#' @param pruned_ht Pruned height above ground, in feet, as finite nonnegative numeric values no
+#'   greater than total height. Defaults to `NULL`. Required when a product has `requires_pruned
+#'   = TRUE`.
+#' @param defects Located defect records with the columns returned by [defect()]. Defaults to
+#'   `NULL`, adding no defects. Records must use the same tree identifier type and valid product
+#'   names for restrictions.
+#' @param stump_ht Stump height above ground, in feet. Accepts finite, nonnegative numeric values
+#'   below total height. Defaults to `1`. Cutting starts above this height, subject to located
+#'   defects. The stump remains in the residual record.
+#' @param strategy Log selection strategy as one character string. Accepts `'cascade'` (the
+#'   default) or `'optimize'`. Cascade follows product order. Optimization requires finite
+#'   positive prices for every product and selects the greatest total value within each segment.
+#' @param quiet Whether to suppress aggregated status warnings. Accepts one `TRUE` or `FALSE`,
+#'   without a missing value. Defaults to `FALSE`. Recorded status rows remain available when
+#'   warnings are suppressed.
+#' @param ... Additional named inputs accepted by the selected model, with none supplied by
+#'   default. Numeric inputs must be finite: positive `upper_ht1`, `upper_ht2`, and `site_index`
+#'   use feet, positive `upper_d1` and `upper_d2` use inches, and positive `basal_area` uses
+#'   square feet per acre. `form_class` accepts positive numbers. `bark_ratio` is inside diameter
+#'   divided by outside diameter, greater than zero and no greater than one. `decay_class`
+#'   accepts whole numbers from 0 through 5 and `cull` accepts percentages from 0 through 100.
+#'   `upper_bark` accepts `'ib'` or `'ob'`. Upper heights and diameters must be supplied in
+#'   pairs. Only inputs declared by the selected model are accepted.
+#' @return A `merch_result` list containing:
+#' * `logs`: `tree_id` (identifier), `log` (sequence within tree), `product` (label),
+#'   `start_height` and `end_height` (physical ends, feet), `length` (nominal feet),
+#'   `scaling_length` (rounded feet), `sed` and `led` (physical end diameters, inches),
+#'   `scaling_diameter` (board foot scaling diameter inside bark, inches, otherwise missing),
+#'   `inside_bark` (eligibility basis), `scale` (quantity in `volume_unit`), and
+#'   `volume_unit` (rule label). When any product is priced, `value` gives currency amounts
+#'   and is missing for unpriced products. Scale units are board feet, cubic feet, cords,
+#'   or green short tons according to the rule. Do not total unlike units.
+#' * `residuals`: `tree_id`, `start_height`, `end_height` (feet), and `cause`.
+#'   Causes include stump, trim, top, end, cull, restricted, short_remainder,
+#'   diameter_limit, and no_entry_product.
+#' * `status`: reported conditions only, with `tree_id`, `status` (integer code),
+#'   `name`, and `description`. A clean run has no rows.
+#' * `assumptions`: the columns and units documented in [assumptions()].
+#' * `call`: validated inputs and selected models needed to reproduce the calculation.
 #' @usage
 #' merchandise(
 #'   tree_id,
@@ -104,18 +92,26 @@
 #'   quiet = FALSE,
 #'   ...
 #' )
+#' @importFrom utils head tail
+#' @export
 #' @examples
-#' ## Cut and scale the shipped trees with an explicit product
-#' merchandise(tree_id = example_trees$tree_id,
-#'             dbh = example_trees$dbh,
-#'             ht = example_trees$ht,
-#'             spcd = example_trees$spcd,
-#'             products = product(product = 'domestic_saw',  ## name, unitless
-#'                                min_length = 16,  ## feet
-#'                                max_length = 40,  ## feet
-#'                                trim = 1,  ## feet
-#'                                min_sed = 6,  ## inches
-#'                                volume_unit = 'scribner'))  ## board feet
+#' ## Define an unpriced cubic-foot product
+#' saw <- product(product = 'saw',  ## product label
+#'                min_length = 16,  ## feet
+#'                max_length = 32,  ## feet
+#'                min_sed = 6,  ## inches inside bark
+#'                volume_unit = 'cubic')  ## cubic feet
+#'
+#' ## Select logs from the shipped trees
+#' result <- merchandise(tree_id = example_trees$tree_id,
+#'                       dbh = example_trees$dbh,
+#'                       ht = example_trees$ht,
+#'                       spcd = example_trees$spcd,
+#'                       products = saw,
+#'                       model = example_trees$model)
+#'
+#' ## Inspect selected logs
+#' head(result$logs)
 merchandise <- function(
   tree_id, dbh, ht, spcd, products, model = NULL, taper_map = NULL, age = NULL,
   pruned_ht = NULL, defects = NULL, stump_ht = 1, strategy = "cascade", quiet = FALSE, ...

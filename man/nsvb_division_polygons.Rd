@@ -13,6 +13,7 @@ degrees), and y (latitude, degrees).
 nsvb_division_polygons
 }
 \description{
-Boundary coordinates support ecological division lookup.
+Boundary coordinates support ecological division lookup from longitude and latitude in degrees.
+Use these polygons to inspect the spatial coverage of coefficient selection.
 }
 \keyword{datasets}

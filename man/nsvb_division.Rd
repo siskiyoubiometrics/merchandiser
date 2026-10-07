@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-nsvb.R
 \name{nsvb_division}
 \alias{nsvb_division}
-\title{Look up the county ecological code for biomass equations}
+\title{Look up ecological division by state and county}
 \usage{
 nsvb_division(
   state,
@@ -10,21 +10,27 @@ nsvb_division(
 )
 }
 \arguments{
-\item{state}{The state code locates the tree for ecological division lookup. Numeric vector,
-federal state codes. Required, with no default.}
+\item{state}{State code as numeric whole numbers from 1 through 99. Required, without a
+default. Nonfinite codes receive missing-input status. Finite codes outside the accepted
+range or with fractional values cause an error.}
 
-\item{county}{The county code locates the tree within its state. Numeric vector, federal county
-codes. Required, with no default.}
+\item{county}{County code within the supplied state, as numeric whole numbers from 1 through
+999. Required, without a default. Finite fractional or out-of-range codes cause an error.
+State and county jointly determine the lookup.}
 }
 \value{
-A data frame with value (ecological division code) and status (integer result code),
-in input order. A county without a division returns status 8, outside_divisions.
+A data frame with \code{value} (integer ecological division code) and \code{status} (integer
+result code). Missing inputs receive status 1, and unrecognized locations receive status 8.
 }
 \description{
-Look up the county ecological code for biomass equations
+Translate numeric state and county codes to the ecological division used for biomass
+coefficients. Use the returned code to request location-specific biomass estimates.
 }
 \examples{
-## Find the ecological division for the source example county.
-nsvb_division(state = 41,
-              county = 39)
+## Compare a county lookup with the shipped coordinates
+nsvb_division(state = 41, county = 5)
+
+## Inspect the lookup at the shipped coordinates
+nsvb_division_xy(x = example_trees_pnw$longitude[1],
+                 y = example_trees_pnw$latitude[1])
 }

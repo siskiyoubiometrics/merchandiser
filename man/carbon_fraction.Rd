@@ -2,27 +2,28 @@
 % Please edit documentation in R/stem-nsvb.R
 \name{carbon_fraction}
 \alias{carbon_fraction}
-\title{Look up the carbon fraction of dry tree biomass}
+\title{Look up the carbon fraction of dry biomass}
 \usage{
 carbon_fraction(
   spcd
 )
 }
 \arguments{
-\item{spcd}{Numeric inventory species code. Numeric
-vector, species codes. Required, with no default.}
+\item{spcd}{Species identifiers as numeric positive whole-number codes. Required, without a
+default. The carbon lookup applies its source species remapping. Unknown or invalid codes
+return missing fractions with a warning.}
 }
 \value{
-A numeric vector of carbon fractions of dry mass, with a source attribute. Unknown
-codes return NA with a warning.
+A numeric vector in species input order, with a \code{source} attribute recording
+provenance. Missing codes return \code{NA}. Invalid or unknown codes return \code{NA} with a warning.
+The default compatibility setting returns the rounded fraction used in biomass calculations,
+while source compatibility returns the raw table fraction.
 }
 \description{
-Look up the carbon fraction of dry tree biomass
+Return the species fraction used to convert dry aboveground mass excluding foliage to carbon.
+Use it to check the carbon calculation for numeric species codes.
 }
 \examples{
-## Look up the carbon fraction for the example species.
-fraction <- carbon_fraction(spcd = example_trees$spcd[1])
-
-## Show the fraction without its provenance attribute
-c(`carbon fraction (unitless)` = fraction)
+## Inspect the fraction used for the first example species
+carbon_fraction(spcd = example_trees$spcd[1])
 }

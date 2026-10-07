@@ -1,0 +1,165 @@
+---
+title: 'Heights'
+output:
+  rmarkdown::html_vignette:
+    md_extensions: -smart
+vignette: >
+  %\VignetteIndexEntry{Heights}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = '#>', message = FALSE,
+                      dev.args = list(bg = 'white'), fig.width = 8, fig.height = 4.5, dpi = 120)
+library(merchandiser)
+library(dplyr)
+```
+
+Height fitting supplies missing total heights while preserving measured heights for subsequent stem calculations. `fit_height()` fits a relationship to diameter and species, with optional group adjustments for plots or other sampling groups. Diameters enter in inches, and measured and predicted heights use feet.
+
+The Pacific Northwest example includes measured heights and stored predictions. Replacing only its predicted heights creates the same fitting inputs used to prepare the shipped list. The plot grouping must also match to reproduce those predictions.
+
+## Which heights were measured?
+
+
+```{r}
+## Attach the calculation and data tools
+library(merchandiser)
+library(dplyr)
+```
+
+```{r}
+## Retain measurements and remove stored predictions before fitting
+trees <- example_trees_pnw %>%
+  mutate(ht_observed = if_else(ht_status == 'predicted', NA_real_, ht))
+```
+
+
+```{r, echo = FALSE}
+trees %>%
+  count(ht_status, name = 'trees (count)') %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The list contains `r sum(trees$ht_status == 'measured')` measured heights, which supply the observations for fitting. Missing heights are prediction targets rather than observations used in the fit.
+
+## How is the relationship fitted?
+
+The default Chapman-Richards form is fitted with a pooled relationship and species relationships where enough observations are available. `min_n` controls the minimum sample for a species fit. Species fits that cannot be estimated fall back to the pooled relationship, and the fitted object records those choices.
+
+
+```{r}
+## Refit using the same plot groups as the shipped predictions
+height_fit <- fit_height(dbh = trees$dbh,
+                         ht = trees$ht_observed,
+                         spcd = trees$spcd,
+                         group = trees$plot)
+```
+
+The warning reports omitted rows because the deliberately blanked heights cannot contribute observations to fitting.
+
+
+<details>
+<summary>Measured heights used by the fit</summary>
+
+```{r, echo = FALSE}
+height_fit$data %>%
+  rename(`diameter (inches)` = dbh, `height (feet)` = ht, `species code` = spcd) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+These are the `r nrow(height_fit$data)` measured rows retained for the fitted curves.
+
+</details>
+
+```{r, echo = FALSE, fig.width = 12}
+par(mfrow = c(1, 2))
+plot(height_fit)
+```
+
+The fit uses `r nrow(height_fit$data)` retained observations, shown against the fitted diameter-height relationships. The plot displays the data used by the model, so missing height rows are absent.
+
+The available forms are Chapman-Richards, Curtis, Wykoff, Näslund, and Schumacher. The chosen form remains part of the fitted object. Group adjustments describe shared departures within the supplied groups, and do not replace the species relationship.
+
+The fitted object retains the observations, species sample counts, fixed coefficients, variance components, and group effects. These records distinguish a separately fitted species relationship from one using the pooled model.
+
+## Do the completed heights match?
+
+`complete_heights()` preserves measured heights on rows with valid diameter, height, and species inputs, and fills nonfinite heights using the supplied fit. An invalid diameter or species code can also replace a finite measured height with a missing value and a warning. Passing the existing fit avoids fitting again when completing another list from the same sampling groups.
+
+
+```{r}
+## Fill missing heights with conditional plot predictions
+trees <- trees %>%
+  mutate(ht_completed = complete_heights(dbh = dbh,
+                                         ht = ht_observed,
+                                         spcd = spcd,
+                                         group = plot,
+                                         fit = height_fit))
+```
+
+
+```{r}
+## Compare completed heights with the original stored values
+comparison <- trees %>%
+  group_by(ht_status) %>%
+  summarize(trees = n(), max_difference = max(abs(ht_completed - ht)))
+```
+
+
+```{r, echo = FALSE}
+comparison %>%
+  rename(`trees (count)` = trees, `maximum difference (feet)` = max_difference) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+match_text <- format(round(max(comparison$max_difference), 3), trim = TRUE)
+```
+
+The maximum difference is `r match_text` feet, confirming that the refitted, plot-adjusted predictions reproduce the shipped heights to the displayed precision.
+
+Completing the heights does not alter diameter, species, or plot identifiers.
+
+## What do the prediction intervals include?
+
+`predict_height()` uses conditional group adjustments by default. An absent or unseen group uses the population relationship, while `re_form = 'population'` requests population predictions explicitly. A species absent from the fitted species mapping returns a missing prediction with a warning.
+
+Prediction intervals simulate group variation and residual error around the fitted relationship. For a known group, simulation centers its adjustment on the fitted group effect. The intervals hold fitted coefficients fixed, exclude coefficient uncertainty and inventory sampling uncertainty, and constrain their lower endpoints to breast height. They describe height predictions under the fitted model rather than uncertainty in an inventory total.
+
+
+```{r}
+## Select prediction targets for an interval comparison
+targets <- trees %>%
+  filter(ht_status == 'predicted') %>%
+  slice_head(n = 4)
+```
+
+
+```{r}
+## Predict heights and repeatable intervals for the selected plots
+intervals <- predict_height(fit = height_fit,
+                            dbh = targets$dbh,
+                            spcd = targets$spcd,
+                            group = targets$plot,
+                            interval = TRUE,
+                            seed = 12)
+```
+
+
+```{r, echo = FALSE}
+targets %>%
+  select(tree_id) %>%
+  bind_cols(intervals) %>%
+  rename(`fit (feet)` = fit, `lower (feet)` = lower, `upper (feet)` = upper) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+
+```{r, echo = FALSE}
+height_text <- format(round(intervals$fit[1], 3), trim = TRUE)
+```
+
+The first target has a conditional height estimate of `r height_text` feet.

@@ -2,7 +2,7 @@
 % Please edit documentation in R/defects.R
 \name{validate_defects}
 \alias{validate_defects}
-\title{Check defects against tree heights and products}
+\title{Check defect heights and product restrictions}
 \usage{
 validate_defects(
   defects,
@@ -12,32 +12,52 @@ validate_defects(
 )
 }
 \arguments{
-\item{defects}{Supply recorded tree defects. Data frame from \code{\link[=defect]{defect()}}, required.}
+\item{defects}{Defect records with the columns returned by \code{\link[=defect]{defect()}}. Required, without a
+default. Invalid records are retained with a status rather than silently used for cutting.}
 
-\item{tree_id}{Identify each tree in the height vector. Unique atomic vector, unitless, required.}
+\item{tree_id}{Unique tree identifiers corresponding to \code{ht}. Accepts a nonmissing atomic
+vector of the same identifier type as the defects. Required, without a default.}
 
-\item{ht}{Supply each tree's total height. Numeric, feet, required.}
+\item{ht}{Total tree heights above ground, in feet. Accepts one numeric value for each tree
+identifier. Required, without a default. Used to resolve missing interval ends and check
+physical bounds.}
 
-\item{products}{Supply the products allowed in restrictions. Product data frame, required.}
+\item{products}{Validated product rows from \code{\link[=product]{product()}} or \code{\link[=products]{products()}}. Required, with no
+default. Names must be unique, and row order supplies priority for the default cascade
+strategy.}
 }
 \value{
-The columns from \code{\link[=defect]{defect()}} with integer \code{status} added. Heights remain in feet,
-\code{percent} remains percent, and \code{status} is a unitless code from \code{\link[=status_codes]{status_codes()}}.
+A \code{merch_defects} data frame with \code{tree_id} (identifier), \code{start_height} and
+\code{end_height} (feet above ground), \code{effect} (cutting effect), \code{product} (restriction label,
+otherwise missing), and \code{percent} (sweep percentage, otherwise missing). Scalars recycle to
+the record count. An integer \code{status} column reports each validation condition. See
+\code{\link[=status_codes]{status_codes()}} for descriptions.
 }
 \description{
-Check each record before using it to select logs.
+Validate records against tree heights and product names. Exact duplicates are removed with a
+message, and overlapping valid culls are merged.
 }
 \examples{
-## Check the first mapped cull with an explicit product
-checked <- validate_defects(defects = head(example_defects_pnw, n = 1),
-                            products = product(product = 'pulp',  ## name, unitless
-                                               min_length = 8,  ## feet
-                                               max_length = 40,  ## feet
-                                               min_sed = 3,  ## inches
-                                               volume_unit = 'cubic'),  ## cubic feet
-                            ht = example_trees_pnw$ht,
-                            tree_id = example_trees_pnw$tree_id)
+## Define an unpriced cubic-foot product
+saw <- product(product = 'saw',  ## product label
+               min_length = 16,  ## feet
+               max_length = 32,  ## feet
+               min_sed = 6,  ## inches inside bark
+               volume_unit = 'cubic')  ## cubic feet
 
-## Show the validation status
-checked$status
+## Define the product named by the shipped restrictions
+pulp <- product(product = 'pulp',  ## product label
+                min_length = 8,  ## feet
+                max_length = 20,  ## feet
+                min_sed = 3,  ## inches inside bark
+                volume_unit = 'green_ton')  ## green short tons
+
+## Validate shipped defects against their matching trees
+checked <- validate_defects(defects = example_defects_pnw,
+                            tree_id = example_trees_pnw$tree_id,
+                            ht = example_trees_pnw$ht,
+                            products = products(saw, pulp))
+
+## Inspect validated records
+head(checked)
 }

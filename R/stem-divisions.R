@@ -1,22 +1,29 @@
 #' Ecological division boundaries
 #'
-#' Boundary coordinates support ecological division lookup.
+#' Boundary coordinates support ecological division lookup from longitude and latitude in degrees.
+#' Use these polygons to inspect the spatial coverage of coefficient selection.
 #' @format A data frame with division (numeric division code), ring_id (polygon
 #'   ring identifier), hole (logical interior ring indicator), x (longitude,
 #'   degrees), and y (latitude, degrees).
 "nsvb_division_polygons"
 
-#' Look up an ecological division by coordinates
+#' Look up ecological division from coordinates
 #'
-#' @param x The easting locates the tree in the supplied coordinate system. Numeric vector,
-#'   coordinate-system distance or degrees. Required, with no default.
-#' @param y The northing locates the tree in the supplied coordinate system. Numeric vector,
-#'   coordinate-system distance or degrees. Required, with no default.
-#' @param crs The coordinate reference system identifies how to interpret the locations. An
-#'   sf-compatible coordinate reference system, 4326 means longitude and latitude in degrees.
-#'   Default: \code{4326}.
-#' @return A data frame with value (ecological division code) and status (integer result code),
-#'   in input order.
+#' Locate coordinates in the shipped ecological division polygons for biomass coefficient
+#'   selection. Use the returned code when estimating biomass with local coefficients.
+#'
+#' @param x Horizontal coordinate as a numeric vector. Required, without a default. The default
+#'   coordinate system uses longitude in decimal degrees. Other systems use their own coordinate
+#'   units.
+#' @param y Vertical coordinate as a numeric vector. Required, without a default. The default
+#'   coordinate system uses latitude in decimal degrees. Coordinates outside the polygon coverage
+#'   receive status 8.
+#' @param crs Coordinate reference system as one numeric code or character string accepted by
+#'   `sf::st_crs()`. Defaults to `4326` for longitude and latitude in degrees. A different
+#'   system requires sf to transform coordinates. A constructed sf coordinate-system object
+#'   is not accepted.
+#' @return A data frame with `value` (integer ecological division code) and `status` (integer
+#'   result code). Missing inputs receive status 1, and unrecognized locations receive status 8.
 #' @usage
 #' nsvb_division_xy(
 #'   x,
@@ -25,7 +32,7 @@
 #' )
 #' @export
 #' @examples
-#' ## Find divisions for the example tree locations.
+#' ## Inspect the ecological division at the shipped location
 #' nsvb_division_xy(x = example_trees_pnw$longitude[1],
 #'                  y = example_trees_pnw$latitude[1])
 nsvb_division_xy <- function(x, y, crs = 4326) {

@@ -233,60 +233,65 @@
   "vol_tip_cu"
 )
 
-#' Record source-library log-length and measurement rules
+#' Record source library measurement rules
 #'
-#' @param even_or_odd Choose the source library's log-length rounding convention. Numeric whole-
-#' number code, unitless, default NA selects the library default. Code 1 allows odd lengths and
-#' code 2 uses even lengths.
-#' @param option Choose how the source library divides the merchantable stem. Numeric whole-
-#' number code, unitless, default NA selects the library default. Codes 11 through 14 use its 16,
-#' 20, 32, and 40 foot conventions. Codes 21 through 24 select its top-segment rules.
-#' @param maximum_length Set the longest nominal segment allowed by the source rules.
-#' Numeric scalar,
-#' feet, default NA selects the library default.
-#' @param minimum_length Set the shortest nominal segment allowed by the source rules.
-#' Numeric scalar,
-#' feet, default NA selects the library default.
-#' @param minimum_top_length Set the shortest top segment allowed by the source rules.
-#' Numeric scalar,
-#' feet, default NA selects the library default.
-#' @param merchantable_length Set the primary-product stem length needed for the tree to qualify.
-#' Numeric, feet, default NA selects the library default.
-#' @param primary_top Set the smallest inside-bark diameter for the primary product. Numeric scalar,
-#' inches, default NA selects the library default.
-#' @param secondary_top Set the smallest inside-bark diameter for the secondary product.
-#' Numeric scalar,
-#' inches, default NA selects the library default.
-#' @param stump Set the height left below the first source-library segment. Numeric scalar, feet,
-#' default NA selects the library default.
-#' @param trim Set the extra wood cut above each nominal source-library segment.
-#' Numeric scalar, feet,
-#' default NA selects the library default.
-#' @param bark_ratio The bark ratio estimates inside diameter from outside diameter when needed.
-#'   Numeric scalar, inside diameter divided by outside diameter. Default: \code{NA_real_}.
-#' @param minimum_board_foot_dbh Set the smallest tree eligible for board foot volume.
-#' Numeric scalar
-#' outside-bark diameter at breast height, inches, default NA selects the library default.
-#' @param scribner Choose how the source library scales Scribner volume. Character scalar,
-#'   unitless, default `'regional'` uses its regional setting. `'table'` uses the Scribner table
-#'   and `'factor'` uses regional factors. Missing values and unknown labels are errors.
-#' @param prod Choose the source product class. Character scalar of two-character codes,
-#'   unitless, default `'01'` means sawtimber. `'08'` means a nonsaw product.
-#' @param ht_type Tell the source library how height is recorded. Character scalar, unitless,
-#'   default `''` leaves the setting unspecified. `'F'` means feet and `'L'` means logs.
-#' @param live Tell the source library whether the tree is alive. Character scalar, unitless,
-#'   default `'L'` means live. `'D'` means dead.
-#' @param ctype Identify the kind of inventory supplying the tree. Character scalar, unitless,
-#'   default `'C'` means cruise. `'I'` selects Forest Inventory and Analysis, `'F'` selects
-#'   Forest Vegetation Simulator, and `'B'` selects the alternate National Scale Volume and
-#'   Biomass route. Missing values and unknown labels are errors.
-#' @param cull Supply the whole-tree cull percentage required by a source equation. Numeric scalar,
-#' percent, default 0. This source input does not reduce merchandise log scales.
-#' @param forest The national forest code selects local source rules. Numeric scalar, whole-number
-#'   forest codes. Default: \code{0}.
-#' @param district The ranger district code selects local source rules. Numeric scalar,
-#'   whole-number district codes. Default: \code{0}.
-#' @return A validated list of scalar fields with class `treevolume_nvel_rules`.
+#' Validate a source library rule record. Use the retained fields to describe a resolved
+#'   source measurement convention.
+#'
+#' @param even_or_odd Source log-length rounding code as a numeric scalar. Accepts `1` for
+#'   whole-foot lengths, `2` for even-foot lengths, or `NA`. Defaults to `NA_integer_`, leaving
+#'   the source default unresolved.
+#' @param option Source segmentation code as a numeric scalar. Accepts `11` through `14` for the
+#'   source length conventions or `21` through `24` for top-segment conventions. Defaults to
+#'   `NA_integer_`, leaving the source default unresolved.
+#' @param maximum_length Longest nominal source segment, in feet. Accepts one finite positive
+#'   number or `NA`. Defaults to `NA_real_`, leaving the source default unresolved.
+#' @param minimum_length Shortest nominal source segment, in feet. Accepts one finite positive
+#'   number or `NA`. Defaults to `NA_real_`, leaving the source default unresolved.
+#' @param minimum_top_length Shortest source top segment, in feet. Accepts one finite positive
+#'   number or `NA`. Defaults to `NA_real_`, leaving the source default unresolved.
+#' @param merchantable_length Primary-product stem length required for eligibility, in feet.
+#'   Accepts one finite positive number or `NA`. Defaults to `NA_real_`, leaving the source
+#'   default unresolved.
+#' @param primary_top Primary inside bark top diameter, in inches. Accepts one finite positive
+#'   number or `NA`. Defaults to `NA_real_`, leaving the source default unresolved.
+#' @param secondary_top Secondary inside bark top diameter, in inches. Accepts one finite
+#'   positive number or `NA`. Defaults to `NA_real_`, leaving the source default unresolved.
+#' @param stump Source stump height above ground, in feet. Accepts one finite nonnegative number
+#'   or `NA`. Defaults to `NA_real_`, leaving the source default unresolved.
+#' @param trim Extra length above a nominal source segment, in feet. Accepts one finite positive
+#'   number or `NA`. Defaults to `NA_real_`, leaving the source default unresolved.
+#' @param bark_ratio Inside bark diameter divided by outside bark diameter. Accepts a single
+#'   finite number greater than zero and no greater than one, or `NA`. Defaults to `NA_real_`,
+#'   leaving the ratio unspecified. Enables a constant-ratio outside bark calculation where
+#'   needed.
+#' @param minimum_board_foot_dbh Minimum outside bark breast-height diameter for board foot
+#'   scale, in inches. Accepts one finite positive number or `NA`. Defaults to `NA_real_`,
+#'   leaving the source default unresolved.
+#' @param scribner Source Scribner method as one character string. Accepts 'regional', 'table',
+#'   or 'factor'. Defaults to 'regional', using the source default method. Other choices request
+#'   table scale or source factors.
+#' @param prod Source product code as one character string containing exactly two digits.
+#'   Defaults to '01' for sawtimber. '08' selects the source nonsaw product route.
+#' @param ht_type Source height basis as one character string. Accepts '', 'F', or 'L'. Defaults
+#'   to '', leaving the basis unspecified. 'F' requests feet and 'L' requests logs.
+#' @param live Source live-status flag as one character string. Accepts 'L' or 'D'. Defaults to
+#'   'L' for live trees. 'D' identifies dead trees.
+#' @param ctype Source calculation route as one character string. Accepts 'C', 'I', 'F', or 'B'.
+#'   Defaults to 'C' for cruise. Other codes select Forest Inventory and Analysis, Forest
+#'   Vegetation Simulator, or the alternate national biomass route.
+#' @param cull Whole-tree cull percentage for the source equation. Accepts one finite number from
+#'   0 through 100 or `NA`. Defaults to `0`. It does not deduct scale from merchandise logs.
+#' @param forest Forest Service forest code as one whole number from 0 through 99 or `NA`.
+#'   Defaults to `0`. Retained for source rule selection.
+#' @param district Forest Service district code as one whole number from 0 through 99 or `NA`.
+#'   Defaults to `0`. Retained for source rule selection.
+#' @return A validated `treevolume_nvel_rules` list retaining each scalar argument: `even_or_odd`
+#'   and `option` (source codes), `maximum_length`, `minimum_length`, `minimum_top_length`,
+#'   `merchantable_length`, `stump`, and `trim` (feet), `primary_top`, `secondary_top`, and
+#'   `minimum_board_foot_dbh` (inches), `bark_ratio` (diameter ratio), `scribner`, `prod`,
+#'   `ht_type`, `live`, and `ctype` (source flags), `cull` (percent), and `forest` and `district`
+#'   (location codes). Missing values remain unresolved source defaults.
 #' @usage
 #' nvel_rules(
 #'   even_or_odd = NA_integer_,
@@ -312,7 +317,7 @@
 #' )
 #' @export
 #' @examples
-#' ## Inspect an explicit whole foot source rule record.
+#' ## Inspect an explicit source length and top-diameter rule
 #' nvel_rules(even_or_odd = 1,
 #'            maximum_length = 32,
 #'            minimum_length = 16,
@@ -943,32 +948,45 @@ nvel_volume <- function(
   result
 }
 
-#' Dry biomass in metric tonnes from tree measurements in inches and feet
+#' Estimate dry biomass and carbon in metric tonnes
 #'
-#' Outputs are metric tonnes and inputs are inches and feet.
+#' Estimate tree biomass independently of merchandising products. Inputs use inches and feet. All
+#'   mass outputs use metric tonnes, and the aboveground total excludes foliage and roots.
 #'
-#' @param dbh Diameter at breast height outside bark. Numeric vector,
-#'   inches. Required, with no default.
-#' @param ht Total height above ground. Numeric vector, feet.
-#'   Required, with no default.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param division The ecological division selects biomass coefficients for the tree. Numeric
-#'   vector, division codes, 0 selects national coefficients. Default: \code{0}.
-#' @param ... Additional named inputs supply measurements required by the selected model. Named
-#'   vectors in inches for diameters and feet for heights, none by default.
-#' @return One row per input row in input order. All mass columns use metric tonnes:
-#'   * `dry_aboveground_no_foliage`: dry aboveground mass excluding foliage.
-#'   * `dry_stem_wood`, `dry_stem_bark`: dry stem components.
-#'   * `dry_stump_wood`, `dry_stump_bark`: dry stump components.
-#'   * `dry_saw_wood`, `dry_saw_bark`: dry sawlog components.
-#'   * `dry_topwood_wood`, `dry_topwood_bark`: dry topwood components.
-#'   * `dry_tip_wood`, `dry_tip_bark`: dry tip components.
-#'   * `dry_branches`, `dry_foliage`, `dry_top_and_limb`: dry crown components.
-#'   * `carbon`: carbon mass excluding foliage.
-#'   * `tco2e`: carbon dioxide equivalent.
-#'
-#'   The integer status column describes the row, including rows with invalid inputs.
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Invalid measurement rows
+#'   return missing results with a status.
+#' @param ht Total height above ground, in feet. Accepts numeric values greater than zero and no
+#'   greater than 500. Required, with no default. Measurement heights and section bounds must
+#'   fall within the tree.
+#' @param spcd Species identifiers as numeric positive whole-number codes. Required, without a
+#'   default. The biomass lookup must recognize the code after its source species remapping.
+#'   Unknown codes return missing masses with a status.
+#' @param division Ecological division code as a numeric vector of whole numbers from 0 through
+#'   1999. Defaults to `0`, using national coefficients. Lookup helpers return local codes, and
+#'   unsupported codes receive a status.
+#' @param ... Named biomass inputs, with defaults used when omitted. Component boundaries accept
+#'   positive `primary_top = 6` and `secondary_top = 4` in inches and nonnegative
+#'   `stump_ht = 1` in feet. `max_log_length`, `min_log_length`, and `trim` accept positive
+#'   feet or `NA_real_` (their defaults), leaving source length choices unresolved. `cull = 0`
+#'   accepts
+#'   percentages from 0 through 100, and `decay_class = 0` accepts whole numbers from 0 through
+#'   5. These inputs affect the source biomass calculation and do not read merchandising
+#'   products.
+#' @return A data frame in input order. All mass columns use metric tonnes:
+#' * `dry_aboveground_no_foliage`: stem wood, stem bark, and branches.
+#' * `dry_stem_wood`, `dry_stem_bark`: whole-stem wood and bark.
+#' * `dry_stump_wood`, `dry_stump_bark`: stump wood and bark.
+#' * `dry_saw_wood`, `dry_saw_bark`: sawlog portion wood and bark.
+#' * `dry_topwood_wood`, `dry_topwood_bark`: topwood portion wood and bark.
+#' * `dry_tip_wood`, `dry_tip_bark`: tip wood and bark.
+#' * `dry_branches`, `dry_foliage`: separate crown components.
+#' * `dry_top_and_limb`: tip wood, tip bark, and branches combined.
+#' * `carbon`: carbon in aboveground dry mass excluding foliage.
+#' * `tco2e`: carbon dioxide equivalent, `carbon * 44 / 12`.
+#' * `status`: integer result code.
+#' Whole-stem and partition columns overlap. Do not sum all component columns.
+#' Foliage is separate from the aboveground total, and roots are not estimated.
 #' @usage
 #' biomass(
 #'   dbh,
@@ -979,16 +997,13 @@ nvel_volume <- function(
 #' )
 #' @export
 #' @examples
-#' ## Load data verbs
-#' library(dplyr)
+#' ## Estimate masses for the first shipped tree
+#' mass <- biomass(dbh = example_trees$dbh[1],
+#'                 ht = example_trees$ht[1],
+#'                 spcd = example_trees$spcd[1])
 #'
-#' ## Estimate mass with national coefficients
-#' biomass(dbh = example_trees$dbh[1],
-#'         ht = example_trees$ht[1],
-#'         spcd = example_trees$spcd[1]) %>%
-#'   transmute(`dry mass excluding foliage (tonnes)` = dry_aboveground_no_foliage,
-#'             `carbon (tonnes)` = carbon,
-#'             `carbon dioxide equivalent (tonnes)` = tco2e)
+#' ## Inspect dry mass in metric tonnes
+#' mass$dry_aboveground_no_foliage
 biomass <- function(dbh, ht, spcd, division = 0, ...) {
   if (!is.numeric(spcd) || !is.numeric(division)) {
     stop("spcd and division must be numeric.", call. = FALSE)
@@ -1012,23 +1027,26 @@ biomass <- function(dbh, ht, spcd, division = 0, ...) {
   .public_status(mass)
 }
 
-#' Look up the carbon fraction of dry tree biomass
+#' Look up the carbon fraction of dry biomass
 #'
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @return A numeric vector of carbon fractions of dry mass, with a source attribute. Unknown
-#'   codes return NA with a warning.
+#' Return the species fraction used to convert dry aboveground mass excluding foliage to carbon.
+#'   Use it to check the carbon calculation for numeric species codes.
+#'
+#' @param spcd Species identifiers as numeric positive whole-number codes. Required, without a
+#'   default. The carbon lookup applies its source species remapping. Unknown or invalid codes
+#'   return missing fractions with a warning.
+#' @return A numeric vector in species input order, with a `source` attribute recording
+#'   provenance. Missing codes return `NA`. Invalid or unknown codes return `NA` with a warning.
+#'   The default compatibility setting returns the rounded fraction used in biomass calculations,
+#'   while source compatibility returns the raw table fraction.
 #' @usage
 #' carbon_fraction(
 #'   spcd
 #' )
 #' @export
 #' @examples
-#' ## Look up the carbon fraction for the example species.
-#' fraction <- carbon_fraction(spcd = example_trees$spcd[1])
-#'
-#' ## Show the fraction without its provenance attribute
-#' c(`carbon fraction (unitless)` = fraction)
+#' ## Inspect the fraction used for the first example species
+#' carbon_fraction(spcd = example_trees$spcd[1])
 carbon_fraction <- function(spcd) {
   if (!is.numeric(spcd)) {
     stop("spcd must be numeric.", call. = FALSE)
@@ -1090,14 +1108,19 @@ carbon_fraction <- function(spcd) {
   }
 })
 
-#' Look up the county ecological code for biomass equations
+#' Look up ecological division by state and county
 #'
-#' @param state The state code locates the tree for ecological division lookup. Numeric vector,
-#'   federal state codes. Required, with no default.
-#' @param county The county code locates the tree within its state. Numeric vector, federal county
-#'   codes. Required, with no default.
-#' @return A data frame with value (ecological division code) and status (integer result code),
-#'   in input order. A county without a division returns status 8, outside_divisions.
+#' Translate numeric state and county codes to the ecological division used for biomass
+#'   coefficients. Use the returned code to request location-specific biomass estimates.
+#'
+#' @param state State code as numeric whole numbers from 1 through 99. Required, without a
+#'   default. Nonfinite codes receive missing-input status. Finite codes outside the accepted
+#'   range or with fractional values cause an error.
+#' @param county County code within the supplied state, as numeric whole numbers from 1 through
+#'   999. Required, without a default. Finite fractional or out-of-range codes cause an error.
+#'   State and county jointly determine the lookup.
+#' @return A data frame with `value` (integer ecological division code) and `status` (integer
+#'   result code). Missing inputs receive status 1, and unrecognized locations receive status 8.
 #' @usage
 #' nsvb_division(
 #'   state,
@@ -1105,9 +1128,12 @@ carbon_fraction <- function(spcd) {
 #' )
 #' @export
 #' @examples
-#' ## Find the ecological division for the source example county.
-#' nsvb_division(state = 41,
-#'               county = 39)
+#' ## Compare a county lookup with the shipped coordinates
+#' nsvb_division(state = 41, county = 5)
+#'
+#' ## Inspect the lookup at the shipped coordinates
+#' nsvb_division_xy(x = example_trees_pnw$longitude[1],
+#'                  y = example_trees_pnw$latitude[1])
 nsvb_division <- function(state, county) {
   prepared <- .prepare_vectors(list(state = state, county = county),
     numeric_names = c(

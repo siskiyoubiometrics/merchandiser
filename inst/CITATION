@@ -4,7 +4,7 @@ note <- sprintf("R package version %s", meta$Version)
 
 bibentry(
   bibtype  = "Manual",
-  title    = "{merchandiser}: Turn Tree Lists into Logs, Scale, Weight, and Value",
+  title    = "merchandiser: Estimate Log and Product Volumes from Tree Measurements",
   author   = person("Hunter", "Stanke"),
   year     = year,
   note     = note,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-taper_fit.R
 \name{taper_model_from_coefficients}
 \alias{taper_model_from_coefficients}
-\title{Create a taper model from a coefficient set}
+\title{Construct a taper model from metric coefficients}
 \usage{
 taper_model_from_coefficients(
   id,
@@ -15,51 +15,70 @@ taper_model_from_coefficients(
 )
 }
 \arguments{
-\item{id}{The identifier names the taper model in the registry. Character scalar model
-identifier. Required, with no default.}
+\item{id}{Identifier for the new equation as a nonempty character scalar. Required, with no
+default. Private registrations require a namespaced identifier containing a dot, such as
+\code{'local.profile'}.}
 
-\item{form}{The equation form chooses the relationship to fit. Character scalar, equation name.
-Required, with no default.}
+\item{form}{Equation form as one character string. Accepts \code{'max_burkhart'}, \code{'kozak_1988'},
+or \code{'kozak_2002'}. Required, without a default. The form determines coefficient names,
+order, and constraints.}
 
-\item{coefficients}{The coefficients supply the published taper equation values. Named numeric
-vector. Required, with no default.}
+\item{coefficients}{Coefficients for the selected equation form as a finite named numeric
+vector in the form's required order. Required, with no default. Coefficients use centimeters
+for diameters and meters for heights, while public calls use inches and feet.}
 
-\item{spcd}{The species codes limit the trees this model covers. Numeric vector of species
-codes. Default: \code{integer()}.}
+\item{spcd}{Species scope as numeric positive whole-number codes. Defaults to \code{integer()},
+imposing no species restriction. A scoped model reports a condition when called for another
+species.}
 
-\item{stump_ht}{Stump height above ground. Numeric
-scalar, feet. Default: \code{1}.}
+\item{stump_ht}{Default stump height above ground, in feet. Accepts one finite nonnegative
+number. Defaults to \code{1}. Stored in the model's internal height units without changing public
+input units.}
 
-\item{bark_ratio}{The bark ratio estimates inside diameter from outside diameter when needed.
-Numeric scalar, inside diameter divided by outside diameter. Default: \code{NA_real_}.}
+\item{bark_ratio}{Inside bark diameter divided by outside bark diameter. Accepts a single
+finite number greater than zero and no greater than one, or \code{NA}. Defaults to \code{NA_real_},
+leaving the ratio unspecified. Enables a constant-ratio outside bark calculation where
+needed.}
 
-\item{source}{The source records where the model came from. Character scalar, provenance text.
-Default: \code{NULL}.}
+\item{source}{Provenance for the equation as a single character string. Defaults to \code{NULL},
+using the form citation where available. Stored with the model for later inspection.}
 }
 \value{
-A taper_model object with the supplied coefficients and provenance, ready for
-register_taper_model().
+A \code{taper_model} list containing \code{id} (identifier), \code{form} (equation form),
+\code{kernel} (implementation and capability metadata), \code{dib}, \code{dob}, \code{height_at_dib},
+and \code{volume} (callbacks or absent optional callbacks), \code{inputs} (required, optional,
+and paired auxiliary names), \code{measurement_system} (internal units), \code{spcd} (species
+scope), \code{stump_ht} (feet for imperial models or meters for metric models),
+\code{bark_ratio} (inside-to-outside diameter ratio), \code{source} (provenance), \code{notes},
+\code{data} (equation data or coefficients), and \code{class_version}. The optional
+\code{oracle_verified} attribute records source-fixture verification. Public calls
+continue to accept inches and feet regardless of stored coefficient units.
 }
 \description{
-Create a taper model from a coefficient set
+Create an unregistered model from an existing coefficient vector. Supply coefficients on the
+equation's metric scale and use inches and feet in public measurements.
+}
+\details{
+Max-Burkhart
+coefficients are \code{b1}, \code{b2}, \code{b3}, \code{b4}, \code{a1}, \code{a2}, with \verb{0 < a2 < a1 < 1}. Kozak 1988 uses
+\code{a0}, \code{a1}, \code{a2}, \code{b1} through \code{b5}, and \code{p}, with positive \code{a0} and \code{a2} and \verb{0 < p < 1}.
+Kozak 2002 uses \code{a0}, \code{a1}, \code{a2}, and \code{b1} through \code{b6}, with positive \code{a0}.
 }
 \examples{
-## Obtain coefficients from the shipped synthetic stem measurements.
-fitted <- fit_taper(
-  tree_id = example_stem_measurements$tree_id,
-  dbh = example_stem_measurements$dbh,
-  ht = example_stem_measurements$ht,
-  h = example_stem_measurements$h,
-  dib = example_stem_measurements$dib,
-  spcd = example_stem_measurements$spcd,
-  form = 'max_burkhart'
-)
+## Use the shipped stem measurements
+measurements <- example_stem_measurements
 
-## Create a model from that coefficient set.
-local_model <- taper_model_from_coefficients(id = 'example.coefficients',
-                                             form = 'max_burkhart',
-                                             coefficients = fitted$coefficients)
+## Fit coefficients to the measured profiles
+fit <- fit_taper(tree_id = measurements$tree_id,
+                 dbh = measurements$dbh,
+                 ht = measurements$ht,
+                 h = measurements$h,
+                 dib = measurements$dib,
+                 spcd = measurements$spcd)
 
-## Inspect the local model
-print(local_model)
+## Inspect a model reconstructed from the fitted metric coefficients
+taper_model_from_coefficients(id = 'local.coefficients',
+                              form = fit$form,
+                              coefficients = fit$coefficients,
+                              spcd = fit$spcd)
 }

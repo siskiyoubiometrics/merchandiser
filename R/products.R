@@ -1,74 +1,97 @@
-#' Define one product
+#' Define log dimensions, eligibility, and pricing for a product
 #'
-#' Describe the logs a mill accepts and how it measures and prices them.
-#' Candidate cuts use an internal half foot grid between the length limits.
+#' Define the tree and log limits, scaling rule, and optional price for a product. Returns a
+#'   validated product row for `merchandise()`. Combine rows with `products()` to set cutting
+#'   priority under the default strategy.
 #'
-#' @details
-#' `length_round` rounds nominal length down for scaling. Source board foot products accept
-#' `1` for whole feet or `2` for even feet. The source segmentation option follows that choice
-#' and the rule scales exactly the rounded length. Other increments are rejected.
-#'
-#' Cubic, green weight, and cord products scale the nominal body and report the rounded length
-#' for the mill's records only.
-#' @param product Name the product so its logs can be recognized. Character, unitless, required.
-#' @param spcd Limit this product to the listed species codes. Numeric vector of inventory
-#'   species codes, unitless, default `NULL` accepts every species.
-#' @param min_dbh Set the smallest tree that qualifies for this product. Numeric, inches,
-#'   default `0`.
-#' @param max_dbh Set the tree diameter at which this product stops qualifying. Numeric, inches,
-#'   default `NA` has no upper limit.
-#' @param min_age Set the youngest tree that qualifies. Numeric, years, default `NA` has no limit.
-#' @param max_age Set the age at which the tree stops qualifying. Numeric, years,
-#'   default `NA` has no limit.
-#' @param requires_pruned Require the entire cut to lie within the tree's pruned section.
-#'   Logical, unitless, default `FALSE`.
-#' @param min_length Set the shortest nominal log accepted. Numeric, feet, required.
-#' @param max_length Set the longest nominal log accepted. Numeric, feet, required.
-#' @param length_round Set the mill's scaling increment. Numeric, feet, default `1`.
-#' @param trim Allow extra wood above the nominal log for trimming. Numeric, feet, default `0`.
-#' @param min_sed Set the smallest diameter accepted at the physical small end. Numeric, inches,
-#'   required.
-#' @param max_sed Set the largest diameter accepted at the physical small end. Numeric, inches,
-#'   default `NA` has no limit.
-#' @param min_led Set the smallest diameter accepted at the physical large end. Numeric, inches,
-#'   default `0`.
-#' @param max_led Set the largest diameter accepted at the physical large end. Numeric, inches,
-#'   default `NA` has no limit.
-#' @param inside_bark Measure the diameter limits inside bark. Logical, unitless, default `TRUE`.
-#'   `FALSE` uses outside bark. Cubic and cord volume use the same bark basis.
-#' @param max_sweep Set the greatest sweep or crook accepted in an overlapping section.
-#'   Numeric, percent, default `NA` has no limit.
-#' @param max_logs Limit the number of these logs in each segment. Numeric whole number,
-#'   logs per segment, default `NA` has no limit. Counts restart above culls and restrictions.
-#' @param volume_unit Choose the product's volume measurement. Character, required.
-#'   Choices are `'scribner'`, `'international'`, and `'doyle'` in board feet,
-#'   `'cubic'` in cubic feet, `'green_ton'` in green short tons, and `'cord'` in cords.
-#'   Board foot rules measure inside bark. Green weight includes wood and attached bark.
-#' @param split_scale Scale Scribner logs in shorter sections. Logical, unitless, default `FALSE`.
-#'   This changes scaling sections only and has no effect on other volume measurements.
-#' @param round Choose how to round the scaling diameter before applying the rule.
-#'   Character, unitless, default `'default'` uses the rule's rounding.
-#'   `'down'` rounds down to whole inches, `'nearest'` rounds to the nearest inch with halves
-#'   upward, and `'none'` skips product rounding. Scribner and International still round
-#'   to the nearest inch as their rules require. Doyle uses the resulting diameter directly.
-#' @param cord_solid_fraction Set the solid wood proportion used to convert volume to cords.
-#'   Numeric proportion strictly between zero and one, default `NA`.
-#'   Required only for `'cord'`.
-#' @param price Set the amount paid per pricing quantity. Numeric, caller's price unit,
-#'   default `NA` leaves the product unpriced.
-#' @param price_per Set how many volume units the price covers. Numeric, selected volume units,
-#'   default `1`. The quantity uses the selected volume unit.
-#' @return A one-row `merch_products` data frame. Columns and units match the arguments:
-#'   * Identification: `product`, `spcd`.
-#'   * Tree limits: `min_dbh`, `max_dbh`, `min_age`, `max_age`, `requires_pruned`.
-#'   * Lengths: `min_length`, `max_length`, `length_round`, `trim`.
-#'   * Diameters: `min_sed`, `max_sed`, `min_led`, `max_led`, `inside_bark`.
-#'   * Cutting limits: `max_sweep`, `max_logs`.
-#'   * Scaling: `volume_unit`, `split_scale`, `round`, `cord_solid_fraction`.
-#'   * Pricing: `price`, `price_per`.
-#'
-#'   `spcd` is a list column of numeric code vectors.
-#' @export
+#' @param product Product label as a single nonempty character string. Required, with no default.
+#'   Names must be unique when rows are combined and must match names used in defect
+#'   restrictions.
+#' @param spcd Species allowed for this product as a numeric vector of positive whole-number
+#'   codes. Defaults to `NULL`, allowing all species. Tree calculations still require a usable
+#'   taper equation and recognized species properties.
+#' @param min_dbh Minimum outside bark diameter at breast height, in inches, for a tree to
+#'   qualify. Accepts a single finite, nonnegative number. The lower limit is inclusive. Defaults
+#'   to `0`, which imposes no additional minimum on a valid tree. Cannot exceed a supplied
+#'   `max_dbh`.
+#' @param max_dbh Maximum outside bark diameter at breast height, in inches, for tree
+#'   eligibility. Accepts a single finite positive number or `NA`. The upper limit is exclusive.
+#'   Defaults to `NA_real_`, imposing no maximum. Cannot be smaller than `min_dbh`.
+#' @param min_age Minimum tree age, in years. Accepts a single finite nonnegative number or `NA`.
+#'   The lower limit is inclusive. Defaults to `NA_real_`, imposing no minimum age. Requires
+#'   `age` in [merchandise()] and cannot exceed `max_age`.
+#' @param max_age Maximum tree age, in years. Accepts a single finite nonnegative number or `NA`.
+#'   The upper limit is exclusive. Defaults to `NA_real_`, imposing no maximum age. Requires
+#'   `age` in [merchandise()] and cannot be below `min_age`.
+#' @param requires_pruned Whether logs must fit within the pruned portion of the tree. Accepts
+#'   `TRUE` or `FALSE`, without missing values. Defaults to `FALSE`. When `TRUE`, [merchandise()]
+#'   requires `pruned_ht` and checks the physical log end against that height.
+#' @param min_length Shortest nominal log length, in feet. Accepts one finite positive number.
+#'   Required, with no default. Cannot exceed `max_length`, and the interval must include a
+#'   candidate on the half-foot grid.
+#' @param max_length Longest nominal log length, in feet. Accepts one finite positive number.
+#'   Required, with no default. Cannot be below `min_length`. Trim occupies additional stem
+#'   length beyond this nominal length.
+#' @param length_round Increment for rounding scaling length down, in feet. Accepts one finite
+#'   positive number. Defaults to `1`. Board foot rules accept only `1` or `2`. Cubic, cord, and
+#'   green weight scales use nominal length even when reported scaling length differs.
+#' @param trim Extra length occupied above the nominal log body, in feet. Accepts one finite
+#'   nonnegative number. Defaults to `0`. Physical end diameters include trim, but scale excludes
+#'   it and the wood remains in the residual record.
+#' @param min_sed Minimum diameter at the physical small end of a candidate log, in inches.
+#'   Accepts one finite nonnegative number. Required, with no default. The lower limit is
+#'   inclusive, uses `inside_bark`, and cannot exceed `max_sed`.
+#' @param max_sed Maximum diameter at the physical small end of a candidate log, in inches.
+#'   Accepts one finite nonnegative number or `NA`. The upper limit is inclusive. Defaults to
+#'   `NA_real_`, imposing no maximum. Uses `inside_bark` and cannot be below `min_sed`.
+#' @param min_led Minimum diameter at the physical large end of a candidate log, in inches.
+#'   Accepts a single finite, nonnegative number. The lower limit is inclusive. Defaults to `0`,
+#'   which imposes no additional large end minimum. Uses the bark basis selected by `inside_bark`
+#'   and cannot exceed a supplied `max_led`.
+#' @param max_led Maximum diameter at the physical large end of a candidate log, in inches.
+#'   Accepts one finite nonnegative number or `NA`. The upper limit is inclusive. Defaults to
+#'   `NA_real_`, imposing no maximum. Uses `inside_bark` and cannot be below `min_led`.
+#' @param inside_bark Bark basis for the log end diameter limits. Accepts `TRUE` or `FALSE`, with
+#'   no missing value. Defaults to `TRUE` for inside bark. `FALSE` uses outside bark. Cubic and
+#'   cord scales use the same basis. Board foot rules still use inside bark diameters, and green
+#'   weight includes wood and attached bark. This setting does not change the tree diameter basis
+#'   for `min_dbh`.
+#' @param max_sweep Largest sweep percentage accepted by a log overlapping a sweep interval.
+#'   Accepts one finite number from 0 through 100 or `NA`. Defaults to `NA_real_`, imposing no
+#'   sweep limit. Comparison uses the percentage in [defect()], without deducting it from scale.
+#' @param max_logs Maximum number of logs from this product within each available stem segment.
+#'   Accepts one positive whole number or `NA`. Defaults to `NA_integer_`, imposing no count
+#'   limit. Counts restart at cull and restriction boundaries.
+#' @param volume_unit Scaling rule as one character string. Accepts `'scribner'`,
+#'   `'international'`, and `'doyle'` for board feet, `'cubic'` for cubic feet, `'cord'` for
+#'   cords, or `'green_ton'` for green short tons. Required, with no default. The selected rule
+#'   determines the scale and price basis.
+#' @param split_scale Whether Scribner logs use shorter scaling sections.
+#'   Accepts `TRUE` or `FALSE`, without missing values. Defaults to `FALSE`. It affects
+#'   Scribner scale only and does not add physical cuts.
+#' @param round Scaling diameter rounding as one character string. Accepts `'default'`, `'down'`,
+#'   `'nearest'`, or `'none'`. Defaults to `'default'`, using the selected board foot rule's
+#'   convention. Does not round tree measurements or physical eligibility limits. `none`
+#'   bypasses preprocessing, but the source rule can still round internally.
+#' @param cord_solid_fraction Solid volume divided by stacked cord volume. Accepts one finite
+#'   number strictly between zero and one, or `NA`. Defaults to `NA_real_`. A finite fraction is
+#'   required when `volume_unit = 'cord'` and converts the selected solid volume to cords.
+#' @param price Amount per `price_per` scale units, in a caller-selected currency. Accepts one
+#'   finite nonnegative number or `NA`. Defaults to `NA_real_`, leaving the product unpriced.
+#'   Optimization requires a positive price on every product.
+#' @param price_per Number of scale units covered by `price`. Accepts one finite positive number.
+#'   Defaults to `1`. Log value is `scale * price / price_per`, using the unit selected by
+#'   `volume_unit`.
+#' @return A one-row `merch_products` data frame with all specification fields:
+#' * `product`: label. `spcd`: list column of allowed numeric codes.
+#' * `min_dbh`, `max_dbh`: outside bark diameter limits, inches.
+#' * `min_age`, `max_age`: age limits, years. `requires_pruned`: pruning requirement.
+#' * `min_length`, `max_length`, `length_round`, `trim`: lengths, feet.
+#' * `min_sed`, `max_sed`, `min_led`, `max_led`: end diameter limits, inches.
+#' * `inside_bark`: diameter basis. `max_sweep`: percent. `max_logs`: count per segment.
+#' * `volume_unit`: scale rule. `split_scale`: split-scaling choice. `round`: rounding choice.
+#' * `cord_solid_fraction`: solid-to-stacked volume fraction.
+#' * `price`: currency amount. `price_per`: scale units per price.
 #' @usage
 #' product(
 #'   product,
@@ -96,17 +119,25 @@
 #'   price = NA_real_,
 #'   price_per = 1
 #' )
+#' @export
 #' @examples
-#' ## Define an unpriced product
-#' specification <- product(product = 'domestic_saw',  ## name, unitless
-#'                          min_length = 16,  ## feet
-#'                          max_length = 40,  ## feet
-#'                          trim = 1,  ## feet
-#'                          min_sed = 6,  ## inches
-#'                          volume_unit = 'scribner')  ## board feet
+#' ## Define an unpriced cubic-foot product
+#' saw <- product(product = 'saw',  ## product label
+#'                min_length = 16,  ## feet
+#'                max_length = 32,  ## feet
+#'                min_sed = 6,  ## inches inside bark
+#'                volume_unit = 'cubic')  ## cubic feet
 #'
-#' ## Show the product name
-#' specification$product
+#' ## Select logs from the shipped trees
+#' result <- merchandise(tree_id = example_trees$tree_id,
+#'                       dbh = example_trees$dbh,
+#'                       ht = example_trees$ht,
+#'                       spcd = example_trees$spcd,
+#'                       products = saw,
+#'                       model = example_trees$model)
+#'
+#' ## Inspect selected logs
+#' head(result$logs)
 product <- function(
   product, spcd = NULL, min_dbh = 0, max_dbh = NA_real_, min_age = NA_real_,
   max_age = NA_real_, requires_pruned = FALSE, min_length, max_length,
@@ -127,31 +158,47 @@ product <- function(
 
 #' Combine products in cutting priority order
 #'
-#' Cascade uses product order as cutting priority: the first product is offered the stem first.
-#' Optimization ignores product order.
-#' Each cull or restriction boundary starts a fresh segment and restarts this order.
-#' @param ... Supply product rows in the order they should be cut. Data frames from [product()],
-#'   with the units recorded there, supply at least one product.
-#' @return A `merch_products` data frame with the columns and units listed in [product()].
-#'   Rows retain the supplied order.
-#' @export
+#' Combine validated product rows into a specification. Under the default cascade strategy,
+#'   earlier rows receive the first opportunity to use each available stem section.
+#'
+#' @param ... One or more product rows or tables from [product()]. Required, without a default.
+#'   Rows are combined in argument order, with duplicate product names rejected.
+#' @return A multiple-row `merch_products` data frame with all specification fields:
+#' * `product`: label. `spcd`: list column of allowed numeric codes.
+#' * `min_dbh`, `max_dbh`: outside bark diameter limits, inches.
+#' * `min_age`, `max_age`: age limits, years. `requires_pruned`: pruning requirement.
+#' * `min_length`, `max_length`, `length_round`, `trim`: lengths, feet.
+#' * `min_sed`, `max_sed`, `min_led`, `max_led`: end diameter limits, inches.
+#' * `inside_bark`: diameter basis. `max_sweep`: percent. `max_logs`: count per segment.
+#' * `volume_unit`: scale rule. `split_scale`: split-scaling choice. `round`: rounding choice.
+#' * `cord_solid_fraction`: solid-to-stacked volume fraction.
+#' * `price`: currency amount. `price_per`: scale units per price.
 #' @usage
 #' products(
 #'   ...
 #' )
+#' @export
 #' @examples
-#' ## Define an unpriced product
-#' saw <- product(product = 'domestic_saw',  ## name, unitless
+#' ## Define an unpriced cubic-foot product
+#' saw <- product(product = 'saw',  ## product label
 #'                min_length = 16,  ## feet
-#'                max_length = 40,  ## feet
-#'                min_sed = 6,  ## inches
-#'                volume_unit = 'scribner')  ## board feet
+#'                max_length = 32,  ## feet
+#'                min_sed = 6,  ## inches inside bark
+#'                volume_unit = 'cubic')  ## cubic feet
 #'
-#' ## Combine rows in cutting priority order
-#' specifications <- products(saw = saw)
+#' ## Combine the specification before cutting
+#' specifications <- products(saw)
 #'
-#' ## Show the product order
-#' specifications$product
+#' ## Select logs from the shipped trees
+#' result <- merchandise(tree_id = example_trees$tree_id,
+#'                       dbh = example_trees$dbh,
+#'                       ht = example_trees$ht,
+#'                       spcd = example_trees$spcd,
+#'                       products = specifications,
+#'                       model = example_trees$model)
+#'
+#' ## Inspect selected products
+#' head(result$logs)
 products <- function(...) {
   rows <- list(...)
   if (!length(rows)) {

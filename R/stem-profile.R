@@ -88,40 +88,66 @@
   )
 }
 
-#' Diameters along a tree stem
+#' Sample diameters and cumulative volumes along stems
 #'
-#' @param tree_id Identifier for matching profile rows to input trees. Atomic vector, unique
-#'   tree identifiers.
-#'   Required, with no default.
-#' @param dbh Diameter at breast height outside bark. Numeric vector,
-#'   inches, greater than zero and at most 400. Required, with no default.
-#' @param ht Total height above ground. Numeric vector, feet.
-#'   Required, with no default. Heights must be greater than zero and at most 500 feet.
-#' @param spcd Numeric inventory species code. Numeric
-#'   vector, species codes. Required, with no default.
-#' @param model Registered taper model identifier. Character vector of
-#'   registered model identifiers. Default: \code{NULL}.
-#'   model NULL selects the shipped default for the species, see [default_taper_models].
-#'   Species without a default return status 404.
-#' @param step The spacing sets the distance between points on the stem profile. Numeric vector,
-#'   feet, at least 0.05. Default: \code{0.5}, on the half foot grid.
-#' @param from Start height above ground. Numeric vector, feet. Default `NULL` uses `stump_ht`.
-#' @param to End height above ground. Numeric vector, feet. Default `NULL` uses the tree tip.
-#' @param from_dib Inside bark diameter at the start. Numeric vector, inches, default `NULL`.
-#' @param from_dob Outside bark diameter at the start. Numeric vector, inches, default `NULL`.
-#' @param to_dib Inside bark diameter at the end. Numeric vector, inches, default `NULL`.
-#' @param to_dob Outside bark diameter at the end. Numeric vector, inches, default `NULL`.
-#'   Diameter bounds use [height_at_dib()] or [height_at_dob()], including their status conventions.
-#'   Supply at most one start argument and at most one end argument.
-#' @param stump_ht Stump height above ground. Numeric vector, feet, default `1`.
-#' @param ... Additional named inputs supply measurements required by the selected model. Named
-#'   vectors in inches for diameters and feet for heights, none by default.
-#' @return A `stem_profile` data frame ordered by input tree and height, with columns:
-#'   * `tree_id`: tree identifier.
-#'   * `h`: height above ground, feet.
-#'   * `dib`, `dob`: diameter inside and outside bark, inches.
-#'   * `status`: integer result code.
-#'   * `cum_volume_ib`, `cum_volume_ob`: cumulative volume inside and outside bark, cubic feet.
+#' Evaluate a taper equation at regular height intervals, including the final bound. Invalid
+#'   trees retain a row with missing measurements and a status. The plot method distinguishes
+#'   inside and outside bark profiles.
+#'
+#' @param tree_id Unique, nonmissing identifiers for the input trees, as an atomic vector.
+#'   Required, without a default. Repeated output rows retain these identifiers.
+#' @param dbh Outside bark diameter at breast height, in inches. Accepts numeric values greater
+#'   than zero and no greater than 400. Required, with no default. Invalid measurement rows
+#'   return missing results with a status.
+#' @param ht Total height above ground, in feet. Accepts numeric values greater than zero and no
+#'   greater than 500. Required, with no default. Measurement heights and section bounds must
+#'   fall within the tree.
+#' @param spcd Species identifier as a numeric vector of positive whole-number codes. Required,
+#'   with no default. The species must be recognized for species properties and within the
+#'   selected equation's scope.
+#' @param model Taper equation identifier as a character vector. Defaults to `NULL`, selecting
+#'   the stored species default. A supplied identifier overrides that choice. Scalar identifiers
+#'   recycle across trees.
+#' @param step Spacing between profile measurements, in feet. Accepts finite numeric values of at
+#'   least 0.05, either scalar or one per tree. Defaults to `0.5`. The exact upper bound is
+#'   included even when it does not fall on the spacing.
+#' @param from Lower section height above ground, in feet. Accepts numeric values from zero
+#'   through total height. Defaults to `NULL`, using `stump_ht`. Supply at most one of `from`,
+#'   `from_dib`, and `from_dob`.
+#' @param to Upper section height above ground, in feet. Accepts numeric values from zero through
+#'   total height. Defaults to `NULL`, using the tip. Supply at most one of `to`, `to_dib`, and
+#'   `to_dob`. The resulting upper bound must exceed the lower bound.
+#' @param from_dib Lower section boundary specified by inside bark diameter, in inches. Accepts
+#'   positive numeric values. Defaults to `NULL`, leaving this diameter bound unset. It locates
+#'   the boundary independently of the volume bark basis and cannot accompany another lower
+#'   bound.
+#' @param from_dob Lower section boundary specified by outside bark diameter, in inches. Accepts
+#'   positive numeric values. Defaults to `NULL`, leaving this diameter bound unset. It locates
+#'   the boundary independently of the volume bark basis and cannot accompany another lower
+#'   bound.
+#' @param to_dib Upper section boundary specified by inside bark diameter, in inches. Accepts
+#'   positive numeric values. Defaults to `NULL`, leaving this diameter bound unset. It locates
+#'   the boundary independently of the volume bark basis and cannot accompany another upper
+#'   bound.
+#' @param to_dob Upper section boundary specified by outside bark diameter, in inches. Accepts
+#'   positive numeric values. Defaults to `NULL`, leaving this diameter bound unset. It locates
+#'   the boundary independently of the volume bark basis and cannot accompany another upper
+#'   bound.
+#' @param stump_ht Stump height above ground, in feet. Accepts finite, nonnegative numeric values
+#'   below total height. Defaults to `1`. Used as the lower section bound unless another bound is
+#'   supplied.
+#' @param ... Additional named inputs accepted by the selected model, with none supplied by
+#'   default. Numeric inputs must be finite: positive `upper_ht1`, `upper_ht2`, and `site_index`
+#'   use feet, positive `upper_d1` and `upper_d2` use inches, and positive `basal_area` uses
+#'   square feet per acre. `form_class` accepts positive numbers. `bark_ratio` is inside diameter
+#'   divided by outside diameter, greater than zero and no greater than one. `decay_class`
+#'   accepts whole numbers from 1 through 5 and `cull` accepts percentages from 0 through 100.
+#'   `upper_bark` accepts `'ib'` or `'ob'`. Upper heights and diameters must be supplied in
+#'   pairs. Only inputs declared by the selected model are accepted.
+#' @return A `stem_profile` data frame with `tree_id` (identifier), `h` (feet above ground),
+#'   `dib` and `dob` (inches), `cum_volume_ib` and `cum_volume_ob` (cubic feet above the lower
+#'   bound), and `status` (integer code). Trees remain in input order, with ascending heights
+#'   within each tree.
 #' @usage
 #' stem_profile(
 #'   tree_id,
@@ -141,18 +167,16 @@
 #' )
 #' @export
 #' @examples
-#' ## Load data verbs
-#' library(dplyr)
+#' ## Sample the first example tree
+#' profile <- stem_profile(tree_id = example_trees$tree_id[1],
+#'                         dbh = example_trees$dbh[1],
+#'                         ht = example_trees$ht[1],
+#'                         spcd = example_trees$spcd[1],
+#'                         model = example_trees$model[1],
+#'                         step = 5)
 #'
-#' ## Measure and show the first example stem
-#' stem_profile(tree_id = example_trees$tree_id[1],
-#'              dbh = example_trees$dbh[1],
-#'              ht = example_trees$ht[1],
-#'              spcd = example_trees$spcd[1]) %>%
-#'   transmute(`height (feet)` = h,
-#'             `diameter inside bark (inches)` = dib,
-#'             `diameter outside bark (inches)` = dob) %>%
-#'   head(n = 3)
+#' ## Draw the sampled profile
+#' plot(profile)
 stem_profile <- function(
   tree_id,
   dbh,

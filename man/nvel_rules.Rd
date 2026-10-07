@@ -2,7 +2,7 @@
 % Please edit documentation in R/stem-nsvb.R
 \name{nvel_rules}
 \alias{nvel_rules}
-\title{Record source-library log-length and measurement rules}
+\title{Record source library measurement rules}
 \usage{
 nvel_rules(
   even_or_odd = NA_integer_,
@@ -28,85 +28,88 @@ nvel_rules(
 )
 }
 \arguments{
-\item{even_or_odd}{Choose the source library's log-length rounding convention. Numeric whole-
-number code, unitless, default NA selects the library default. Code 1 allows odd lengths and
-code 2 uses even lengths.}
+\item{even_or_odd}{Source log-length rounding code as a numeric scalar. Accepts \code{1} for
+whole-foot lengths, \code{2} for even-foot lengths, or \code{NA}. Defaults to \code{NA_integer_}, leaving
+the source default unresolved.}
 
-\item{option}{Choose how the source library divides the merchantable stem. Numeric whole-
-number code, unitless, default NA selects the library default. Codes 11 through 14 use its 16,
-20, 32, and 40 foot conventions. Codes 21 through 24 select its top-segment rules.}
+\item{option}{Source segmentation code as a numeric scalar. Accepts \code{11} through \code{14} for the
+source length conventions or \code{21} through \code{24} for top-segment conventions. Defaults to
+\code{NA_integer_}, leaving the source default unresolved.}
 
-\item{maximum_length}{Set the longest nominal segment allowed by the source rules.
-Numeric scalar,
-feet, default NA selects the library default.}
+\item{maximum_length}{Longest nominal source segment, in feet. Accepts one finite positive
+number or \code{NA}. Defaults to \code{NA_real_}, leaving the source default unresolved.}
 
-\item{minimum_length}{Set the shortest nominal segment allowed by the source rules.
-Numeric scalar,
-feet, default NA selects the library default.}
+\item{minimum_length}{Shortest nominal source segment, in feet. Accepts one finite positive
+number or \code{NA}. Defaults to \code{NA_real_}, leaving the source default unresolved.}
 
-\item{minimum_top_length}{Set the shortest top segment allowed by the source rules.
-Numeric scalar,
-feet, default NA selects the library default.}
+\item{minimum_top_length}{Shortest source top segment, in feet. Accepts one finite positive
+number or \code{NA}. Defaults to \code{NA_real_}, leaving the source default unresolved.}
 
-\item{merchantable_length}{Set the primary-product stem length needed for the tree to qualify.
-Numeric, feet, default NA selects the library default.}
+\item{merchantable_length}{Primary-product stem length required for eligibility, in feet.
+Accepts one finite positive number or \code{NA}. Defaults to \code{NA_real_}, leaving the source
+default unresolved.}
 
-\item{primary_top}{Set the smallest inside-bark diameter for the primary product. Numeric scalar,
-inches, default NA selects the library default.}
+\item{primary_top}{Primary inside bark top diameter, in inches. Accepts one finite positive
+number or \code{NA}. Defaults to \code{NA_real_}, leaving the source default unresolved.}
 
-\item{secondary_top}{Set the smallest inside-bark diameter for the secondary product.
-Numeric scalar,
-inches, default NA selects the library default.}
+\item{secondary_top}{Secondary inside bark top diameter, in inches. Accepts one finite
+positive number or \code{NA}. Defaults to \code{NA_real_}, leaving the source default unresolved.}
 
-\item{stump}{Set the height left below the first source-library segment. Numeric scalar, feet,
-default NA selects the library default.}
+\item{stump}{Source stump height above ground, in feet. Accepts one finite nonnegative number
+or \code{NA}. Defaults to \code{NA_real_}, leaving the source default unresolved.}
 
-\item{trim}{Set the extra wood cut above each nominal source-library segment.
-Numeric scalar, feet,
-default NA selects the library default.}
+\item{trim}{Extra length above a nominal source segment, in feet. Accepts one finite positive
+number or \code{NA}. Defaults to \code{NA_real_}, leaving the source default unresolved.}
 
-\item{bark_ratio}{The bark ratio estimates inside diameter from outside diameter when needed.
-Numeric scalar, inside diameter divided by outside diameter. Default: \code{NA_real_}.}
+\item{bark_ratio}{Inside bark diameter divided by outside bark diameter. Accepts a single
+finite number greater than zero and no greater than one, or \code{NA}. Defaults to \code{NA_real_},
+leaving the ratio unspecified. Enables a constant-ratio outside bark calculation where
+needed.}
 
-\item{minimum_board_foot_dbh}{Set the smallest tree eligible for board foot volume.
-Numeric scalar
-outside-bark diameter at breast height, inches, default NA selects the library default.}
+\item{minimum_board_foot_dbh}{Minimum outside bark breast-height diameter for board foot
+scale, in inches. Accepts one finite positive number or \code{NA}. Defaults to \code{NA_real_},
+leaving the source default unresolved.}
 
-\item{scribner}{Choose how the source library scales Scribner volume. Character scalar,
-unitless, default \code{'regional'} uses its regional setting. \code{'table'} uses the Scribner table
-and \code{'factor'} uses regional factors. Missing values and unknown labels are errors.}
+\item{scribner}{Source Scribner method as one character string. Accepts 'regional', 'table',
+or 'factor'. Defaults to 'regional', using the source default method. Other choices request
+table scale or source factors.}
 
-\item{prod}{Choose the source product class. Character scalar of two-character codes,
-unitless, default \code{'01'} means sawtimber. \code{'08'} means a nonsaw product.}
+\item{prod}{Source product code as one character string containing exactly two digits.
+Defaults to '01' for sawtimber. '08' selects the source nonsaw product route.}
 
-\item{ht_type}{Tell the source library how height is recorded. Character scalar, unitless,
-default \code{''} leaves the setting unspecified. \code{'F'} means feet and \code{'L'} means logs.}
+\item{ht_type}{Source height basis as one character string. Accepts '', 'F', or 'L'. Defaults
+to '', leaving the basis unspecified. 'F' requests feet and 'L' requests logs.}
 
-\item{live}{Tell the source library whether the tree is alive. Character scalar, unitless,
-default \code{'L'} means live. \code{'D'} means dead.}
+\item{live}{Source live-status flag as one character string. Accepts 'L' or 'D'. Defaults to
+'L' for live trees. 'D' identifies dead trees.}
 
-\item{ctype}{Identify the kind of inventory supplying the tree. Character scalar, unitless,
-default \code{'C'} means cruise. \code{'I'} selects Forest Inventory and Analysis, \code{'F'} selects
-Forest Vegetation Simulator, and \code{'B'} selects the alternate National Scale Volume and
-Biomass route. Missing values and unknown labels are errors.}
+\item{ctype}{Source calculation route as one character string. Accepts 'C', 'I', 'F', or 'B'.
+Defaults to 'C' for cruise. Other codes select Forest Inventory and Analysis, Forest
+Vegetation Simulator, or the alternate national biomass route.}
 
-\item{cull}{Supply the whole-tree cull percentage required by a source equation. Numeric scalar,
-percent, default 0. This source input does not reduce merchandise log scales.}
+\item{cull}{Whole-tree cull percentage for the source equation. Accepts one finite number from
+0 through 100 or \code{NA}. Defaults to \code{0}. It does not deduct scale from merchandise logs.}
 
-\item{forest}{The national forest code selects local source rules. Numeric scalar, whole-number
-forest codes. Default: \code{0}.}
+\item{forest}{Forest Service forest code as one whole number from 0 through 99 or \code{NA}.
+Defaults to \code{0}. Retained for source rule selection.}
 
-\item{district}{The ranger district code selects local source rules. Numeric scalar,
-whole-number district codes. Default: \code{0}.}
+\item{district}{Forest Service district code as one whole number from 0 through 99 or \code{NA}.
+Defaults to \code{0}. Retained for source rule selection.}
 }
 \value{
-A validated list of scalar fields with class \code{treevolume_nvel_rules}.
+A validated \code{treevolume_nvel_rules} list retaining each scalar argument: \code{even_or_odd}
+and \code{option} (source codes), \code{maximum_length}, \code{minimum_length}, \code{minimum_top_length},
+\code{merchantable_length}, \code{stump}, and \code{trim} (feet), \code{primary_top}, \code{secondary_top}, and
+\code{minimum_board_foot_dbh} (inches), \code{bark_ratio} (diameter ratio), \code{scribner}, \code{prod},
+\code{ht_type}, \code{live}, and \code{ctype} (source flags), \code{cull} (percent), and \code{forest} and \code{district}
+(location codes). Missing values remain unresolved source defaults.
 }
 \description{
-Record source-library log-length and measurement rules
+Validate a source library rule record. Use the retained fields to describe a resolved
+source measurement convention.
 }
 \examples{
-## Inspect an explicit whole foot source rule record.
+## Inspect an explicit source length and top-diameter rule
 nvel_rules(even_or_odd = 1,
            maximum_length = 32,
            minimum_length = 16,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/defects.R
 \name{defects_from_stoppers}
 \alias{defects_from_stoppers}
-\title{Convert southern stopping heights to defect records}
+\title{Convert stopper heights to located defects}
 \usage{
 defects_from_stoppers(
   tree_id,
@@ -16,51 +16,58 @@ defects_from_stoppers(
 )
 }
 \arguments{
-\item{tree_id}{Identify the tree each record belongs to. Atomic vector, unitless, required.
-This identifier ties every log, residual, and status row back to its tree and is the only
-link between a log and its tree.}
+\item{tree_id}{Identifiers linking each defect to an input tree. Accepts a nonmissing atomic
+vector. Required, with no default. Its type must match the tree list when records are
+validated.}
 
-\item{ht}{Supply each tree's total height. Numeric, feet, required.}
+\item{ht}{Total height above ground, in feet. Accepts numeric values greater than zero and no
+greater than 500. Required, with no default. Measurement heights and section bounds must
+fall within the tree.}
 
-\item{topwood_product}{Name the product allowed above a saw stop or on a whole pulp tree.
-Character scalar, unitless, required.}
+\item{topwood_product}{Product allowed above a saw stop or on a whole pulp tree, as a nonempty
+character scalar. Required, without a default. The label must match the product used in
+subsequent merchandising.}
 
-\item{saw_stop}{Stop saw products at this height and allow only \code{topwood_product} above it.
-Numeric, feet, default \code{NULL} records no stop. Missing heights also record no stop.}
+\item{saw_stop}{Height above which only \code{topwood_product} is allowed, in feet. Accepts
+positive numeric values or missing values. Defaults to \code{NULL}, adding no saw restriction.
+Must follow any jump butt and precede any pulp stop.}
 
-\item{pulp_stop}{End the usable stem at this height. Numeric, feet, default \code{NULL} records
-no stop. Missing heights also record no stop.}
+\item{pulp_stop}{Height ending the usable stem, in feet. Accepts positive numeric values or
+missing values. Defaults to \code{NULL}, adding no end record. Must lie above other supplied
+stops and no higher than total height.}
 
-\item{jump_butt}{Remove the wood between the stump and this height. Numeric, feet,
-default \code{NULL} records no cull. Missing heights also record no cull.}
+\item{jump_butt}{Upper height of an unusable butt section, in feet. Accepts positive numeric
+values or missing values. Defaults to \code{NULL}, adding no butt cull. A cull spans from
+\code{stump_ht} to this height.}
 
-\item{pulp_tree}{Restrict the whole tree to \code{topwood_product}. Logical, unitless,
-default \code{FALSE}.}
+\item{pulp_tree}{Whether the entire tree is restricted to \code{topwood_product}. Accepts \code{TRUE} or
+\code{FALSE} per tree, without missing values. Defaults to \code{FALSE}. Cannot accompany a saw stop
+or jump butt for the same tree.}
 
-\item{stump_ht}{Set the lower height of a jump butt cull. Numeric, feet, default \code{1}.}
+\item{stump_ht}{Stump height above ground, in feet. Accepts finite, nonnegative numeric values
+below total height. Defaults to \code{1}. A jump-butt cull starts here, and supplied stopping
+heights must lie above it.}
 }
 \value{
-A \code{merch_defects} data frame with the columns and units listed in \code{\link[=defect]{defect()}}.
-A saw stop becomes \code{restrict}, a pulp stop becomes \code{end}, and a jump butt becomes \code{cull}.
+A \code{merch_defects} data frame with \code{tree_id} (identifier), \code{start_height} and
+\code{end_height} (feet above ground), \code{effect} (cutting effect), \code{product} (restriction label,
+otherwise missing), and \code{percent} (sweep percentage, otherwise missing). Scalars recycle to
+the record count.
 }
 \description{
-Translate a saw stop, pulp stop, jump butt, or whole pulp tree into located records.
-}
-\details{
-Heights must be finite and at most 500 feet. Total height must be positive. Other
-heights must be nonnegative. Optional missing stopping heights record no stop.
+Translate saw stops to restrictions, pulp stops to usable-stem ends, and jump butts to culls.
+Supplied stops must remain above the stump, within the tree, and in increasing physical
+order.
 }
 \examples{
-## Convert the shipped stopping heights
-records <- defects_from_stoppers(
-  tree_id = example_trees_south$tree_id,
-  ht = example_trees_south$ht,
-  topwood_product = "pulpwood",
-  saw_stop = example_trees_south$saw_stop,
-  pulp_stop = example_trees_south$pulp_stop,
-  jump_butt = example_trees_south$jump_butt
-)
+## Convert the southern list's stopping heights
+converted <- defects_from_stoppers(tree_id = example_trees_south$tree_id,
+                                   ht = example_trees_south$ht,
+                                   topwood_product = 'pulp',
+                                   saw_stop = example_trees_south$saw_stop,
+                                   pulp_stop = example_trees_south$pulp_stop,
+                                   jump_butt = example_trees_south$jump_butt)
 
-## Show the converted effects
-head(records$effect, n = 3)
+## Inspect the resulting defect intervals
+head(converted)
 }
