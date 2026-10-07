@@ -1,0 +1,108 @@
+# Combine defect percentages by stem-volume thirds
+
+Combine lower, middle, and upper defect percentages using inside bark
+volume weights. Use the returned percentage in a separate deduction
+calculation, with diameters in inches and heights in feet. The thirds
+divide total height from ground to tip, and merchandise() does not apply
+the returned percentage. Scalar inputs recycle across trees, and invalid
+rows retain their input position and a status.
+
+## Usage
+
+``` r
+defect_by_thirds(
+  dbh,
+  ht,
+  spcd,
+  lower,
+  middle,
+  upper,
+  model = NULL,
+  ...
+)
+```
+
+## Arguments
+
+- dbh:
+
+  Outside bark diameter at breast height, in inches. Accepts numeric
+  values greater than zero and no greater than 400. Required, with no
+  default. Invalid measurement rows return missing results with a
+  status.
+
+- ht:
+
+  Total height above ground, in feet. Accepts numeric values greater
+  than zero and no greater than 500. Required, with no default.
+  Measurement heights and section bounds must fall within the tree.
+
+- spcd:
+
+  Species identifier as a numeric vector of positive whole-number codes.
+  Required, with no default. The species must be recognized for species
+  properties and within the selected equation's scope.
+
+- lower:
+
+  Defect in the lower third of total tree height, in percent. Accepts
+  numeric values from 0 through 100, or missing values. Required, with
+  no default. The contribution is weighted by inside bark volume in that
+  third.
+
+- middle:
+
+  Defect in the middle third of total tree height, in percent. Accepts
+  numeric values from 0 through 100, or missing values. Required, with
+  no default. The contribution is weighted by inside bark volume in that
+  third.
+
+- upper:
+
+  Defect in the upper third of total tree height, in percent. Accepts
+  numeric values from 0 through 100, or missing values. Required, with
+  no default. The contribution is weighted by inside bark volume in that
+  third.
+
+- model:
+
+  Taper equation identifier as a character vector. Defaults to `NULL`,
+  selecting the stored species default. A supplied identifier overrides
+  that choice. Scalar identifiers recycle across trees.
+
+- ...:
+
+  Additional named inputs accepted by the selected model, with none
+  supplied by default. Numeric inputs must be finite: positive
+  `upper_ht1`, `upper_ht2`, and `site_index` use feet, positive
+  `upper_d1` and `upper_d2` use inches, and positive `basal_area` uses
+  square feet per acre. `form_class` accepts positive numbers.
+  `bark_ratio` is inside diameter divided by outside diameter, greater
+  than zero and no greater than one. `decay_class` accepts whole numbers
+  from 0 through 5 and `cull` accepts percentages from 0 through 100.
+  `upper_bark` accepts `'ib'` or `'ob'`. Upper heights and diameters
+  must be supplied in pairs. Only inputs declared by the selected model
+  are accepted.
+
+## Value
+
+A data frame in input order with `value` (whole-tree defect, percent)
+and `status` (integer code described by
+[`status_codes()`](https://siskiyoubiometrics.com/merchandiser/reference/status_codes.md)).
+Missing results remain in the table. Nonfatal section statuses are not
+propagated to this percentage result.
+
+## Examples
+
+``` r
+## Measure the first shipped tree with its stored equation
+defect_by_thirds(dbh = example_trees$dbh[1],
+                 ht = example_trees$ht[1],
+                 spcd = example_trees$spcd[1],
+                 lower = 10,
+                 middle = 5,
+                 upper = 0,
+                 model = example_trees$model[1])
+#>      value status
+#> 1 8.074932      0
+```

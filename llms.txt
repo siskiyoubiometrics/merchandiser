@@ -1,0 +1,360 @@
+# merchandiser
+
+merchandiser estimates logs, product volumes, and value from tree
+measurements and explicit product specifications. It supports foresters
+working with tree lists in R, with results that retain tree identifiers
+for summaries by species, stand, or product.
+
+Specify log dimensions, diameter limits, scaling rules, and prices, then
+select logs by product priority or maximize their total value. Located
+defects change the available stem sections and eligible products.
+Results include selected logs, residual sections, status, and recorded
+assumptions.
+
+The package also fits and completes tree heights, fits taper equations,
+measures stem sections, and estimates dry biomass and carbon in metric
+tonnes from diameters in inches and heights in feet. The shipped source
+equations come from the Forest Service National Volume Estimator
+Library, as recorded in `DESCRIPTION`.
+
+## Install
+
+``` r
+
+## Install the package from its source repository
+library(remotes)
+
+## Install the source package
+install_github(repo = 'siskiyoubiometrics/merchandiser')
+```
+
+## Tasks
+
+| Task | Functions |
+|:---|:---|
+| Define products and select logs | [`product()`](https://siskiyoubiometrics.com/merchandiser/reference/product.md), [`products()`](https://siskiyoubiometrics.com/merchandiser/reference/products.md), [`merchandise()`](https://siskiyoubiometrics.com/merchandiser/reference/merchandise.md) |
+| Record located defects | [`defect()`](https://siskiyoubiometrics.com/merchandiser/reference/defect.md), [`defects_from_stoppers()`](https://siskiyoubiometrics.com/merchandiser/reference/defects_from_stoppers.md), [`validate_defects()`](https://siskiyoubiometrics.com/merchandiser/reference/validate_defects.md) |
+| Fit and complete tree heights | [`fit_height()`](https://siskiyoubiometrics.com/merchandiser/reference/fit_height.md), [`complete_heights()`](https://siskiyoubiometrics.com/merchandiser/reference/complete_heights.md), [`predict_height()`](https://siskiyoubiometrics.com/merchandiser/reference/predict_height.md) |
+| Measure a stem or section | [`stem_profile()`](https://siskiyoubiometrics.com/merchandiser/reference/stem_profile.md), [`dib()`](https://siskiyoubiometrics.com/merchandiser/reference/dib.md), [`dob()`](https://siskiyoubiometrics.com/merchandiser/reference/dob.md), [`stem_volume()`](https://siskiyoubiometrics.com/merchandiser/reference/stem_volume.md) |
+| Estimate biomass and carbon | [`biomass()`](https://siskiyoubiometrics.com/merchandiser/reference/biomass.md), [`carbon_fraction()`](https://siskiyoubiometrics.com/merchandiser/reference/carbon_fraction.md) |
+| Fit and register a taper equation | [`fit_taper()`](https://siskiyoubiometrics.com/merchandiser/reference/fit_taper.md), [`as_taper_model()`](https://siskiyoubiometrics.com/merchandiser/reference/as_taper_model.md), [`register_taper_model()`](https://siskiyoubiometrics.com/merchandiser/reference/register_taper_model.md) |
+| Review calculation conditions | [`status_codes()`](https://siskiyoubiometrics.com/merchandiser/reference/status_codes.md), [`assumptions()`](https://siskiyoubiometrics.com/merchandiser/reference/assumptions.md) |
+
+[`biomass()`](https://siskiyoubiometrics.com/merchandiser/reference/biomass.md)
+returns metric tonnes, while
+[`green_weight()`](https://siskiyoubiometrics.com/merchandiser/reference/green_weight.md)
+converts stem volume to short tons for product scaling.
+
+## Get started
+
+[`merchandise()`](https://siskiyoubiometrics.com/merchandiser/reference/merchandise.md)
+selects and scales logs from tree measurements and product
+specifications. Product order sets cutting priority under the default
+strategy. Prices assign value to the selected logs without changing that
+priority.
+
+Tree 5 is a synthetic example with species code 202, diameter at breast
+height of 20 inches, and total height of 100 feet. Its stored equation
+is passed explicitly below. Dimensions use inches and feet. Prices are
+illustrative United States dollars.
+
+``` r
+
+## Attach the calculation and data tools
+library(merchandiser)
+library(dplyr)
+```
+
+``` r
+
+## Select the tree with a stored taper equation
+tree <- example_trees %>%
+  filter(tree_id == 5)
+```
+
+| tree_id | species code | diameter (inches) | height (feet) |
+|--------:|-------------:|------------------:|--------------:|
+|       5 |          202 |                20 |           100 |
+
+The 20-inch diameter and 100-foot height supply the tree measurements
+for the log calculation.
+
+``` r
+
+## Give long logs with the largest small end limit first priority
+large <- product(product = 'Large sawlog',  ## product label
+                 min_length = 32,  ## feet
+                 max_length = 32,  ## feet
+                 min_sed = 12,  ## inches
+                 inside_bark = TRUE,  ## limits measured inside bark
+                 trim = 0.5,  ## feet
+                 volume_unit = 'scribner',  ## board feet
+                 price = 900,  ## dollars
+                 price_per = 1000)  ## board feet
+
+## Accept shorter logs that meet the medium sawlog diameter limit
+medium <- product(product = 'Medium sawlog',  ## product label
+                  min_length = 16,  ## feet
+                  max_length = 16,  ## feet
+                  min_sed = 10,  ## inches
+                  inside_bark = TRUE,  ## limits measured inside bark
+                  trim = 0.5,  ## feet
+                  volume_unit = 'scribner',  ## board feet
+                  price = 700,  ## dollars
+                  price_per = 1000)  ## board feet
+
+## Accept smaller sawlogs before assigning wood to pulp
+small <- product(product = 'Small sawlog',  ## product label
+                 min_length = 16,  ## feet
+                 max_length = 16,  ## feet
+                 min_sed = 6,  ## inches
+                 inside_bark = TRUE,  ## limits measured inside bark
+                 trim = 0.5,  ## feet
+                 volume_unit = 'scribner',  ## board feet
+                 price = 500,  ## dollars
+                 price_per = 1000)  ## board feet
+
+## Assign remaining eligible sections to pulp by green weight
+pulp <- product(product = 'Pulp',  ## product label
+                min_length = 8,  ## feet
+                max_length = 20,  ## feet
+                min_sed = 3,  ## inches
+                inside_bark = TRUE,  ## limits measured inside bark
+                trim = 0.5,  ## feet
+                volume_unit = 'green_ton',  ## green short tons
+                price = 30,  ## dollars
+                price_per = 1)  ## green short tons
+```
+
+Each cut occupies the nominal log length plus trim. Scale uses the
+nominal length, and trim remains in the residual record.
+
+``` r
+
+## Offer the stem to sawlog products before pulp
+specifications <- products(large, medium, small, pulp)
+```
+
+``` r
+
+## Select and price logs using the tree's stored taper equation
+result <- merchandise(tree_id = tree$tree_id,
+                      dbh = tree$dbh,
+                      ht = tree$ht,
+                      spcd = tree$spcd,
+                      products = specifications,
+                      model = tree$model)
+```
+
+| product | start (feet) | end including trim (feet) | nominal length (feet) | small-end diameter (inches) | scale (Scribner board feet) | scale (green short tons) | value (dollars) |
+|:---|---:|---:|---:|---:|---:|---:|---:|
+| Large sawlog | 1.0 | 33.5 | 32 | 14.017 | 230 | NA | 207.000 |
+| Medium sawlog | 33.5 | 50.0 | 16 | 11.643 | 80 | NA | 56.000 |
+| Small sawlog | 50.0 | 66.5 | 16 | 8.413 | 40 | NA | 20.000 |
+| Pulp | 66.5 | 87.0 | 20 | 3.341 | NA | 0.098 | 2.951 |
+
+The large sawlog contributes 207 dollars at the specified price of 900
+dollars per 1000 board feet.
+
+| scale (Scribner board feet) | price (dollars) | price basis (board feet) | calculated value (dollars) |
+|---:|---:|---:|---:|
+| 230 | 900 | 1000 | 207 |
+
+Its 230 board feet supply the scale used in that value calculation.
+
+``` r
+
+## Draw the selected logs and unassigned stem sections
+plot(result)
+```
+
+![](reference/figures/README-unnamed-chunk-12-1.png)
+
+The drawing places the large sawlog at the base, starting above the 1
+foot stump.
+
+## Biomass and carbon
+
+``` r
+
+## Estimate dry biomass and carbon for the same tree
+mass <- biomass(dbh = tree$dbh,
+                ht = tree$ht,
+                spcd = tree$spcd)
+```
+
+| dry mass excluding foliage (tonnes) | carbon (tonnes) | carbon dioxide equivalent (tonnes) |
+|---:|---:|---:|
+| 1.302 | 0.672 | 2.463 |
+
+The tree contains 1.302 metric tonnes of dry aboveground biomass
+excluding foliage.
+
+## Guides
+
+- [Get
+  started](https://siskiyoubiometrics.com/merchandiser/articles/get-started.html)
+- [Defining
+  products](https://siskiyoubiometrics.com/merchandiser/articles/defining-products.html)
+- [Recording
+  defect](https://siskiyoubiometrics.com/merchandiser/articles/recording-defect.html)
+- [Heights](https://siskiyoubiometrics.com/merchandiser/articles/heights.html)
+- [Stem measurements and
+  volumes](https://siskiyoubiometrics.com/merchandiser/articles/stem-measurements.html)
+- [Biomass and
+  carbon](https://siskiyoubiometrics.com/merchandiser/articles/biomass-carbon.html)
+- [Bucking strategy and
+  value](https://siskiyoubiometrics.com/merchandiser/articles/bucking-strategy.html)
+- [Working a tree
+  list](https://siskiyoubiometrics.com/merchandiser/articles/tree-lists.html)
+- [Taper
+  equations](https://siskiyoubiometrics.com/merchandiser/articles/taper-equations.html)
+
+# Package index
+
+## Select and price logs
+
+- [`merchandise()`](https://siskiyoubiometrics.com/merchandiser/reference/merchandise.md)
+  : Select and scale logs from measured trees
+- [`assumptions()`](https://siskiyoubiometrics.com/merchandiser/reference/assumptions.md)
+  : Inspect assumptions recorded with a merchandising result
+- [`example_trees`](https://siskiyoubiometrics.com/merchandiser/reference/example_trees.md)
+  : Example trees for stem calculations
+
+## Define products
+
+- [`product()`](https://siskiyoubiometrics.com/merchandiser/reference/product.md)
+  : Define log dimensions, eligibility, and pricing for a product
+- [`products()`](https://siskiyoubiometrics.com/merchandiser/reference/products.md)
+  : Combine products in cutting priority order
+
+## Record defects
+
+- [`defect()`](https://siskiyoubiometrics.com/merchandiser/reference/defect.md)
+  : Record a located stem defect
+- [`validate_defects()`](https://siskiyoubiometrics.com/merchandiser/reference/validate_defects.md)
+  : Check defect heights and product restrictions
+- [`defects_from_stoppers()`](https://siskiyoubiometrics.com/merchandiser/reference/defects_from_stoppers.md)
+  : Convert stopper heights to located defects
+- [`defect_by_thirds()`](https://siskiyoubiometrics.com/merchandiser/reference/defect_by_thirds.md)
+  : Combine defect percentages by stem-volume thirds
+- [`example_defects_pnw`](https://siskiyoubiometrics.com/merchandiser/reference/example_defects_pnw.md)
+  : Example Pacific Northwest defect records
+
+## Fit and complete heights
+
+- [`fit_height()`](https://siskiyoubiometrics.com/merchandiser/reference/fit_height.md)
+  : Fit height relationships by species and group
+- [`complete_heights()`](https://siskiyoubiometrics.com/merchandiser/reference/complete_heights.md)
+  : Fill missing heights while retaining measured values
+- [`predict_height()`](https://siskiyoubiometrics.com/merchandiser/reference/predict_height.md)
+  : Predict tree heights and optional intervals
+
+## Measure stems
+
+- [`stem_profile()`](https://siskiyoubiometrics.com/merchandiser/reference/stem_profile.md)
+  : Sample diameters and cumulative volumes along stems
+- [`dib()`](https://siskiyoubiometrics.com/merchandiser/reference/dib.md)
+  : Measure inside bark diameter at a height
+- [`dob()`](https://siskiyoubiometrics.com/merchandiser/reference/dob.md)
+  : Measure outside bark diameter at a height
+- [`height_at_dib()`](https://siskiyoubiometrics.com/merchandiser/reference/height_at_dib.md)
+  : Locate a specified inside bark diameter
+- [`height_at_dob()`](https://siskiyoubiometrics.com/merchandiser/reference/height_at_dob.md)
+  : Locate a specified outside bark diameter
+- [`stem_volume()`](https://siskiyoubiometrics.com/merchandiser/reference/stem_volume.md)
+  : Measure solid volume between stem bounds
+- [`green_weight()`](https://siskiyoubiometrics.com/merchandiser/reference/green_weight.md)
+  : Convert solid stem volume to merchandising weight
+- [`get_taper_model()`](https://siskiyoubiometrics.com/merchandiser/reference/get_taper_model.md)
+  : Inspect a taper model and its required inputs
+- [`taper_models()`](https://siskiyoubiometrics.com/merchandiser/reference/taper_models.md)
+  : List registered taper equations by form or species
+- [`has_taper_model()`](https://siskiyoubiometrics.com/merchandiser/reference/has_taper_model.md)
+  : Check availability of taper equation identifiers
+- [`default_taper_models`](https://siskiyoubiometrics.com/merchandiser/reference/default_taper_models.md)
+  : Shipped default taper models by species
+- [`species_reference`](https://siskiyoubiometrics.com/merchandiser/reference/species_reference.md)
+  : Species reference for joining tree lists
+
+## Estimate biomass and carbon
+
+- [`biomass()`](https://siskiyoubiometrics.com/merchandiser/reference/biomass.md)
+  : Estimate dry biomass and carbon in metric tonnes
+- [`carbon_fraction()`](https://siskiyoubiometrics.com/merchandiser/reference/carbon_fraction.md)
+  : Look up the carbon fraction of dry biomass
+- [`nsvb_division()`](https://siskiyoubiometrics.com/merchandiser/reference/nsvb_division.md)
+  : Look up ecological division by state and county
+- [`nsvb_division_xy()`](https://siskiyoubiometrics.com/merchandiser/reference/nsvb_division_xy.md)
+  : Look up ecological division from coordinates
+- [`nsvb_division_polygons`](https://siskiyoubiometrics.com/merchandiser/reference/nsvb_division_polygons.md)
+  : Ecological division boundaries
+
+## Work with tree lists
+
+- [`status_codes()`](https://siskiyoubiometrics.com/merchandiser/reference/status_codes.md)
+  : Look up calculation status codes
+- [`threads()`](https://siskiyoubiometrics.com/merchandiser/reference/threads.md)
+  : Inspect or set the calculation thread limit
+- [`with_threads()`](https://siskiyoubiometrics.com/merchandiser/reference/with_threads.md)
+  : Evaluate a calculation with a temporary thread limit
+- [`example_trees_pnw`](https://siskiyoubiometrics.com/merchandiser/reference/example_trees_pnw.md)
+  : Example Pacific Northwest trees
+- [`example_trees_south`](https://siskiyoubiometrics.com/merchandiser/reference/example_trees_south.md)
+  : Example southern plantation trees
+
+## Fit and manage taper equations
+
+- [`fit_taper()`](https://siskiyoubiometrics.com/merchandiser/reference/fit_taper.md)
+  : Fit taper coefficients to repeated stem measurements
+- [`as_taper_model()`](https://siskiyoubiometrics.com/merchandiser/reference/as_taper_model.md)
+  : Convert a taper fit to a usable model
+- [`register_taper_model()`](https://siskiyoubiometrics.com/merchandiser/reference/register_taper_model.md)
+  : Register a private taper model for the session
+- [`unregister_taper_model()`](https://siskiyoubiometrics.com/merchandiser/reference/unregister_taper_model.md)
+  : Remove a private taper model from the session
+- [`check_taper_models()`](https://siskiyoubiometrics.com/merchandiser/reference/check_taper_models.md)
+  : Check model identifiers, scope, and required inputs
+- [`taper_manifest()`](https://siskiyoubiometrics.com/merchandiser/reference/taper_manifest.md)
+  : Record registered taper identifiers and versions
+- [`taper_model_from_coefficients()`](https://siskiyoubiometrics.com/merchandiser/reference/taper_model_from_coefficients.md)
+  : Construct a taper model from metric coefficients
+- [`new_taper_model()`](https://siskiyoubiometrics.com/merchandiser/reference/new_taper_model.md)
+  : Create a taper model from diameter and volume functions
+- [`example_stem_measurements`](https://siskiyoubiometrics.com/merchandiser/reference/example_stem_measurements.md)
+  : Example stem measurements
+
+## Source library
+
+- [`nvel_default_equation()`](https://siskiyoubiometrics.com/merchandiser/reference/nvel_default_equation.md)
+  : Look up a source library equation identifier
+- [`nvel_from_fia_code()`](https://siskiyoubiometrics.com/merchandiser/reference/nvel_from_fia_code.md)
+  : Translate an inventory equation identifier
+- [`nvel_rules()`](https://siskiyoubiometrics.com/merchandiser/reference/nvel_rules.md)
+  : Record source library measurement rules
+- [`nvel_source_revision()`](https://siskiyoubiometrics.com/merchandiser/reference/nvel_source_revision.md)
+  : Inspect the pinned source library revision
+- [`products_from_nvel_rules()`](https://siskiyoubiometrics.com/merchandiser/reference/products_from_nvel_rules.md)
+  : Convert explicit source rules to products
+
+# Articles
+
+### Guides
+
+- [Get
+  started](https://siskiyoubiometrics.com/merchandiser/articles/get-started.md):
+- [Defining
+  products](https://siskiyoubiometrics.com/merchandiser/articles/defining-products.md):
+- [Recording
+  defect](https://siskiyoubiometrics.com/merchandiser/articles/recording-defect.md):
+- [Heights](https://siskiyoubiometrics.com/merchandiser/articles/heights.md):
+- [Stem measurements and
+  volumes](https://siskiyoubiometrics.com/merchandiser/articles/stem-measurements.md):
+- [Biomass and
+  carbon](https://siskiyoubiometrics.com/merchandiser/articles/biomass-carbon.md):
+- [Bucking strategy and
+  value](https://siskiyoubiometrics.com/merchandiser/articles/bucking-strategy.md):
+- [Working a tree
+  list](https://siskiyoubiometrics.com/merchandiser/articles/tree-lists.md):
+- [Taper
+  equations](https://siskiyoubiometrics.com/merchandiser/articles/taper-equations.md):

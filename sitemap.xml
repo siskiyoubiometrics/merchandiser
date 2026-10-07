@@ -1,207 +1,71 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/404.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/CONTRIBUTING.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/articles/biomass-carbon.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/articles/bucking-strategy.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/articles/defining-products.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/articles/get-started.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/articles/heights.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/articles/recording-defect.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/articles/stem-measurements.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/articles/taper-equations.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/articles/tree-lists.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/index.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/as_taper_model.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/assumptions.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/biomass.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/carbon_fraction.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/check_taper_models.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/complete_heights.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/default_taper_models.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/defect.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/defect_by_thirds.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/defects_from_stoppers.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/dib.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/dob.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/example_defects_pnw.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/example_stem_measurements.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/example_trees.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/example_trees_pnw.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/example_trees_south.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/fit_height.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/fit_taper.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/get_taper_model.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/green_weight.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/has_taper_model.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/height_at_dib.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/height_at_dob.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/merchandise.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/merchandiser-package.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/new_taper_model.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/nsvb_division.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/nsvb_division_polygons.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/nsvb_division_xy.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/nvel_default_equation.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/nvel_from_fia_code.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/nvel_rules.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/nvel_source_revision.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/predict_height.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/product.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/products.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/products_from_nvel_rules.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/register_taper_model.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/species_reference.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/status_codes.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/stem_profile.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/stem_volume.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/taper_manifest.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/taper_model_from_coefficients.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/taper_models.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/threads.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/unregister_taper_model.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/validate_defects.html</loc>
-  </url>
-  <url>
-    <loc>https://siskiyoubiometrics.com/merchandiser/reference/with_threads.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/404.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/CONTRIBUTING.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/LICENSE-text.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/LICENSE.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/articles/biomass-carbon.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/articles/bucking-strategy.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/articles/defining-products.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/articles/get-started.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/articles/heights.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/articles/index.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/articles/recording-defect.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/articles/stem-measurements.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/articles/taper-equations.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/articles/tree-lists.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/authors.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/index.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/news/index.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/as_taper_model.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/assumptions.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/biomass.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/carbon_fraction.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/check_taper_models.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/complete_heights.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/default_taper_models.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/defect.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/defect_by_thirds.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/defects_from_stoppers.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/dib.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/dob.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/example_defects_pnw.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/example_stem_measurements.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/example_trees.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/example_trees_pnw.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/example_trees_south.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/fit_height.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/fit_taper.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/get_taper_model.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/green_weight.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/has_taper_model.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/height_at_dib.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/height_at_dob.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/index.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/merchandise.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/merchandiser-package.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/new_taper_model.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/nsvb_division.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/nsvb_division_polygons.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/nsvb_division_xy.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/nvel_default_equation.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/nvel_from_fia_code.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/nvel_rules.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/nvel_source_revision.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/predict_height.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/product.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/products.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/products_from_nvel_rules.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/register_taper_model.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/species_reference.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/status_codes.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/stem_profile.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/stem_volume.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/taper_manifest.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/taper_model_from_coefficients.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/taper_models.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/threads.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/unregister_taper_model.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/validate_defects.html</loc></url>
+<url><loc>https://siskiyoubiometrics.com/merchandiser/reference/with_threads.html</loc></url>
 </urlset>
+

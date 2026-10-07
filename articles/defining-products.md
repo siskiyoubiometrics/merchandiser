@@ -1,0 +1,295 @@
+# Defining products
+
+[`product()`](https://siskiyoubiometrics.com/merchandiser/reference/product.md)
+defines the trees and logs that qualify for a product and its scaling
+rule. Use explicit specifications when dimensions, eligibility, or
+measurement rules differ between products. Tree and log diameters enter
+in inches, and heights, lengths, and trim enter in feet.
+
+## Which trees qualify?
+
+The product name identifies logs in the result and must be unique within
+a specification. Species, diameter, and age limits keep a product within
+its accepted tree classes, while pruning requirements limit cuts to the
+recorded pruned portion. `spcd` limits eligibility to numeric species
+codes. Leaving it unspecified allows any species with a usable taper
+equation. Tree diameter limits use outside bark diameter at breast
+height regardless of the log bark setting.
+
+The minimum tree diameter and age are inclusive. Their maximum limits
+are exclusive, so adjacent classes can share a boundary without
+accepting the same tree. Age limits require `age` in
+[`merchandise()`](https://siskiyoubiometrics.com/merchandiser/reference/merchandise.md).
+`requires_pruned = TRUE` requires a supplied `pruned_ht`, and only logs
+ending within that height qualify.
+
+``` r
+
+## Attach the calculation and data tools
+library(merchandiser)
+library(dplyr)
+```
+
+``` r
+
+## Select the tree with a stored taper equation
+tree <- example_trees %>%
+  filter(tree_id == 5)
+```
+
+``` r
+
+## Define all tree and log eligibility fields explicitly
+saw <- product(product = 'saw',  ## product label
+               spcd = 202,  ## species code
+               min_dbh = 12,  ## inches outside bark
+               max_dbh = 30,  ## inches outside bark, excluded
+               min_age = 40,  ## years
+               max_age = 90,  ## years, excluded
+               requires_pruned = TRUE,  ## keep logs within the pruned height
+               min_length = 16,  ## feet
+               max_length = 32,  ## feet
+               length_round = 1,  ## feet
+               trim = 0.5,  ## feet
+               min_sed = 6,  ## inches
+               max_sed = 20,  ## inches
+               min_led = 8,  ## inches
+               max_led = 30,  ## inches
+               inside_bark = TRUE,  ## limits measured inside bark
+               max_sweep = 10,  ## percent
+               max_logs = 2,  ## logs per available segment
+               volume_unit = 'scribner',  ## board feet
+               split_scale = FALSE,  ## scale the nominal log without splitting
+               round = 'default')  ## use the rule's default diameter rounding
+```
+
+``` r
+
+## Check age, diameter, and pruning eligibility
+qualified <- merchandise(tree_id = tree$tree_id,
+                         dbh = tree$dbh,
+                         ht = tree$ht,
+                         spcd = tree$spcd,
+                         products = saw,
+                         age = 60,
+                         pruned_ht = 50)
+```
+
+| product | length (feet) | end (feet) | scale (Scribner board feet) |
+|:--------|--------------:|-----------:|----------------------------:|
+| saw     |            32 |       33.5 |                         230 |
+| saw     |            16 |       50.0 |                          80 |
+
+The last selected log ends at 50 feet, within the supplied pruning
+height.
+
+``` r
+
+## Raise the minimum tree diameter above this tree's diameter
+excluded_spec <- saw %>%
+  mutate(min_dbh = 21)
+```
+
+``` r
+
+## Recalculate after raising the minimum diameter
+excluded <- merchandise(tree_id = tree$tree_id,
+                        dbh = tree$dbh,
+                        ht = tree$ht,
+                        spcd = tree$spcd,
+                        products = excluded_spec,
+                        age = 60,
+                        pruned_ht = 50)
+```
+
+``` r
+
+## Count logs after changing tree eligibility
+nrow(excluded$logs)
+#> [1] 0
+```
+
+The revised minimum accepts 0 logs from this tree because its measured
+diameter falls below the new threshold.
+
+## Which logs qualify?
+
+`min_length` and `max_length` bound nominal lengths on the half-foot
+candidate grid. Large-end limits can exclude oversized butt sections,
+and small-end limits determine whether an upper cut still qualifies.
+`trim` adds wood above the nominal body, and the physical log must fit
+within an available section. Both end diameter limits are inclusive and
+apply at the physical ends, including trim. `min_led` and `max_led`
+refer to the physical large end, while `min_sed` and `max_sed` refer to
+the small end.
+
+`max_sweep` sets the largest recorded percentage a product accepts on an
+overlapping sweep interval. Omitting it imposes no sweep limit.
+`max_logs` caps selected logs of that product within a segment. This
+limits repeated assignments to that product before other eligible
+products are considered. Cull and restriction boundaries start new
+segments and reset those counts. The [defect
+guide](https://siskiyoubiometrics.com/merchandiser/articles/recording-defect.md)
+shows how those intervals enter the calculation.
+
+When rows are combined with
+[`products()`](https://siskiyoubiometrics.com/merchandiser/reference/products.md),
+the first row gets the first opportunity to use each available stem
+section under the default strategy. Changing that order can change the
+logs even when every field within each row stays the same.
+
+## How is the accepted log scaled?
+
+`volume_unit` accepts `scribner`, `international`, `doyle`, `cubic`,
+`cord`, or `green_ton`. The first three return board feet under the
+named rule. Cubic scale returns cubic feet, and cord scale converts
+solid volume to stacked volume using `cord_solid_fraction`. Green weight
+returns short tons including wood and attached bark.
+
+`inside_bark` controls the physical log diameter limits and the cubic or
+cord volume basis. Board foot rules always use inside bark diameters.
+Green weight includes attached bark regardless of that setting, so
+changing bark basis does not turn it into a wood-only mass estimate.
+
+`length_round` rounds the scaling length down. Board foot rules accept
+whole-foot or even-foot rounding, while other scales accept a positive
+increment. Cubic, cord, and green weight calculations use nominal length
+even when the reported scaling length differs. `round` selects
+`default`, `down`, `nearest`, or `none` for scaling diameter.
+`split_scale` selects shorter scaling sections for Scribner without
+adding cuts or affecting other scale units. `none` disables diameter
+preprocessing, but the source rule can still round internally. These
+fields affect scale without adding trim to the scaled body.
+
+``` r
+
+## Hold nominal length and diameter limits fixed for the rounding comparison
+rounding_spec <- product(product = 'saw',  ## product label
+                         min_length = 16,  ## feet
+                         max_length = 16,  ## feet
+                         min_sed = 6,  ## inches
+                         inside_bark = TRUE,  ## limits measured inside bark
+                         trim = 0.5,  ## feet
+                         volume_unit = 'scribner',  ## board feet
+                         round = 'default')  ## use the rule's diameter rounding
+```
+
+``` r
+
+## Scale the accepted logs with default diameter rounding
+rounded <- merchandise(tree_id = tree$tree_id,
+                       dbh = tree$dbh,
+                       ht = tree$ht,
+                       spcd = tree$spcd,
+                       products = rounding_spec,
+                       model = tree$model)
+```
+
+``` r
+
+## Round scaling diameters down on the same accepted logs
+down_spec <- rounding_spec %>%
+  mutate(round = 'down')
+```
+
+``` r
+
+## Recalculate with scaling diameters rounded down
+rounded_down <- merchandise(tree_id = tree$tree_id,
+                            dbh = tree$dbh,
+                            ht = tree$ht,
+                            spcd = tree$spcd,
+                            products = down_spec,
+                            model = tree$model)
+```
+
+| rounding | log | scaling diameter (inches) | scale (Scribner board feet) |
+|:---------|----:|--------------------------:|----------------------------:|
+| default  |   1 |                        16 |                         160 |
+| default  |   2 |                        14 |                         110 |
+| default  |   3 |                        12 |                          80 |
+| default  |   4 |                         8 |                          30 |
+| down     |   1 |                        15 |                         140 |
+| down     |   2 |                        14 |                         110 |
+| down     |   3 |                        11 |                          70 |
+| down     |   4 |                         8 |                          30 |
+
+The first log scales to 160 Scribner board feet under default rounding
+and 140 when rounded down. Its physical small end of 15.94 inches rounds
+to 16 inches under the rule and to 15 inches when rounded down.
+
+## How are cords specified?
+
+Cords require `cord_solid_fraction`, the solid wood fraction of stacked
+volume. It must lie strictly between zero and one. The conversion uses
+the chosen bark basis and divides solid cubic volume by the cord’s
+stacked volume and this fraction.
+
+``` r
+
+## Convert nominal log bodies to cords with an explicit solid fraction
+cordwood <- product(product = 'cordwood',  ## product label
+                    min_length = 8,  ## feet
+                    max_length = 20,  ## feet
+                    min_sed = 3,  ## inches inside bark
+                    volume_unit = 'cord',  ## cords
+                    cord_solid_fraction = 0.7)  ## solid volume / stacked volume
+```
+
+``` r
+
+## Scale the nominal bodies in cords
+cords <- merchandise(tree_id = tree$tree_id,
+                     dbh = tree$dbh,
+                     ht = tree$ht,
+                     spcd = tree$spcd,
+                     products = cordwood)
+```
+
+| log | length (feet) | scale (cords) |
+|----:|--------------:|--------------:|
+|   1 |            20 |         0.361 |
+|   2 |            20 |         0.250 |
+|   3 |            20 |         0.160 |
+|   4 |            20 |         0.068 |
+
+The first nominal log body scales to 0.361 cords at the specified solid
+fraction.
+
+## How are prices applied?
+
+`price` is the amount charged for `price_per` scale units. Currency is
+supplied by the caller and is not converted. An omitted price leaves the
+product unpriced. A result includes a value column when any product is
+priced, with missing values for unpriced products.
+
+``` r
+
+## Price Scribner scale in dollars per specified board feet
+priced <- product(product = 'priced saw',  ## product label
+                  min_length = 32,  ## feet
+                  max_length = 32,  ## feet
+                  min_sed = 12,  ## inches inside bark
+                  trim = 0.5,  ## feet
+                  volume_unit = 'scribner',  ## board feet
+                  price = 900,  ## dollars
+                  price_per = 1000)  ## board feet
+```
+
+``` r
+
+## Apply the stated price to accepted logs
+valued <- merchandise(tree_id = tree$tree_id,
+                      dbh = tree$dbh,
+                      ht = tree$ht,
+                      spcd = tree$spcd,
+                      products = priced)
+```
+
+| log | scale (Scribner board feet) | value (dollars) |
+|----:|----------------------------:|----------------:|
+|   1 |                         230 |             207 |
+
+The first log contributes 207 dollars from its scale multiplied by
+`price / price_per`. Prices affect log selection only when
+`strategy = 'optimize'` is requested.
