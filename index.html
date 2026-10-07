@@ -5,8 +5,11 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="description" content="Turn tree measurements and product specifications into logs and scale.">
-<title>Logs, scale, biomass, and carbon • merchandiser</title>
+<meta name="description" content="Estimates log and product volumes from tree measurements.
+    Combines stem profiles, height models, biomass equations, product
+    specifications, located defects, and bucking. The National
+    Volume Estimator Library supplies the shipped source equations.">
+<title>Estimate Log and Product Volumes from Tree Measurements • merchandiser</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
@@ -17,9 +20,12 @@
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Logs, scale, biomass, and carbon">
-<meta property="og:description" content="Turn tree measurements and product specifications into logs and scale.">
-<meta property="og:image" content="https://siskiyoubiometrics.github.io/merchandiser/logo.svg">
+<!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Estimate Log and Product Volumes from Tree Measurements">
+<meta property="og:description" content="Estimates log and product volumes from tree measurements.
+    Combines stem profiles, height models, biomass equations, product
+    specifications, located defects, and bucking. The National
+    Volume Estimator Library supplies the shipped source equations.">
+<meta property="og:image" content="https://siskiyoubiometrics.com/merchandiser/logo.svg">
 <!-- mathjax --><script src="file:///usr/share/javascript/mathjax/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
@@ -49,21 +55,13 @@
   <div class="dropdown-menu" aria-labelledby="dropdown-guides">
     <a class="dropdown-item" href="articles/get-started.html">Get started</a>
     <a class="dropdown-item" href="articles/defining-products.html">Defining products</a>
-    <a class="dropdown-item" href="articles/defect-recording-conventions.html">Recording defect</a>
-    <a class="dropdown-item" href="articles/fill-missing-heights.html">Fitting and completing heights</a>
-    <a class="dropdown-item" href="articles/taper-profiles.html">Taper and stem profiles</a>
-    <a class="dropdown-item" href="articles/volumes-scaling.html">Volumes and green weight</a>
-    <a class="dropdown-item" href="articles/scaling-rules.html">Scaling rules</a>
+    <a class="dropdown-item" href="articles/recording-defect.html">Recording defect</a>
+    <a class="dropdown-item" href="articles/heights.html">Heights</a>
+    <a class="dropdown-item" href="articles/stem-measurements.html">Stem measurements and volumes</a>
     <a class="dropdown-item" href="articles/biomass-carbon.html">Biomass and carbon</a>
-    <a class="dropdown-item" href="articles/pacific-northwest.html">Pacific Northwest tree list</a>
-    <a class="dropdown-item" href="articles/southern.html">Southern stands</a>
-    <a class="dropdown-item" href="articles/optimal-bucking.html">Optimal bucking</a>
-    <a class="dropdown-item" href="articles/assumptions-status.html">Assumptions and status</a>
-    <a class="dropdown-item" href="articles/methods-taper-equations.html">Taper equation methods</a>
-    <a class="dropdown-item" href="articles/methods-fitting-taper.html">Fitting taper equations</a>
-    <a class="dropdown-item" href="articles/stem-model-overview.html">Stem model calculations</a>
-    <a class="dropdown-item" href="articles/oracle-agreement.html">Source agreement</a>
-    <a class="dropdown-item" href="articles/identifiers-defaults.html">Identifiers and defaults</a>
+    <a class="dropdown-item" href="articles/bucking-strategy.html">Bucking strategy and value</a>
+    <a class="dropdown-item" href="articles/tree-lists.html">Working a tree list</a>
+    <a class="dropdown-item" href="articles/taper-equations.html">Taper equations</a>
   </div>
 </li>
 <li class="nav-item">
@@ -76,8 +74,8 @@
 
       <ul class="navbar-nav">
 <li class="nav-item">
-  <a class="external-link nav-link" href="https://github.com/siskiyoubiometrics/merchandiser/" aria-label="github">
-    <span class="fab fa fab fa-github fa-lg"></span>
+  <a class="external-link nav-link" href="https://github.com/siskiyoubiometrics/merchandiser" aria-label="GitHub">
+    <span class="fa fa-github"></span>
      
   </a>
 </li>
@@ -93,238 +91,294 @@
 <img src="logo.svg" class="logo" alt=""><h1 id="merchandiser-">merchandiser <a class="anchor" aria-label="anchor" href="#merchandiser-"></a>
 </h1>
 </div>
-<p>merchandiser turns tree measurements, product specifications, and located defects into logs, scale, and residual stem sections. It also fits heights and taper equations, measures stems, and estimates dry biomass and carbon.</p>
+<p>merchandiser estimates logs, product volumes, and value from tree measurements and explicit product specifications. It supports foresters working with tree lists in R, with results that retain tree identifiers for summaries by species, stand, or product.</p>
+<p>Specify log dimensions, diameter limits, scaling rules, and prices, then select logs by product priority or maximize their total value. Located defects change the available stem sections and eligible products. Results include selected logs, residual sections, status, and recorded assumptions.</p>
+<p>The package also fits and completes tree heights, fits taper equations, measures stem sections, and estimates dry biomass and carbon in metric tonnes from diameters in inches and heights in feet. The shipped source equations come from the Forest Service National Volume Estimator Library, as recorded in <code>DESCRIPTION</code>.</p>
 <div class="section level2">
 <h2 id="install">Install<a class="anchor" aria-label="anchor" href="#install"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Install from the package repository</span></span>
+<code class="sourceCode R"><span><span class="co">## Install the package from its source repository</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://remotes.r-lib.org" class="external-link">remotes</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Install the package</span></span>
+<span><span class="co">## Install the source package</span></span>
 <span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span>repo <span class="op">=</span> <span class="st">'siskiyoubiometrics/merchandiser'</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="select-and-scale-logs">Select and scale logs<a class="anchor" aria-label="anchor" href="#select-and-scale-logs"></a>
+<h2 id="tasks">Tasks<a class="anchor" aria-label="anchor" href="#tasks"></a>
 </h2>
-<p>The shipped tree is a synthetic example. The four products below are three Scribner sawlogs and green-ton pulp, with illustrative prices in United States dollars. Product order in <code><a href="reference/products.html">products()</a></code> sets cutting priority.</p>
+<table class="table">
+<colgroup>
+<col width="36%">
+<col width="63%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Task</th>
+<th align="left">Functions</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">Define products and select logs</td>
+<td align="left">
+<code><a href="reference/product.html">product()</a></code>, <code><a href="reference/products.html">products()</a></code>, <code><a href="reference/merchandise.html">merchandise()</a></code>
+</td>
+</tr>
+<tr class="even">
+<td align="left">Record located defects</td>
+<td align="left">
+<code><a href="reference/defect.html">defect()</a></code>, <code><a href="reference/defects_from_stoppers.html">defects_from_stoppers()</a></code>, <code><a href="reference/validate_defects.html">validate_defects()</a></code>
+</td>
+</tr>
+<tr class="odd">
+<td align="left">Fit and complete tree heights</td>
+<td align="left">
+<code><a href="reference/fit_height.html">fit_height()</a></code>, <code><a href="reference/complete_heights.html">complete_heights()</a></code>, <code><a href="reference/predict_height.html">predict_height()</a></code>
+</td>
+</tr>
+<tr class="even">
+<td align="left">Measure a stem or section</td>
+<td align="left">
+<code><a href="reference/stem_profile.html">stem_profile()</a></code>, <code><a href="reference/dib.html">dib()</a></code>, <code><a href="reference/dob.html">dob()</a></code>, <code><a href="reference/stem_volume.html">stem_volume()</a></code>
+</td>
+</tr>
+<tr class="odd">
+<td align="left">Estimate biomass and carbon</td>
+<td align="left">
+<code><a href="reference/biomass.html">biomass()</a></code>, <code><a href="reference/carbon_fraction.html">carbon_fraction()</a></code>
+</td>
+</tr>
+<tr class="even">
+<td align="left">Fit and register a taper equation</td>
+<td align="left">
+<code><a href="reference/fit_taper.html">fit_taper()</a></code>, <code><a href="reference/as_taper_model.html">as_taper_model()</a></code>, <code><a href="reference/register_taper_model.html">register_taper_model()</a></code>
+</td>
+</tr>
+<tr class="odd">
+<td align="left">Review calculation conditions</td>
+<td align="left">
+<code><a href="reference/status_codes.html">status_codes()</a></code>, <code><a href="reference/assumptions.html">assumptions()</a></code>
+</td>
+</tr>
+</tbody>
+</table>
+<p><code><a href="reference/biomass.html">biomass()</a></code> returns metric tonnes, while <code><a href="reference/green_weight.html">green_weight()</a></code> converts stem volume to short tons for product scaling.</p>
+</div>
+<div class="section level2">
+<h2 id="get-started">Get started<a class="anchor" aria-label="anchor" href="#get-started"></a>
+</h2>
+<p><code><a href="reference/merchandise.html">merchandise()</a></code> selects and scales logs from tree measurements and product specifications. Product order sets cutting priority under the default strategy. Prices assign value to the selected logs without changing that priority.</p>
+<p>Tree 5 is a synthetic example with species code 202, diameter at breast height of 20 inches, and total height of 100 feet. Its stored equation is passed explicitly below. Dimensions use inches and feet. Prices are illustrative United States dollars.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Load the packages</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/siskiyoubiometrics/merchandiser" class="external-link">merchandiser</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co">## Select the example tree</span></span>
+<code class="sourceCode R"><span><span class="co">## Attach the calculation and data tools</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://siskiyoubiometrics.com/merchandiser/">merchandiser</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Select the tree with a stored taper equation</span></span>
 <span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree_id</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co">## Define each product: lengths, small end limit, trim, unit, and price</span></span>
-<span><span class="va">large</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Large sawlog'</span>,</span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">tree_id</span> <span class="op">==</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="right">tree_id</th>
+<th align="right">species code</th>
+<th align="right">diameter (inches)</th>
+<th align="right">height (feet)</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td align="right">5</td>
+<td align="right">202</td>
+<td align="right">20</td>
+<td align="right">100</td>
+</tr></tbody>
+</table>
+<p>The 20-inch diameter and 100-foot height supply the tree measurements for the log calculation.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Give long logs with the largest small end limit first priority</span></span>
+<span><span class="va">large</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Large sawlog'</span>,  <span class="co">## product label</span></span>
 <span>                 min_length <span class="op">=</span> <span class="fl">32</span>,  <span class="co">## feet</span></span>
 <span>                 max_length <span class="op">=</span> <span class="fl">32</span>,  <span class="co">## feet</span></span>
-<span>                 min_sed <span class="op">=</span> <span class="fl">12</span>,  <span class="co">## inches, small end diameter</span></span>
-<span>                 inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## diameter limit is inside bark</span></span>
-<span>                 trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet added to each log</span></span>
-<span>                 volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## Scribner board feet</span></span>
+<span>                 min_sed <span class="op">=</span> <span class="fl">12</span>,  <span class="co">## inches</span></span>
+<span>                 inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## limits measured inside bark</span></span>
+<span>                 trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet</span></span>
+<span>                 volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## board feet</span></span>
 <span>                 price <span class="op">=</span> <span class="fl">900</span>,  <span class="co">## dollars</span></span>
-<span>                 price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>  <span class="co">## per thousand board feet</span></span>
+<span>                 price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>  <span class="co">## board feet</span></span>
 <span></span>
-<span><span class="va">medium</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Medium sawlog'</span>,</span>
+<span><span class="co">## Accept shorter logs that meet the medium sawlog diameter limit</span></span>
+<span><span class="va">medium</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Medium sawlog'</span>,  <span class="co">## product label</span></span>
 <span>                  min_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
 <span>                  max_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
-<span>                  min_sed <span class="op">=</span> <span class="fl">10</span>,  <span class="co">## inches, small end diameter</span></span>
-<span>                  inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## diameter limit is inside bark</span></span>
-<span>                  trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet added to each log</span></span>
-<span>                  volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## Scribner board feet</span></span>
+<span>                  min_sed <span class="op">=</span> <span class="fl">10</span>,  <span class="co">## inches</span></span>
+<span>                  inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## limits measured inside bark</span></span>
+<span>                  trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet</span></span>
+<span>                  volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## board feet</span></span>
 <span>                  price <span class="op">=</span> <span class="fl">700</span>,  <span class="co">## dollars</span></span>
-<span>                  price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>  <span class="co">## per thousand board feet</span></span>
+<span>                  price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>  <span class="co">## board feet</span></span>
 <span></span>
-<span><span class="va">small</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Small sawlog'</span>,</span>
+<span><span class="co">## Accept smaller sawlogs before assigning wood to pulp</span></span>
+<span><span class="va">small</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Small sawlog'</span>,  <span class="co">## product label</span></span>
 <span>                 min_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
 <span>                 max_length <span class="op">=</span> <span class="fl">16</span>,  <span class="co">## feet</span></span>
-<span>                 min_sed <span class="op">=</span> <span class="fl">6</span>,  <span class="co">## inches, small end diameter</span></span>
-<span>                 inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## diameter limit is inside bark</span></span>
-<span>                 trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet added to each log</span></span>
-<span>                 volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## Scribner board feet</span></span>
+<span>                 min_sed <span class="op">=</span> <span class="fl">6</span>,  <span class="co">## inches</span></span>
+<span>                 inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## limits measured inside bark</span></span>
+<span>                 trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet</span></span>
+<span>                 volume_unit <span class="op">=</span> <span class="st">'scribner'</span>,  <span class="co">## board feet</span></span>
 <span>                 price <span class="op">=</span> <span class="fl">500</span>,  <span class="co">## dollars</span></span>
-<span>                 price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>  <span class="co">## per thousand board feet</span></span>
+<span>                 price_per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>  <span class="co">## board feet</span></span>
 <span></span>
-<span><span class="va">pulp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Pulp'</span>,</span>
+<span><span class="co">## Assign remaining eligible sections to pulp by green weight</span></span>
+<span><span class="va">pulp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/product.html">product</a></span><span class="op">(</span>product <span class="op">=</span> <span class="st">'Pulp'</span>,  <span class="co">## product label</span></span>
 <span>                min_length <span class="op">=</span> <span class="fl">8</span>,  <span class="co">## feet</span></span>
 <span>                max_length <span class="op">=</span> <span class="fl">20</span>,  <span class="co">## feet</span></span>
-<span>                min_sed <span class="op">=</span> <span class="fl">3</span>,  <span class="co">## inches, small end diameter</span></span>
-<span>                inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## diameter limit is inside bark</span></span>
-<span>                trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet added to each log</span></span>
+<span>                min_sed <span class="op">=</span> <span class="fl">3</span>,  <span class="co">## inches</span></span>
+<span>                inside_bark <span class="op">=</span> <span class="cn">TRUE</span>,  <span class="co">## limits measured inside bark</span></span>
+<span>                trim <span class="op">=</span> <span class="fl">0.5</span>,  <span class="co">## feet</span></span>
 <span>                volume_unit <span class="op">=</span> <span class="st">'green_ton'</span>,  <span class="co">## green short tons</span></span>
 <span>                price <span class="op">=</span> <span class="fl">30</span>,  <span class="co">## dollars</span></span>
-<span>                price_per <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>  <span class="co">## per ton</span></span>
-<span></span>
-<span><span class="co">## Combine the products in cutting priority order</span></span>
+<span>                price_per <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>  <span class="co">## green short tons</span></span></code></pre></div>
+<p>Each cut occupies the nominal log length plus trim. Scale uses the nominal length, and trim remains in the residual record.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Offer the stem to sawlog products before pulp</span></span>
 <span><span class="va">specifications</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/products.html">products</a></span><span class="op">(</span><span class="va">large</span>, <span class="va">medium</span>, <span class="va">small</span>, <span class="va">pulp</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select logs from the tree</span></span>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Select and price logs using the tree's stored taper equation</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/merchandise.html">merchandise</a></span><span class="op">(</span>tree_id <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">tree_id</span>,</span>
 <span>                      dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
 <span>                      ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
 <span>                      spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span>,</span>
 <span>                      products <span class="op">=</span> <span class="va">specifications</span>,</span>
 <span>                      model <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
+<table style="width:100%;" class="table">
 <colgroup>
-<col width="4%">
-<col width="14%">
-<col width="12%">
-<col width="27%">
 <col width="8%">
-<col width="17%">
+<col width="7%">
+<col width="15%">
 <col width="12%">
+<col width="16%">
+<col width="16%">
+<col width="14%">
+<col width="9%">
 </colgroup>
 <thead><tr class="header">
-<th align="right">Log</th>
-<th align="left">Product</th>
-<th align="right">Length (ft)</th>
-<th align="right">Small end inside bark (in)</th>
-<th align="right">Scale</th>
-<th align="left">Unit</th>
-<th align="right">Value (USD)</th>
+<th align="left">product</th>
+<th align="right">start (feet)</th>
+<th align="right">end including trim (feet)</th>
+<th align="right">nominal length (feet)</th>
+<th align="right">small-end diameter (inches)</th>
+<th align="right">scale (Scribner board feet)</th>
+<th align="right">scale (green short tons)</th>
+<th align="right">value (dollars)</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">1</td>
 <td align="left">Large sawlog</td>
+<td align="right">1.0</td>
+<td align="right">33.5</td>
 <td align="right">32</td>
 <td align="right">14.017</td>
-<td align="right">230.000</td>
-<td align="left">board feet</td>
+<td align="right">230</td>
+<td align="right">NA</td>
 <td align="right">207.000</td>
 </tr>
 <tr class="even">
-<td align="right">2</td>
 <td align="left">Medium sawlog</td>
+<td align="right">33.5</td>
+<td align="right">50.0</td>
 <td align="right">16</td>
 <td align="right">11.643</td>
-<td align="right">80.000</td>
-<td align="left">board feet</td>
+<td align="right">80</td>
+<td align="right">NA</td>
 <td align="right">56.000</td>
 </tr>
 <tr class="odd">
-<td align="right">3</td>
 <td align="left">Small sawlog</td>
+<td align="right">50.0</td>
+<td align="right">66.5</td>
 <td align="right">16</td>
 <td align="right">8.413</td>
-<td align="right">40.000</td>
-<td align="left">board feet</td>
+<td align="right">40</td>
+<td align="right">NA</td>
 <td align="right">20.000</td>
 </tr>
 <tr class="even">
-<td align="right">4</td>
 <td align="left">Pulp</td>
+<td align="right">66.5</td>
+<td align="right">87.0</td>
 <td align="right">20</td>
 <td align="right">3.341</td>
+<td align="right">NA</td>
 <td align="right">0.098</td>
-<td align="left">green short tons</td>
 <td align="right">2.951</td>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Draw the selected logs</span></span>
+<p>The large sawlog contributes 207 dollars at the specified price of 900 dollars per 1000 board feet.</p>
+<table class="table">
+<colgroup>
+<col width="28%">
+<col width="17%">
+<col width="26%">
+<col width="28%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">scale (Scribner board feet)</th>
+<th align="right">price (dollars)</th>
+<th align="right">price basis (board feet)</th>
+<th align="right">calculated value (dollars)</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td align="right">230</td>
+<td align="right">900</td>
+<td align="right">1000</td>
+<td align="right">207</td>
+</tr></tbody>
+</table>
+<p>Its 230 board feet supply the scale used in that value calculation.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Draw the selected logs and unassigned stem sections</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-4-1.png"><!-- --></p>
-<p><code>scale</code> uses the unit shown in <code>volume_unit</code>. The result also contains residual intervals, tree status, and assumptions.</p>
+<p><img src="reference/figures/README-unnamed-chunk-12-1.png"><!-- --></p>
+<p>The drawing places the large sawlog at the base, starting above the 1 foot stump.</p>
 </div>
 <div class="section level2">
 <h2 id="biomass-and-carbon">Biomass and carbon<a class="anchor" aria-label="anchor" href="#biomass-and-carbon"></a>
 </h2>
-<p><code><a href="reference/biomass.html">biomass()</a></code> returns dry mass and carbon in metric tonnes from diameters in inches and heights in feet. The default uses national coefficients.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Select three example trees</span></span>
-<span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">example_trees</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_head</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co">## Estimate dry biomass and carbon in metric tonnes</span></span>
-<span><span class="va">mass</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/biomass.html">biomass</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">dbh</span>,</span>
-<span>                ht <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">ht</span>,</span>
-<span>                spcd <span class="op">=</span> <span class="va">trees</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Estimate dry biomass and carbon for the same tree</span></span>
+<span><span class="va">mass</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/biomass.html">biomass</a></span><span class="op">(</span>dbh <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">dbh</span>,</span>
+<span>                ht <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">ht</span>,</span>
+<span>                spcd <span class="op">=</span> <span class="va">tree</span><span class="op">$</span><span class="va">spcd</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <colgroup>
-<col width="7%">
-<col width="24%">
-<col width="24%">
-<col width="23%">
-<col width="20%">
+<col width="41%">
+<col width="18%">
+<col width="40%">
 </colgroup>
 <thead><tr class="header">
-<th align="right">Tree</th>
-<th align="right">Stem wood (tonnes)</th>
-<th align="right">Stem bark (tonnes)</th>
-<th align="right">Branches (tonnes)</th>
-<th align="right">Carbon (tonnes)</th>
+<th align="right">dry mass excluding foliage (tonnes)</th>
+<th align="right">carbon (tonnes)</th>
+<th align="right">carbon dioxide equivalent (tonnes)</th>
 </tr></thead>
-<tbody>
-<tr class="odd">
-<td align="right">1</td>
-<td align="right">0.224</td>
-<td align="right">0.039</td>
-<td align="right">0.063</td>
-<td align="right">0.168</td>
-</tr>
-<tr class="even">
-<td align="right">2</td>
-<td align="right">0.318</td>
-<td align="right">0.042</td>
-<td align="right">0.094</td>
-<td align="right">0.230</td>
-</tr>
-<tr class="odd">
-<td align="right">3</td>
-<td align="right">0.520</td>
-<td align="right">0.087</td>
-<td align="right">0.105</td>
-<td align="right">0.367</td>
-</tr>
-</tbody>
+<tbody><tr class="odd">
+<td align="right">1.302</td>
+<td align="right">0.672</td>
+<td align="right">2.463</td>
+</tr></tbody>
 </table>
+<p>The tree contains 1.302 metric tonnes of dry aboveground biomass excluding foliage.</p>
 </div>
 <div class="section level2">
-<h2 id="package-site">Package site<a class="anchor" aria-label="anchor" href="#package-site"></a>
+<h2 id="guides">Guides<a class="anchor" aria-label="anchor" href="#guides"></a>
 </h2>
 <ul>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/get-started.html">Get started</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/defining-products.html">Defining products</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/defect-recording-conventions.html">Recording defect</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/fill-missing-heights.html">Fitting and completing heights</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/taper-profiles.html">Taper and stem profiles</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/volumes-scaling.html">Volumes and green weight</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/scaling-rules.html">Scaling rules</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/biomass-carbon.html">Biomass and carbon</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/pacific-northwest.html">Pacific Northwest tree list</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/southern.html">Southern stands</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/optimal-bucking.html">Optimal bucking</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/assumptions-status.html">Assumptions and status</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/methods-taper-equations.html">Taper equation methods</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/methods-fitting-taper.html">Fitting taper equations</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/stem-model-overview.html">Stem model calculations</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/oracle-agreement.html">Source agreement</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/articles/identifiers-defaults.html">Identifiers and defaults</a>.</li>
-<li>
-<a href="https://siskiyoubiometrics.github.io/merchandiser/reference/index.html">Function reference</a>.</li>
+<li><a href="https://siskiyoubiometrics.com/merchandiser/articles/get-started.html">Get started</a></li>
+<li><a href="https://siskiyoubiometrics.com/merchandiser/articles/defining-products.html">Defining products</a></li>
+<li><a href="https://siskiyoubiometrics.com/merchandiser/articles/recording-defect.html">Recording defect</a></li>
+<li><a href="https://siskiyoubiometrics.com/merchandiser/articles/heights.html">Heights</a></li>
+<li><a href="https://siskiyoubiometrics.com/merchandiser/articles/stem-measurements.html">Stem measurements and volumes</a></li>
+<li><a href="https://siskiyoubiometrics.com/merchandiser/articles/biomass-carbon.html">Biomass and carbon</a></li>
+<li><a href="https://siskiyoubiometrics.com/merchandiser/articles/bucking-strategy.html">Bucking strategy and value</a></li>
+<li><a href="https://siskiyoubiometrics.com/merchandiser/articles/tree-lists.html">Working a tree list</a></li>
+<li><a href="https://siskiyoubiometrics.com/merchandiser/articles/taper-equations.html">Taper equations</a></li>
 </ul>
 </div>
 </div>
