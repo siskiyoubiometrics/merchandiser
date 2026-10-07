@@ -136,6 +136,6 @@ fit <- fit_taper(tree_id = example_stem_measurements$tree_id,
 
 ## Inspect diameter errors in inches
 fit$fit_statistics$overall
-#>    n      rmse        bias
-#> 1 90 0.2745199 0.003557597
+#>    n     rmse        bias
+#> 1 90 0.274483 0.003564137
 ```
